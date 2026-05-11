@@ -1,0 +1,64 @@
+<div class="min-h-screen bg-gray-50">
+  <div class="bg-white border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <h1 class="text-lg font-semibold text-gray-900">Products</h1>
+      <%= link_to "New Product", new_product_path,
+        class: "bg-gray-900 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors" %>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-6 py-8">
+    <% if @products.any? %>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <% @products.each do |product| %>
+          <div class="bg-white border border-gray-200 rounded-2xl p-5 hover:shadow-md transition-shadow">
+
+            <div class="flex items-start justify-between mb-3">
+              <div>
+                <h2 class="font-semibold text-gray-900 mb-0.5"><%= product.name %></h2>
+                <p class="text-gray-400 text-xs line-clamp-2"><%= product.description.presence || "No description" %></p>
+              </div>
+              <span class="shrink-0 ml-2 text-xs px-2 py-0.5 rounded-full font-medium
+                <%= product.status == 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500' %>">
+                <%= product.status&.capitalize || 'Draft' %>
+              </span>
+            </div>
+
+            <div class="border-t border-gray-100 pt-3 mb-4">
+              <div class="text-xs text-gray-400 mb-2">
+                <%= product.product_variants.count %> variant(s)
+                · stock <%= product.product_variants.sum(:stock) %>
+              </div>
+              <% prices = product.product_variants.pluck(:price).compact %>
+              <% if prices.any? && prices.max.to_i > 0 %>
+                <div class="text-sm font-semibold text-gray-900">
+                  <% if prices.min == prices.max %>
+                    Rp <%= number_with_delimiter(prices.min.to_i) %>
+                  <% else %>
+                    Rp <%= number_with_delimiter(prices.min.to_i) %> – Rp <%= number_with_delimiter(prices.max.to_i) %>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+
+            <div class="flex gap-2">
+              <%= link_to "View", product_path(product),
+                class: "flex-1 text-center border border-gray-200 text-gray-700 text-sm font-medium px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors" %>
+              <%= link_to "Edit", edit_product_path(product),
+                class: "flex-1 text-center bg-gray-900 text-white text-sm font-medium px-3 py-2 rounded-lg hover:bg-gray-700 transition-colors" %>
+            </div>
+
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="text-center py-24">
+        <div class="text-5xl mb-4">🛍️</div>
+        <h2 class="text-xl font-semibold text-gray-700 mb-2">No products yet</h2>
+        <p class="text-gray-400 text-sm mb-6">Create your first product to get started.</p>
+        <%= link_to "Create Product", new_product_path,
+          class: "inline-block bg-gray-900 text-white text-sm font-medium px-6 py-3 rounded-xl hover:bg-gray-700 transition-colors" %>
+      </div>
+    <% end %>
+  </div>
+</div>

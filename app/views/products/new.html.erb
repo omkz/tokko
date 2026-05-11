@@ -1,0 +1,52 @@
+<div class="max-w-2xl mx-auto py-10">
+  <div class="mb-6">
+    <%= link_to "← Back to Products", products_path, class: "text-sm text-gray-500 hover:text-gray-900 transition-colors" %>
+  </div>
+
+  <div class="bg-white rounded-2xl border border-gray-200 p-8">
+    <h1 class="text-2xl font-bold text-gray-900 mb-1">New Product</h1>
+    <p class="text-gray-500 text-sm mb-8">Fill in basic info — you can add options & variants after saving.</p>
+
+    <%= form_with model: @product, class: "space-y-5" do |f| %>
+
+      <% if @product.errors.any? %>
+        <div class="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
+          <% @product.errors.full_messages.each do |msg| %>
+            <div>• <%= msg %></div>
+          <% end %>
+        </div>
+      <% end %>
+
+      <div>
+        <%= f.label :name, "Product Title", class: "block text-sm font-medium text-gray-700 mb-1.5" %>
+        <%= f.text_field :name,
+          class: "w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-gray-900 focus:border-transparent outline-none transition",
+          placeholder: "e.g. Classic T-Shirt",
+          autofocus: true %>
+      </div>
+
+      <div>
+        <%= f.label :description, class: "block text-sm font-medium text-gray-700 mb-1.5" %>
+        <%= f.text_area :description, rows: 4,
+          class: "w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-gray-900 focus:border-transparent outline-none transition resize-none",
+          placeholder: "Describe your product..." %>
+      </div>
+
+      <div>
+        <%= f.label :status, class: "block text-sm font-medium text-gray-700 mb-1.5" %>
+        <%= f.select :status,
+          [["Draft", "draft"], ["Active", "active"], ["Archived", "archived"]],
+          { selected: "draft" },
+          class: "w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-gray-900 outline-none" %>
+      </div>
+
+      <div class="flex gap-3 pt-2">
+        <%= f.submit "Create Product",
+          class: "bg-gray-900 text-white text-sm font-medium px-6 py-3 rounded-xl hover:bg-gray-700 cursor-pointer transition-colors" %>
+        <%= link_to "Cancel", products_path,
+          class: "text-sm text-gray-500 hover:text-gray-700 px-4 py-3 transition-colors" %>
+      </div>
+
+    <% end %>
+  </div>
+</div>
