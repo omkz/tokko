@@ -79,7 +79,7 @@
                   <span class="font-medium text-sm text-gray-900"><%= option.name %></span>
                   <span class="text-xs text-gray-400">(<%= option.product_option_values.count %> values)</span>
                 </div>
-                <%= button_to product_product_option_path(@product, option),
+                <%= button_to product_option_path(option),
                   method: :delete,
                   data: { turbo_confirm: "Remove '#{option.name}'?" },
                   class: "text-xs text-gray-400 hover:text-red-500 transition-colors" do %>
