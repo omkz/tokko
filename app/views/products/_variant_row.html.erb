@@ -1,0 +1,59 @@
+<%= form_with model: variant, url: product_variant_path(variant), method: :patch,
+  id: "variant_row_#{variant.id}",
+  data: { 
+    controller: "variant-row",
+    action: "turbo:submit-end->variant-row#onPostSubmit"
+  },
+  class: "grid grid-cols-12 gap-4 items-center px-4 py-3 hover:bg-gray-50/70 transition-colors border-b border-gray-100 last:border-0 #{'opacity-50' unless variant.active?}" do |f| %>
+  
+  <div class="col-span-3 font-medium text-gray-900 truncate">
+    <%= variant.option_text %>
+  </div>
+
+  <div class="col-span-2">
+    <%= f.text_field :sku,
+      class: "border border-gray-200 rounded-lg px-2.5 py-1.5 w-full text-xs text-gray-600 font-mono focus:border-gray-400 focus:ring-0 outline-none transition hover:border-gray-300 bg-transparent",
+      data: { action: "change->variant-row#autoSubmit" } %>
+  </div>
+
+  <div class="col-span-3">
+    <div class="relative">
+      <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs">Rp</span>
+      <%= f.number_field :price, step: "1", min: 0,
+        class: "border border-gray-200 rounded-lg pl-8 pr-2.5 py-1.5 w-full text-right text-sm focus:border-gray-400 outline-none transition hover:border-gray-300 bg-transparent",
+        data: { action: "change->variant-row#autoSubmit" } %>
+    </div>
+  </div>
+
+  <div class="col-span-2">
+    <%= f.number_field :stock, min: 0,
+      class: "border border-gray-200 rounded-lg px-2.5 py-1.5 w-full text-center text-sm focus:border-gray-400 outline-none transition hover:border-gray-300 bg-transparent",
+      data: { action: "change->variant-row#autoSubmit" } %>
+  </div>
+
+  <div class="col-span-1 flex justify-center">
+    <%= f.check_box :active,
+      class: "w-4 h-4 rounded text-indigo-600 border-gray-300 cursor-pointer focus:ring-offset-0 focus:ring-0",
+      data: { action: "change->variant-row#autoSubmit" } %>
+  </div>
+
+  <div class="col-span-1 flex items-center justify-end gap-2 group-hover:opacity-100 transition-opacity">
+    <%# Indicator for saving status %>
+    <span data-variant-row-target="indicator" class="hidden text-[10px] text-green-600 font-medium animate-pulse">Saved</span>
+    
+    <button type="submit" class="hidden text-xs text-indigo-600 hover:text-indigo-800 font-medium transition-colors">
+      Save
+    </button>
+
+    <%= link_to product_variant_path(variant), 
+      data: { 
+        turbo_method: :delete,
+        turbo_confirm: "Delete this variant?" 
+      },
+      class: "text-gray-400 hover:text-red-500 transition-colors p-1" do %>
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+      </svg>
+    <% end %>
+  </div>
+<% end %>

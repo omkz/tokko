@@ -3,12 +3,14 @@ class ProductVariantsController < ApplicationController
 
   # PATCH /product_variants/:id
   def update
-    if @variant.update(variant_params)
-      redirect_to edit_product_path(@variant.product),
-                  notice: "Variant saved"
-    else
-      redirect_to edit_product_path(@variant.product),
-                  alert: @variant.errors.full_messages.to_sentence
+    respond_to do |format|
+      if @variant.update(variant_params)
+        format.html { redirect_to edit_product_path(@variant.product), notice: "Variant saved" }
+        format.turbo_stream
+      else
+        format.html { redirect_to edit_product_path(@variant.product), alert: @variant.errors.full_messages.to_sentence }
+        format.turbo_stream { render turbo_stream: turbo_stream.replace("variant_row_#{@variant.id}", partial: "products/variant_row", locals: { variant: @variant }) }
+      end
     end
   end
 
@@ -16,9 +18,11 @@ class ProductVariantsController < ApplicationController
   def destroy
     product = @variant.product
     @variant.destroy
-
-    redirect_to edit_product_path(product),
-                notice: "Variant deleted"
+    
+    respond_to do |format|
+      format.html { redirect_to edit_product_path(product), notice: "Variant deleted" }
+      format.turbo_stream { render turbo_stream: turbo_stream.remove("variant_row_#{@variant.id}") }
+    end
   end
 
   private

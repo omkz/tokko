@@ -158,65 +158,23 @@
         </div>
 
         <% if @product.product_variants.any? %>
-          <div class="border border-gray-200 rounded-xl overflow-hidden">
-            <table class="w-full text-sm">
-              <thead class="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wide px-4 py-3">Variant</th>
-                  <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wide px-4 py-3 w-36">SKU</th>
-                  <th class="text-right text-xs font-medium text-gray-500 uppercase tracking-wide px-4 py-3 w-32">Price (Rp)</th>
-                  <th class="text-center text-xs font-medium text-gray-500 uppercase tracking-wide px-4 py-3 w-24">Stock</th>
-                  <th class="text-center text-xs font-medium text-gray-500 uppercase tracking-wide px-4 py-3 w-16">Active</th>
-                  <th class="w-16 px-4 py-3"></th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-100">
-                <% @product.product_variants.each do |variant| %>
-                  <%# One form per variant row for inline edit %>
-                  <%= form_with model: variant, url: product_variant_path(variant), method: :patch,
-                    id: "variant-form-#{variant.id}",
-                    class: "contents" do |f| %>
-                    <tr class="hover:bg-gray-50/70 group transition-colors <%= 'opacity-50' unless variant.active? %>">
-                      <td class="px-4 py-3 font-medium text-gray-900">
-                        <%= variant.option_text %>
-                      </td>
-                      <td class="px-4 py-3">
-                        <%= f.text_field :sku,
-                          class: "border border-gray-200 rounded-lg px-2.5 py-1.5 w-full text-xs text-gray-600 font-mono focus:border-gray-400 focus:ring-0 outline-none transition hover:border-gray-300 bg-transparent" %>
-                      </td>
-                      <td class="px-4 py-3">
-                        <%= f.number_field :price, step: "1", min: 0,
-                          class: "border border-gray-200 rounded-lg px-2.5 py-1.5 w-full text-right text-sm focus:border-gray-400 outline-none transition hover:border-gray-300 bg-transparent",
-                          data: { action: "change->variant-row#autoSubmit" } %>
-                      </td>
-                      <td class="px-4 py-3">
-                        <%= f.number_field :stock, min: 0,
-                          class: "border border-gray-200 rounded-lg px-2.5 py-1.5 w-full text-center text-sm focus:border-gray-400 outline-none transition hover:border-gray-300 bg-transparent",
-                          data: { action: "change->variant-row#autoSubmit" } %>
-                      </td>
-                      <td class="px-4 py-3 text-center">
-                        <%= f.check_box :active,
-                          class: "w-4 h-4 rounded text-indigo-600 border-gray-300 cursor-pointer",
-                          data: { action: "change->variant-row#autoSubmit" } %>
-                      </td>
-                      <td class="px-4 py-3 text-right">
-                        <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button type="submit" form="variant-form-<%= variant.id %>"
-                            class="text-xs text-indigo-600 hover:text-indigo-800 font-medium transition-colors">
-                            Save
-                          </button>
-                          <%= button_to product_variant_path(variant), method: :delete,
-                            data: { turbo_confirm: "Delete this variant?" },
-                            class: "text-xs text-gray-400 hover:text-red-500 transition-colors" do %>
-                            Del
-                          <% end %>
-                        </div>
-                      </td>
-                    </tr>
-                  <% end %>
-                <% end %>
-              </tbody>
-            </table>
+          <div class="border border-gray-200 rounded-xl overflow-hidden bg-white">
+            <%# Header %>
+            <div class="grid grid-cols-12 gap-4 bg-gray-50 border-b border-gray-200 px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">
+              <div class="col-span-3">Variant</div>
+              <div class="col-span-2">SKU</div>
+              <div class="col-span-3 text-right pr-4">Price</div>
+              <div class="col-span-2 text-center">Stock</div>
+              <div class="col-span-1 text-center">Active</div>
+              <div class="col-span-1"></div>
+            </div>
+
+            <%# Body %>
+            <div class="divide-y divide-gray-100">
+              <% @product.product_variants.order(:id).each do |variant| %>
+                <%= render "products/variant_row", variant: variant %>
+              <% end %>
+            </div>
           </div>
 
         <% else %>
