@@ -9,14 +9,24 @@ Rails.application.routes.draw do
         post :generate_variants
         delete :delete_image
       end
+      resources :product_options, only: %i[create], shallow: true
+      resources :product_variants, only: %i[update], shallow: true
     end
-    resources :product_options, only: %i[create destroy], shallow: true
-    resources :product_variants, only: %i[update destroy], shallow: true
+    resources :product_options, only: %i[destroy]
+    resources :product_variants, only: %i[destroy]
     resources :orders, only: %i[index show update]
     root to: "products#index"
   end
 
   # Storefront
   resources :products, only: [:show]
+  resource :cart, only: [:show, :update, :destroy] do
+    post "add", to: "carts#add", as: :add_to
+  end
+
+  resource :checkout, only: [:new, :create] do
+    get :success
+  end
+  
   root "home#index"
 end

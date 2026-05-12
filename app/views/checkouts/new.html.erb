@@ -1,0 +1,118 @@
+<div class="bg-gray-50/50 min-h-screen pb-24">
+  <div class="max-w-5xl mx-auto px-6 py-12">
+    
+    <div class="flex items-center gap-4 mb-10">
+      <%= link_to cart_path, class: "text-gray-400 hover:text-gray-900 transition-colors" do %>
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+      <% end %>
+      <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Checkout</h1>
+    </div>
+
+    <%= form_with model: @order, url: checkout_path, class: "grid grid-cols-1 lg:grid-cols-3 gap-12" do |f| %>
+      <%# Left: Shipping Details %>
+      <div class="lg:col-span-2 space-y-8">
+        <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
+          <h2 class="text-sm font-black text-gray-900 uppercase tracking-widest mb-8 flex items-center gap-3">
+            <span class="w-6 h-6 bg-gray-900 text-white rounded-full flex items-center justify-center text-[10px]">1</span>
+            Contact Information
+          </h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="md:col-span-2">
+              <%= f.label :customer_name, "Full Name", class: "block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2" %>
+              <%= f.text_field :customer_name, placeholder: "e.g. John Doe", 
+                  class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition" %>
+            </div>
+            <div>
+              <%= f.label :customer_email, "Email Address", class: "block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2" %>
+              <%= f.email_field :customer_email, placeholder: "john@example.com", 
+                  class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition" %>
+            </div>
+            <div>
+              <%= f.label :customer_phone, "Phone Number", class: "block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2" %>
+              <%= f.text_field :customer_phone, placeholder: "0812...", 
+                  class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition" %>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
+          <h2 class="text-sm font-black text-gray-900 uppercase tracking-widest mb-8 flex items-center gap-3">
+            <span class="w-6 h-6 bg-gray-900 text-white rounded-full flex items-center justify-center text-[10px]">2</span>
+            Shipping Address
+          </h2>
+          
+          <div>
+            <%= f.label :shipping_address, class: "block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2" %>
+            <%= f.text_area :shipping_address, rows: 4, placeholder: "House number, street name, city, province...", 
+                class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition resize-none" %>
+          </div>
+        </div>
+
+        <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
+          <h2 class="text-sm font-black text-gray-900 uppercase tracking-widest mb-8 flex items-center gap-3">
+            <span class="w-6 h-6 bg-gray-900 text-white rounded-full flex items-center justify-center text-[10px]">3</span>
+            Payment Method
+          </h2>
+          
+          <div class="p-4 border-2 border-indigo-600 bg-indigo-50/30 rounded-2xl flex items-center gap-4">
+            <div class="w-5 h-5 border-4 border-indigo-600 rounded-full flex items-center justify-center">
+              <div class="w-2 h-2 bg-indigo-600 rounded-full"></div>
+            </div>
+            <div>
+              <p class="text-sm font-bold text-gray-900">Bank Transfer / Manual Verification</p>
+              <p class="text-[10px] text-gray-500 font-medium">Pay manually and upload proof of payment later.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <%# Right: Summary %>
+      <div class="space-y-6">
+        <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm sticky top-24">
+          <h2 class="text-sm font-black text-gray-900 uppercase tracking-widest mb-6">Your Order</h2>
+          
+          <div class="space-y-4 mb-8">
+            <% session[:cart].each do |variant_id, quantity| %>
+              <% variant = ProductVariant.find_by(id: variant_id) %>
+              <% if variant %>
+                <div class="flex justify-between text-sm">
+                  <div class="flex flex-col">
+                    <span class="font-bold text-gray-900"><%= variant.product.name %></span>
+                    <span class="text-[10px] text-gray-400 font-bold uppercase"><%= variant.option_text %> x <%= quantity %></span>
+                  </div>
+                  <span class="font-bold text-gray-900">Rp <%= number_with_delimiter(variant.price.to_i * quantity.to_i) %></span>
+                </div>
+              <% end %>
+            <% end %>
+          </div>
+
+          <div class="space-y-3 pt-6 border-t border-gray-100 text-sm font-medium">
+            <div class="flex justify-between text-gray-500">
+              <span>Subtotal</span>
+              <span class="text-gray-900">Rp <%= number_with_delimiter(@total_price) %></span>
+            </div>
+            <div class="flex justify-between text-gray-500">
+              <span>Shipping</span>
+              <span class="text-green-600 font-bold uppercase text-[10px]">Free</span>
+            </div>
+            <div class="border-t border-gray-100 pt-4 flex justify-between text-lg font-black text-gray-900">
+              <span>Total</span>
+              <span>Rp <%= number_with_delimiter(@total_price) %></span>
+            </div>
+          </div>
+
+          <%= f.submit "Complete Purchase", 
+              class: "w-full bg-gray-900 text-white py-4 rounded-2xl font-bold mt-8 hover:bg-gray-800 transition-all shadow-xl active:scale-95 cursor-pointer" %>
+          
+          <p class="text-[10px] text-gray-400 text-center mt-4 font-medium px-4">
+            By completing this purchase, you agree to our Terms of Service and Privacy Policy.
+          </p>
+        </div>
+      </div>
+    <% end %>
+
+  </div>
+</div>

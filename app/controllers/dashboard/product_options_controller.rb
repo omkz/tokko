@@ -1,4 +1,4 @@
-class ProductOptionsController < ApplicationController
+class Dashboard::ProductOptionsController < Dashboard::BaseController
   before_action :set_product, only: %i[create]
   before_action :set_option, only: %i[destroy]
 
@@ -7,10 +7,10 @@ class ProductOptionsController < ApplicationController
     @option.position = @product.product_options.count + 1
 
     if @option.save
-      redirect_to edit_product_path(@product),
+      redirect_to edit_dashboard_product_path(@product),
                   notice: "Option '#{@option.name}' added"
     else
-      redirect_to edit_product_path(@product),
+      redirect_to edit_dashboard_product_path(@product),
                   alert: @option.errors.full_messages.to_sentence
     end
   end
@@ -19,7 +19,7 @@ class ProductOptionsController < ApplicationController
     product = @option.product
     @option.destroy
 
-    redirect_to edit_product_path(product),
+    redirect_to edit_dashboard_product_path(product),
                 notice: "Option removed"
   end
 

@@ -1,0 +1,7 @@
+<%= turbo_stream.replace "cart-count" do %>
+  <span id="cart-count" class="absolute -top-0.5 -right-0.5 bg-indigo-600 text-white text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full border-2 border-white shadow-sm">
+    <%= cart_count %>
+  </span>
+<% end %>
+
+<%# Optional: Add a toast notification or fly-in animation %>
