@@ -107,8 +107,30 @@ Product.create!(
   status: "draft"
 )
 
+puts "📦 Seeding orders..."
+o1 = Order.create!(
+  customer_name: "John Doe",
+  customer_email: "john@example.com",
+  customer_phone: "08123456789",
+  shipping_address: "Jl. Merdeka No. 123, Jakarta",
+  total_price: 250000,
+  status: :paid
+)
+o1.order_items.create!(product_variant: p1.product_variants.first, quantity: 2, unit_price: 125000)
+
+o2 = Order.create!(
+  customer_name: "Jane Smith",
+  customer_email: "jane@example.com",
+  customer_phone: "08987654321",
+  shipping_address: "Apartemen Sudirman, Tower A-10, Jakarta",
+  total_price: 450000,
+  status: :pending
+)
+o2.order_items.create!(product_variant: p2.product_variants.first, quantity: 1, unit_price: 450000)
+
 puts "✅ Seeding complete!"
 puts "📊 Total Users: #{User.count}"
 puts "📊 Total Products: #{Product.count}"
 puts "📊 Total Variants: #{ProductVariant.count}"
+puts "📊 Total Orders: #{Order.count}"
 puts "🚀 You can now login with: admin@tokko.com / password123"

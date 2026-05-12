@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_12_045902) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_12_052747) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -40,6 +40,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_12_045902) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "order_items", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "order_id", null: false
+    t.bigint "product_variant_id", null: false
+    t.integer "quantity"
+    t.decimal "unit_price"
+    t.datetime "updated_at", null: false
+    t.index ["order_id"], name: "index_order_items_on_order_id"
+    t.index ["product_variant_id"], name: "index_order_items_on_product_variant_id"
+  end
+
+  create_table "orders", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "customer_email"
+    t.string "customer_name"
+    t.string "customer_phone"
+    t.text "shipping_address"
+    t.integer "status"
+    t.decimal "total_price"
+    t.datetime "updated_at", null: false
   end
 
   create_table "product_option_values", force: :cascade do |t|
@@ -110,6 +132,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_12_045902) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "order_items", "orders"
+  add_foreign_key "order_items", "product_variants"
   add_foreign_key "product_option_values", "product_options"
   add_foreign_key "product_options", "products"
   add_foreign_key "product_variants", "products"

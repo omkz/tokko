@@ -12,6 +12,7 @@ Rails.application.routes.draw do
     end
     resources :product_options, only: %i[create destroy], shallow: true
     resources :product_variants, only: %i[update destroy], shallow: true
+    resources :orders, only: %i[index show update]
     root to: "products#index"
   end
 
