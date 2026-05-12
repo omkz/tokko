@@ -19,6 +19,14 @@ class Product < ApplicationRecord
 
   after_create :create_default_variant
 
+  def related_products(limit = 4)
+    Product.joins(:collections)
+           .where(collections: { id: collection_ids })
+           .where.not(id: id)
+           .distinct
+           .limit(limit)
+  end
+
   # Generate all variant combinations from current options.
   # Skips combinations that already exist.
   # Removes the default "Default Title" variant if real options exist.

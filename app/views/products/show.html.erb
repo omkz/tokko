@@ -90,4 +90,47 @@
       </div>
     </div>
   </div>
+
+  <%# Related Products %>
+  <% if @related_products.any? %>
+    <div class="max-w-7xl mx-auto px-6 py-24 border-t border-gray-100">
+      <div class="mb-12">
+        <h2 class="text-2xl font-bold text-gray-900 tracking-tight">You Might Also Like</h2>
+        <p class="text-sm text-gray-500 mt-1">Customers who viewed this item also loved these.</p>
+      </div>
+
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12">
+        <% @related_products.each do |product| %>
+          <div class="group relative flex flex-col">
+            <div class="aspect-square w-full overflow-hidden rounded-3xl bg-gray-100 group-hover:opacity-75 transition-all duration-300 shadow-sm border border-gray-50">
+              <% if product.images.attached? %>
+                <%= image_tag product.images.first, class: "h-full w-full object-cover object-center" %>
+              <% else %>
+                <div class="w-full h-full flex items-center justify-center text-5xl opacity-20">📦</div>
+              <% end %>
+            </div>
+            
+            <div class="mt-4 flex flex-col flex-1">
+              <h3 class="text-sm font-bold text-gray-700">
+                <%= link_to product_path(product) do %>
+                  <span aria-hidden="true" class="absolute inset-0"></span>
+                  <%= product.name %>
+                <% end %>
+              </h3>
+              <div class="mt-1 flex items-center justify-between">
+                <% prices = product.product_variants.pluck(:price).compact %>
+                <p class="text-sm font-black text-gray-900">
+                  <% if prices.any? %>
+                    Rp <%= number_with_delimiter(prices.min.to_i) %>
+                  <% else %>
+                    —
+                  <% end %>
+                </p>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
 </div>
