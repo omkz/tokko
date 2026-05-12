@@ -1,0 +1,71 @@
+<div class="bg-gray-50 min-h-screen pb-24">
+  <div class="max-w-4xl mx-auto px-6 py-16">
+    <div class="mb-10">
+      <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">My Orders</h1>
+      <p class="text-sm text-gray-500 mt-1">Track and manage your recent purchases.</p>
+    </div>
+
+    <% if @orders.any? %>
+      <div class="space-y-6">
+        <% @orders.each do |order| %>
+          <div class="bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+            <div class="px-8 py-6 border-b border-gray-50 flex flex-wrap items-center justify-between gap-4">
+              <div class="flex items-center gap-6">
+                <div>
+                  <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Order Placed</p>
+                  <p class="text-sm font-bold text-gray-900"><%= order.created_at.strftime("%B %d, %Y") %></p>
+                </div>
+                <div>
+                  <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Total</p>
+                  <p class="text-sm font-bold text-gray-900">Rp <%= number_with_delimiter(order.total_price.to_i) %></p>
+                </div>
+                <div>
+                  <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Status</p>
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider
+                    <%= case order.status
+                        when 'pending' then 'bg-amber-50 text-amber-700'
+                        when 'shipped' then 'bg-blue-50 text-blue-700'
+                        when 'completed' then 'bg-green-50 text-green-700'
+                        else 'bg-gray-50 text-gray-500'
+                        end %>">
+                    <%= order.status %>
+                  </span>
+                </div>
+              </div>
+              <%= link_to "View Details", order_path(order), class: "text-sm font-bold text-indigo-600 hover:text-indigo-800 transition-colors" %>
+            </div>
+            
+            <div class="px-8 py-6 flex items-center gap-4 overflow-x-auto">
+              <% order.order_items.limit(4).each do |item| %>
+                <div class="w-16 h-16 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center overflow-hidden shrink-0">
+                  <% if item.product_variant.product.images.attached? %>
+                    <%= image_tag item.product_variant.product.images.first, class: "w-full h-full object-cover" %>
+                  <% else %>
+                    <span class="text-2xl">📦</span>
+                  <% end %>
+                </div>
+              <% end %>
+              <% if order.order_items.count > 4 %>
+                <div class="text-xs font-bold text-gray-400 pl-2">+<%= order.order_items.count - 4 %> more</div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <div class="mt-12 flex justify-center">
+        <div class="pagy">
+          <%== @pagy.series_nav %>
+        </div>
+      </div>
+
+    <% else %>
+      <div class="bg-white border border-gray-100 rounded-3xl py-24 text-center">
+        <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl opacity-40">🛍️</div>
+        <h2 class="text-xl font-bold text-gray-900">You haven't placed any orders yet</h2>
+        <p class="text-gray-500 mt-2 max-w-xs mx-auto">Start exploring our collection and find something you love!</p>
+        <%= link_to "Start Shopping", root_path, class: "inline-block mt-8 bg-indigo-600 text-white px-8 py-4 rounded-2xl font-bold hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100" %>
+      </div>
+    <% end %>
+  </div>
+</div>

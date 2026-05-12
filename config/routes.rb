@@ -26,6 +26,7 @@ Rails.application.routes.draw do
 
   # Storefront
   resources :products, only: [:show]
+  resources :orders, only: [:index, :show]
   resource :cart, only: [:show, :update, :destroy] do
     post "add", to: "carts#add", as: :add_to
   end

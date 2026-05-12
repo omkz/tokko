@@ -4,6 +4,10 @@ class CheckoutsController < ApplicationController
 
   def new
     @order = Order.new
+    if authenticated?
+      @order.customer_name = Current.user.email_address.split('@').first.capitalize
+      @order.customer_email = Current.user.email_address
+    end
     @total_price = cart_total_price
   end
 
@@ -11,6 +15,7 @@ class CheckoutsController < ApplicationController
     @order = Order.new(order_params)
     @order.total_price = cart_total_price
     @order.status = :pending
+    @order.user = Current.user if authenticated?
 
     if @order.save
       # Move items from cart to OrderItems

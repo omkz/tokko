@@ -1,0 +1,87 @@
+<div class="bg-gray-50 min-h-screen pb-24">
+  <div class="max-w-4xl mx-auto px-6 py-16">
+    <div class="mb-10 flex items-center justify-between">
+      <div>
+        <%= link_to orders_path, class: "inline-flex items-center text-sm font-bold text-gray-400 hover:text-gray-900 transition-colors mb-4" do %>
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+          Back to My Orders
+        <% end %>
+        <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Order #<%= @order.id.to_s.rjust(5, '0') %></h1>
+        <p class="text-sm text-gray-500 mt-1">Placed on <%= @order.created_at.strftime("%B %d, %Y") %></p>
+      </div>
+      
+      <div class="text-right">
+        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Status</p>
+        <span class="inline-flex items-center px-4 py-2 rounded-2xl text-xs font-black uppercase tracking-widest
+          <%= case @order.status
+              when 'pending' then 'bg-amber-50 text-amber-700'
+              when 'shipped' then 'bg-blue-50 text-blue-700'
+              when 'completed' then 'bg-green-50 text-green-700'
+              else 'bg-gray-50 text-gray-500'
+              end %>">
+          <%= @order.status %>
+        </span>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2 space-y-8">
+        <%# Items List %>
+        <div class="bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-sm">
+          <div class="px-8 py-6 border-b border-gray-50 bg-gray-50/50">
+            <h2 class="text-sm font-bold text-gray-900 uppercase tracking-widest">Items</h2>
+          </div>
+          <div class="divide-y divide-gray-100">
+            <% @order_items.each do |item| %>
+              <div class="px-8 py-6 flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                  <div class="w-16 h-16 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center overflow-hidden shrink-0">
+                    <% if item.product_variant.product.images.attached? %>
+                      <%= image_tag item.product_variant.product.images.first, class: "w-full h-full object-cover" %>
+                    <% else %>
+                      <span class="text-3xl">📦</span>
+                    <% end %>
+                  </div>
+                  <div>
+                    <p class="text-sm font-bold text-gray-900"><%= item.product_variant.product.name %></p>
+                    <p class="text-xs text-gray-400 font-medium"><%= item.product_variant.option_text %></p>
+                    <p class="text-xs text-gray-500 mt-1">Quantity: <%= item.quantity %></p>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <p class="text-sm font-bold text-gray-900">Rp <%= number_with_delimiter(item.unit_price.to_i) %></p>
+                </div>
+              </div>
+            <% end %>
+          </div>
+          <div class="px-8 py-6 bg-gray-50/30 flex justify-between items-center border-t border-gray-50">
+            <span class="text-sm font-bold text-gray-500">Order Total</span>
+            <span class="text-2xl font-black text-gray-900">Rp <%= number_with_delimiter(@order_items.sum { |i| i.quantity * i.unit_price }.to_i) %></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-8">
+        <%# Shipping Info %>
+        <div class="bg-white border border-gray-100 rounded-3xl p-8 shadow-sm">
+          <h2 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-6">Shipping Address</h2>
+          <div class="space-y-4">
+            <p class="text-sm font-bold text-gray-900"><%= @order.customer_name %></p>
+            <p class="text-sm text-gray-600 leading-relaxed"><%= @order.shipping_address %></p>
+            <div class="pt-4 border-t border-gray-50">
+              <p class="text-xs text-gray-500"><%= @order.customer_email %></p>
+              <p class="text-xs text-gray-500"><%= @order.customer_phone %></p>
+            </div>
+          </div>
+        </div>
+
+        <%# Need Help? %>
+        <div class="bg-indigo-600 rounded-3xl p-8 text-white shadow-2xl shadow-indigo-100">
+          <h3 class="text-sm font-bold mb-2">Need help?</h3>
+          <p class="text-xs opacity-80 leading-relaxed mb-6">If you have any questions about your order, please contact our support team.</p>
+          <a href="#" class="inline-block bg-white text-indigo-600 px-6 py-3 rounded-xl font-bold text-xs hover:bg-gray-50 transition-colors">Contact Support</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
