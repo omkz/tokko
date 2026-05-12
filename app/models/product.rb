@@ -12,6 +12,11 @@ class Product < ApplicationRecord
 
   validates :name, presence: true
 
+  scope :search, ->(query) {
+    return all if query.blank?
+    where("name ILIKE ? OR description ILIKE ?", "%#{query}%", "%#{query}%")
+  }
+
   after_create :create_default_variant
 
   # Generate all variant combinations from current options.
