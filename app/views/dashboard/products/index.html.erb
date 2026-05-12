@@ -8,7 +8,7 @@
           <h1 class="text-2xl font-bold text-gray-900">Products</h1>
           <p class="text-sm text-gray-500 mt-1">Manage your inventory, pricing, and variants.</p>
         </div>
-        <%= link_to new_product_path,
+        <%= link_to new_dashboard_product_path,
           class: "inline-flex items-center gap-2 bg-gray-900 text-white text-sm font-semibold px-5 py-2.5 rounded-xl hover:bg-gray-800 transition-all shadow-sm active:scale-95" do %>
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -85,7 +85,7 @@
                   </div>
                 </td>
                 <td class="px-6 py-4">
-                  <%= link_to edit_product_path(product), class: "block group" do %>
+                  <%= link_to edit_dashboard_product_path(product), class: "block group" do %>
                     <span class="text-sm font-bold text-gray-900 group-hover:text-indigo-600 transition-colors"><%= product.name %></span>
                     <span class="block text-xs text-gray-400 mt-0.5"><%= product.product_variants.count %> variant(s)</span>
                   <% end %>
@@ -122,12 +122,12 @@
                 </td>
                 <td class="px-6 py-4 text-right">
                   <div class="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <%= link_to edit_product_path(product), class: "p-2 hover:bg-white rounded-lg border border-transparent hover:border-gray-200 hover:shadow-sm text-gray-500 hover:text-indigo-600 transition-all" do %>
+                    <%= link_to edit_dashboard_product_path(product), class: "p-2 hover:bg-white rounded-lg border border-transparent hover:border-gray-200 hover:shadow-sm text-gray-500 hover:text-indigo-600 transition-all" do %>
                       <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                       </svg>
                     <% end %>
-                    <%= button_to product_path(product), method: :delete, data: { turbo_confirm: "Delete product?" }, class: "p-2 hover:bg-white rounded-lg border border-transparent hover:border-red-100 hover:shadow-sm text-gray-400 hover:text-red-500 transition-all" do %>
+                    <%= button_to dashboard_product_path(product), method: :delete, data: { turbo_confirm: "Delete product?" }, class: "p-2 hover:bg-white rounded-lg border border-transparent hover:border-red-100 hover:shadow-sm text-gray-400 hover:text-red-500 transition-all" do %>
                       <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>
@@ -148,7 +148,7 @@
         </div>
         <h2 class="text-2xl font-bold text-gray-900 mb-2">No products found</h2>
         <p class="text-gray-500 max-w-sm mx-auto mb-8">Start growing your inventory by adding your first product with its variants and pricing.</p>
-        <%= link_to new_product_path,
+        <%= link_to new_dashboard_product_path,
           class: "inline-flex items-center gap-2 bg-indigo-600 text-white text-sm font-bold px-8 py-3.5 rounded-2xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 active:scale-95" do %>
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />

@@ -1,4 +1,4 @@
-<%= form_with model: variant, url: product_variant_path(variant), method: :patch,
+<%= form_with model: variant, url: dashboard_product_variant_path(variant), method: :patch,
   id: "variant_row_#{variant.id}",
   data: { 
     controller: "variant-row",
@@ -45,7 +45,7 @@
       Save
     </button>
 
-    <%= link_to product_variant_path(variant), 
+    <%= link_to dashboard_product_variant_path(variant), 
       data: { 
         turbo_method: :delete,
         turbo_confirm: "Delete this variant?" 

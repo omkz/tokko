@@ -1,0 +1,73 @@
+<div class="bg-white">
+  <%# Hero Section %>
+  <div class="relative bg-gray-900 h-[400px] flex items-center justify-center overflow-hidden">
+    <div class="absolute inset-0 opacity-40">
+      <img src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=2070&auto=format&fit=crop" class="w-full h-full object-cover" />
+    </div>
+    <div class="relative z-10 text-center px-6">
+      <h1 class="text-4xl md:text-6xl font-extrabold text-white mb-4 tracking-tight">Level Up Your Style</h1>
+      <p class="text-lg text-gray-200 mb-8 max-w-xl mx-auto">Discover our curated collection of premium essentials designed for your everyday adventures.</p>
+      <a href="#products" class="bg-white text-gray-900 px-8 py-4 rounded-full font-bold hover:bg-gray-100 transition-all shadow-xl">Shop Collection</a>
+    </div>
+  </div>
+
+  <%# Product Grid %>
+  <div id="products" class="max-w-7xl mx-auto px-6 py-24">
+    <div class="flex items-center justify-between mb-12">
+      <h2 class="text-3xl font-bold text-gray-900">Featured Products</h2>
+      <div class="flex gap-4">
+        <span class="text-sm font-medium text-gray-500 cursor-pointer hover:text-gray-900 transition-colors">All</span>
+        <span class="text-sm font-medium text-gray-400 cursor-pointer hover:text-gray-900 transition-colors">New Arrivals</span>
+        <span class="text-sm font-medium text-gray-400 cursor-pointer hover:text-gray-900 transition-colors">Best Sellers</span>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-12">
+      <% @products.each do |product| %>
+        <div class="group relative">
+          <div class="aspect-[4/5] w-full overflow-hidden rounded-2xl bg-gray-100 group-hover:shadow-xl transition-all duration-500">
+            <% if product.images.attached? %>
+              <%= image_tag product.images.first.variant(resize_to_limit: [600, 800]), class: "h-full w-full object-cover object-center group-hover:scale-105 transition-transform duration-700" %>
+            <% else %>
+              <div class="h-full w-full flex items-center justify-center bg-gray-50 text-6xl opacity-20">📦</div>
+            <% end %>
+            
+            <%# Quick Add Overlay %>
+            <div class="absolute inset-x-0 bottom-0 p-4 opacity-0 group-hover:opacity-100 transition-all translate-y-4 group-hover:translate-y-0 duration-300">
+              <button class="w-full bg-white/95 backdrop-blur-sm text-gray-900 py-3 rounded-xl font-bold text-sm shadow-lg hover:bg-white transition-colors">
+                Quick View
+              </button>
+            </div>
+          </div>
+          
+          <div class="mt-4">
+            <h3 class="text-sm font-semibold text-gray-700">
+              <a href="<%= product_path(product) %>">
+                <span aria-hidden="true" class="absolute inset-0"></span>
+                <%= product.name %>
+              </a>
+            </h3>
+            <div class="flex items-center justify-between mt-1">
+              <p class="text-xs text-gray-400 font-medium"><%= product.product_variants.count %> styles</p>
+              <% prices = product.product_variants.pluck(:price).compact %>
+              <p class="text-sm font-bold text-gray-900">
+                <% if prices.any? %>
+                  Rp <%= number_with_delimiter(prices.min.to_i) %>
+                <% else %>
+                  —
+                <% end %>
+              </p>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <%# Footer Placeholder %>
+  <footer class="bg-gray-50 border-t border-gray-100 py-12 mt-12">
+    <div class="max-w-7xl mx-auto px-6 text-center">
+      <p class="text-gray-400 text-sm">&copy; 2026 Tokko Store. Built with ❤️ for your business.</p>
+    </div>
+  </footer>
+</div>

@@ -4,7 +4,7 @@
   <div class="bg-white border-b border-gray-200 sticky top-0 z-10">
     <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <%= link_to products_path, class: "text-gray-400 hover:text-gray-700 transition-colors" do %>
+        <%= link_to dashboard_products_path, class: "text-gray-400 hover:text-gray-700 transition-colors" do %>
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
           </svg>
@@ -53,7 +53,7 @@
                   <span class="font-medium text-sm text-gray-900"><%= option.name %></span>
                   <span class="text-xs text-gray-400">(<%= option.product_option_values.count %> values)</span>
                 </div>
-                <%= button_to product_option_path(option),
+                <%= button_to dashboard_product_option_path(option),
                   method: :delete,
                   data: { turbo_confirm: "Remove '#{option.name}'?" },
                   class: "text-xs text-gray-400 hover:text-red-500 transition-colors" do %>
@@ -71,7 +71,7 @@
 
         <%# Add option form %>
         <% if @product.product_options.count < 3 %>
-          <%= form_with url: product_product_options_path(@product), method: :post,
+          <%= form_with url: dashboard_product_product_options_path(@product), method: :post,
             data: { controller: "option-form" },
             class: "border-2 border-dashed border-gray-200 rounded-xl p-5 space-y-4" do |f| %>
 
@@ -121,7 +121,7 @@
             <p class="text-xs text-gray-400 mt-0.5"><%= @product.product_variants.count %> variant(s)</p>
           </div>
           <% if @product.product_options.any? %>
-            <%= button_to generate_variants_product_path(@product), method: :post,
+            <%= button_to generate_variants_dashboard_product_path(@product), method: :post,
               class: "flex items-center gap-2 bg-indigo-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors" do %>
               <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -146,7 +146,7 @@
             <%# Body %>
             <div class="divide-y divide-gray-100">
               <% @product.product_variants.order(:id).each do |variant| %>
-                <%= render "products/variant_row", variant: variant %>
+                <%= render "dashboard/products/variant_row", variant: variant %>
               <% end %>
             </div>
           </div>
@@ -170,7 +170,7 @@
     <div class="space-y-5">
 
       <%# Status %>
-      <%= form_with model: @product, class: "bg-white rounded-2xl border border-gray-200 p-5 space-y-4" do |f| %>
+      <%= form_with model: [:dashboard, @product], class: "bg-white rounded-2xl border border-gray-200 p-5 space-y-4" do |f| %>
         <h3 class="font-semibold text-gray-900 text-sm">Status</h3>
         <%= f.select :status,
           [["🟢 Active", "active"], ["📝 Draft", "draft"], ["📦 Archived", "archived"]],
@@ -227,7 +227,7 @@
       <%# Danger zone %>
       <div class="bg-white rounded-2xl border border-red-100 p-5">
         <h3 class="text-sm font-semibold text-red-600 mb-3">Danger Zone</h3>
-        <%= button_to product_path(@product), method: :delete,
+        <%= button_to dashboard_product_path(@product), method: :delete,
           data: { turbo_confirm: "Permanently delete '#{@product.name}'? This cannot be undone." },
           class: "w-full text-center border border-red-200 text-red-500 hover:bg-red-50 text-sm font-medium px-4 py-2.5 rounded-lg transition-colors" do %>
           Delete Product

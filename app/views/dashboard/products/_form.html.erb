@@ -1,4 +1,4 @@
-<%= form_with model: product, id: "product-info-form",
+<%= form_with model: [:dashboard, product], id: "product-info-form",
   class: "bg-white rounded-2xl border border-gray-200 p-6 space-y-5" do |f| %>
   <h2 class="font-semibold text-gray-900">Product Information</h2>
 
@@ -32,7 +32,7 @@
         <% product.images.each do |image| %>
           <div class="relative group aspect-square rounded-xl overflow-hidden border border-gray-200 bg-gray-50" id="image_<%= image.id %>">
             <%= image_tag image.variant(resize_to_limit: [200, 200]), class: "w-full h-full object-cover" %>
-            <%= link_to delete_image_product_path(product, image_id: image.id),
+            <%= link_to delete_image_dashboard_product_path(product, image_id: image.id),
                 data: { turbo_method: :delete, turbo_confirm: "Delete this image?" },
                 class: "absolute top-1 right-1 bg-white/90 text-red-500 p-1 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50" do %>
               <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
