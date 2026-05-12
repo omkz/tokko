@@ -2,7 +2,7 @@ class Dashboard::ProductsController < Dashboard::BaseController
   before_action :set_product, only: %i[show edit update destroy generate_variants delete_image]
 
   def index
-    @products = Product.includes(:product_variants).order(created_at: :desc)
+    @pagy, @products = pagy(Product.includes(:product_variants).order(created_at: :desc))
   end
 
   def show

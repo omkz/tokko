@@ -1,136 +1,106 @@
-puts "🧹 Cleaning up database..."
-Session.destroy_all
-User.destroy_all
-Product.destroy_all
+puts "Clearing existing data..."
+CollectionMembership.delete_all
+Collection.delete_all
+OrderItem.delete_all
+Order.delete_all
+VariantOptionValue.delete_all
+ProductVariant.delete_all
+ProductOptionValue.delete_all
+ProductOption.delete_all
+Product.delete_all
 
-puts "👤 Creating default users..."
-# Create the main Owner account
-owner = User.create!(
-  email_address: "owner@tokko.com",
-  password: "password123",
-  role: :owner
-)
-puts "➡️ Created Owner: #{owner.email_address} (password: password123)"
+puts "Creating Collections..."
+collections = [
+  { name: "Summer Collection", description: "Bright and airy essentials for the sunny days." },
+  { name: "Winter Essentials", description: "Stay warm and cozy with our premium winter gear." },
+  { name: "Limited Edition", description: "Exclusive drops you won't find anywhere else." },
+  { name: "Best Sellers", description: "The products everyone is talking about." },
+  { name: "New Arrivals", description: "Freshly added to our curated catalog." }
+].map { |c| Collection.create!(c.merge(active: true)) }
 
-# Create an Admin account
-admin = User.create!(
-  email_address: "admin@tokko.com",
-  password: "password123",
-  role: :admin
-)
-puts "➡️ Created Admin: #{admin.email_address} (password: password123)"
+puts "Creating 1000 Products (this may take a minute)..."
+categories = ["T-Shirt", "Hoodie", "Pants", "Cap", "Jacket", "Sneakers", "Bag", "Watch"]
+colors = ["Black", "White", "Navy", "Grey", "Olive", "Maroon"]
+sizes = ["S", "M", "L", "XL"]
 
-# Create a Staff account
-staff = User.create!(
-  email_address: "staff@tokko.com",
-  password: "password123",
-  role: :staff
-)
-puts "➡️ Created Staff: #{staff.email_address} (password: password123)"
+# We'll use a small pool of placeholder images to avoid downloading 1000 times
+image_urls = [
+  "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=1000&auto=format&fit=crop", # White Tee
+  "https://images.unsplash.com/photo-1556821840-3a63f95609a7?q=80&w=1000&auto=format&fit=crop", # Hoodie
+  "https://images.unsplash.com/photo-1542272604-787c3835535d?q=80&w=1000&auto=format&fit=crop", # Jeans
+  "https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=1000&auto=format&fit=crop", # Watch
+  "https://images.unsplash.com/photo-1527719327859-c6ce80353573?q=80&w=1000&auto=format&fit=crop", # Sneakers
+  "https://images.unsplash.com/photo-1584917865442-de89df76afd3?q=80&w=1000&auto=format&fit=crop"  # Bag
+]
 
-puts "🌱 Seeding products..."
-
-# --- PRODUCT 1: Classic T-Shirt ---
-puts "➡️ Creating Classic T-Shirt..."
-p1 = Product.create!(
-  name: "Classic Heavyweight T-Shirt",
-  description: "Kaos polos bahan cotton combed 20s. Sangat nyaman dan awet untuk dipakai sehari-hari.",
-  slug: "classic-heavyweight-t-shirt",
-  status: "active"
-)
-
-p1.product_options.create!(name: "Size", product_option_values_attributes: [
-  { value: "S", position: 1 },
-  { value: "M", position: 2 },
-  { value: "L", position: 3 },
-  { value: "XL", position: 4 }
-])
-
-p1.product_options.create!(name: "Color", product_option_values_attributes: [
-  { value: "Black", position: 1 },
-  { value: "White", position: 2 },
-  { value: "Navy", position: 3 }
-])
-
-p1.generate_variants!
-
-# Update some prices & stock for realism
-p1.product_variants.each do |v|
-  # XL is a bit more expensive
-  price = v.option_text.include?("XL") ? 125000 : 100000
-  v.update!(price: price, stock: rand(10..50))
+# Create some cached downloads
+require "open-uri"
+downloaded_images = image_urls.map do |url|
+  { io: URI.open(url), filename: File.basename(URI.parse(url).path) }
 end
 
+1000.times do |i|
+  category = categories.sample
+  name = "#{category} #{Faker::Appliance.equipment} #{i+1}"
+  
+  product = Product.create!(
+    name: name,
+    description: Faker::Lorem.paragraph(sentence_count: 5),
+    slug: "#{name.parameterize}-#{i}"
+  )
 
-# --- PRODUCT 2: Sneakers ---
-puts "➡️ Creating Urban Sneakers..."
-p2 = Product.create!(
-  name: "Urban Explorer Sneakers",
-  description: "Sepatu casual cocok untuk jalan-jalan keliling kota. Sol empuk dan anti-slip.",
-  slug: "urban-explorer-sneakers",
-  status: "active"
-)
+  # Attach one random image from our pool
+  img = downloaded_images.sample
+  product.images.attach(io: File.open(img[:io].path), filename: img[:filename])
 
-p2.product_options.create!(name: "Size (EU)", product_option_values_attributes: [
-  { value: "40", position: 1 },
-  { value: "41", position: 2 },
-  { value: "42", position: 3 },
-  { value: "43", position: 4 },
-  { value: "44", position: 5 }
-])
+  # Add to random collections
+  product.collections << collections.sample(rand(1..3))
 
-p2.generate_variants!
+  # Add Options
+  size_opt = product.product_options.create!(name: "Size", position: 1)
+  sizes.each_with_index { |s, idx| size_opt.product_option_values.create!(value: s, position: idx + 1) }
 
-p2.product_variants.each do |v|
-  v.update!(price: 450000, stock: rand(5..20))
+  color_opt = product.product_options.create!(name: "Color", position: 2)
+  colors.sample(3).each_with_index { |c, idx| color_opt.product_option_values.create!(value: c, position: idx + 1) }
+
+  # Generate variants
+  product.generate_variants!
+  
+  # Set prices and stock for variants
+  product.product_variants.each do |v|
+    v.update!(
+      price: rand(150..950) * 1000,
+      stock: rand(10..100),
+      sku: "TK-#{product.id}-#{v.id}"
+    )
+  end
+
+  print "." if (i + 1) % 50 == 0
 end
 
+puts "\nCreating sample Orders..."
+25.times do |i|
+  order = Order.create!(
+    customer_name: Faker::Name.name,
+    customer_email: Faker::Internet.email,
+    customer_phone: Faker::PhoneNumber.phone_number,
+    shipping_address: Faker::Address.full_address,
+    status: Order.statuses.keys.sample,
+    total_price: 0,
+    created_at: rand(0..7).days.ago
+  )
 
-# --- PRODUCT 3: Tote Bag (No variants) ---
-puts "➡️ Creating Canvas Tote Bag..."
-p3 = Product.create!(
-  name: "Eco Canvas Tote Bag",
-  description: "Tas tote bag bahan kanvas tebal ramah lingkungan. Cocok untuk belanja atau kuliah.",
-  slug: "eco-canvas-tote-bag",
-  status: "active"
-)
-# Just update the default variant
-p3.product_variants.first.update!(price: 50000, stock: 100)
+  # Add 1-3 random items
+  rand(1..3).times do
+    variant = ProductVariant.all.sample
+    quantity = rand(1..2)
+    order.order_items.create!(
+      product_variant: variant,
+      quantity: quantity,
+      unit_price: variant.price
+    )
+    order.update!(total_price: order.total_price + (variant.price * quantity))
+  end
+end
 
-
-# --- PRODUCT 4: Draft Product ---
-puts "➡️ Creating Draft Product..."
-Product.create!(
-  name: "Winter Jacket (Coming Soon)",
-  description: "Jaket musim dingin tahan air.",
-  slug: "winter-jacket",
-  status: "draft"
-)
-
-puts "📦 Seeding orders..."
-o1 = Order.create!(
-  customer_name: "John Doe",
-  customer_email: "john@example.com",
-  customer_phone: "08123456789",
-  shipping_address: "Jl. Merdeka No. 123, Jakarta",
-  total_price: 250000,
-  status: :paid
-)
-o1.order_items.create!(product_variant: p1.product_variants.first, quantity: 2, unit_price: 125000)
-
-o2 = Order.create!(
-  customer_name: "Jane Smith",
-  customer_email: "jane@example.com",
-  customer_phone: "08987654321",
-  shipping_address: "Apartemen Sudirman, Tower A-10, Jakarta",
-  total_price: 450000,
-  status: :pending
-)
-o2.order_items.create!(product_variant: p2.product_variants.first, quantity: 1, unit_price: 450000)
-
-puts "✅ Seeding complete!"
-puts "📊 Total Users: #{User.count}"
-puts "📊 Total Products: #{Product.count}"
-puts "📊 Total Variants: #{ProductVariant.count}"
-puts "📊 Total Orders: #{Order.count}"
-puts "🚀 You can now login with: admin@tokko.com / password123"
+puts "\nDone! Seeded 1000 products, 5 collections, and 25 orders."

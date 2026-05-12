@@ -4,9 +4,9 @@ class HomeController < ApplicationController
   def index
     if params[:collection].present?
       @collection = Collection.find_by!(slug: params[:collection])
-      @products = @collection.products.includes(:product_variants)
+      @pagy, @products = pagy(@collection.products.includes(:product_variants))
     else
-      @products = Product.includes(:product_variants).all
+      @pagy, @products = pagy(Product.includes(:product_variants).all)
     end
     
     @collections = Collection.where(active: true)

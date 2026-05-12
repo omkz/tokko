@@ -2,7 +2,7 @@ class Dashboard::OrdersController < Dashboard::BaseController
   before_action :set_order, only: %i[show update]
 
   def index
-    @orders = Order.order(created_at: :desc)
+    @pagy, @orders = pagy(Order.order(created_at: :desc))
   end
 
   def show
