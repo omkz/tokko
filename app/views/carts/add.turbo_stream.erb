@@ -4,4 +4,6 @@
   </span>
 <% end %>
 
-<%# Optional: Add a toast notification or fly-in animation %>
+<%= turbo_stream.append "flash-notifications" do %>
+  <%= render "layouts/toast", message: "Added to cart!", type: "notice" %>
+<% end %>

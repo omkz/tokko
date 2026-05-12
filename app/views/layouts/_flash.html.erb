@@ -1,0 +1,5 @@
+<div id="flash-notifications" class="fixed top-24 right-6 z-[100] flex flex-col gap-3 pointer-events-none">
+  <% flash.each do |type, message| %>
+    <%= render "layouts/toast", message: message, type: type %>
+  <% end %>
+</div>
