@@ -17,6 +17,10 @@ Rails.application.routes.draw do
     resources :product_variants, only: %i[destroy]
     resources :collections
     resources :orders, only: %i[index show update]
+    
+    # Inventory Management
+    get 'inventory', to: 'inventories#index'
+    patch 'inventory/update_all', to: 'inventories#update_all'
     root to: "home#index"
   end
 

@@ -7,6 +7,11 @@ class ProductVariant < ApplicationRecord
   has_many :product_option_values,
            through: :variant_option_values
 
+  scope :search_by_product_name, ->(query) {
+    return all if query.blank?
+    where("products.name ILIKE ?", "%#{query}%")
+  }
+
   validates :sku, presence: true
   validates :price, presence: true
 

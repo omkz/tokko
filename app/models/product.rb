@@ -14,7 +14,7 @@ class Product < ApplicationRecord
 
   scope :search, ->(query) {
     return all if query.blank?
-    where("name ILIKE ? OR description ILIKE ?", "%#{query}%", "%#{query}%")
+    where("products.name ILIKE ? OR products.description ILIKE ?", "%#{query}%", "%#{query}%")
   }
 
   after_create :create_default_variant
