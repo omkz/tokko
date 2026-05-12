@@ -53,6 +53,16 @@ class ProductsController < ApplicationController
                 notice: "Variants generated (#{@product.product_variants.count} total)"
   end
 
+  def delete_image
+    image = ActiveStorage::Attachment.find(params[:image_id])
+    image.purge
+    
+    respond_to do |format|
+      format.turbo_stream { render turbo_stream: turbo_stream.remove("image_#{image.id}") }
+      format.html { redirect_to edit_product_path(image.record), notice: "Image deleted" }
+    end
+  end
+
   private
 
   def set_product

@@ -30,8 +30,15 @@
     <div class="grid grid-cols-4 gap-4 mb-4" data-image-preview-target="grid">
       <% if product.images.attached? %>
         <% product.images.each do |image| %>
-          <div class="relative group aspect-square rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
+          <div class="relative group aspect-square rounded-xl overflow-hidden border border-gray-200 bg-gray-50" id="image_<%= image.id %>">
             <%= image_tag image.variant(resize_to_limit: [200, 200]), class: "w-full h-full object-cover" %>
+            <%= link_to delete_image_product_path(product, image_id: image.id),
+                data: { turbo_method: :delete, turbo_confirm: "Delete this image?" },
+                class: "absolute top-1 right-1 bg-white/90 text-red-500 p-1 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50" do %>
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            <% end %>
           </div>
         <% end %>
       <% end %>

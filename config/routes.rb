@@ -6,6 +6,7 @@ Rails.application.routes.draw do
   resources :products do
     member do
       post :generate_variants
+      delete :delete_image
     end
     resources :product_options, only: %i[create destroy], shallow: true
     resources :product_variants, only: %i[update destroy], shallow: true
