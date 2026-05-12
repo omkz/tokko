@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_12_052747) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_12_172155) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -40,6 +40,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_12_052747) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "collection_memberships", force: :cascade do |t|
+    t.bigint "collection_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "product_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["collection_id"], name: "index_collection_memberships_on_collection_id"
+    t.index ["product_id"], name: "index_collection_memberships_on_product_id"
+  end
+
+  create_table "collections", force: :cascade do |t|
+    t.boolean "active"
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.string "name"
+    t.string "slug"
+    t.datetime "updated_at", null: false
+    t.index ["slug"], name: "index_collections_on_slug", unique: true
   end
 
   create_table "order_items", force: :cascade do |t|
@@ -132,6 +151,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_12_052747) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "collection_memberships", "collections"
+  add_foreign_key "collection_memberships", "products"
   add_foreign_key "order_items", "orders"
   add_foreign_key "order_items", "product_variants"
   add_foreign_key "product_option_values", "product_options"

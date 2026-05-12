@@ -15,6 +15,7 @@ Rails.application.routes.draw do
     end
     resources :product_options, only: %i[destroy]
     resources :product_variants, only: %i[destroy]
+    resources :collections
     resources :orders, only: %i[index show update]
     root to: "home#index"
   end

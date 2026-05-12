@@ -13,12 +13,20 @@
 
   <%# Product Grid %>
   <div id="products" class="max-w-7xl mx-auto px-6 py-24">
-    <div class="flex items-center justify-between mb-12">
-      <h2 class="text-3xl font-bold text-gray-900">Featured Products</h2>
-      <div class="flex gap-4">
-        <span class="text-sm font-medium text-gray-500 cursor-pointer hover:text-gray-900 transition-colors">All</span>
-        <span class="text-sm font-medium text-gray-400 cursor-pointer hover:text-gray-900 transition-colors">New Arrivals</span>
-        <span class="text-sm font-medium text-gray-400 cursor-pointer hover:text-gray-900 transition-colors">Best Sellers</span>
+    <div class="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-6">
+      <div>
+        <h2 class="text-3xl font-bold text-gray-900">
+          <%= @collection ? @collection.name : "Featured Products" %>
+        </h2>
+        <% if @collection %>
+          <p class="text-sm text-gray-500 mt-1"><%= @collection.description %></p>
+        <% end %>
+      </div>
+      <div class="flex flex-wrap gap-4">
+        <%= link_to "All", root_path, class: "text-sm font-bold #{params[:collection].blank? ? 'text-indigo-600' : 'text-gray-400 hover:text-gray-900'} transition-colors" %>
+        <% @collections.each do |col| %>
+          <%= link_to col.name, root_path(collection: col.slug), class: "text-sm font-bold #{params[:collection] == col.slug ? 'text-indigo-600' : 'text-gray-400 hover:text-gray-900'} transition-colors" %>
+        <% end %>
       </div>
     </div>
 

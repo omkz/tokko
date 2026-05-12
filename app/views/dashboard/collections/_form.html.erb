@@ -1,0 +1,49 @@
+<%= form_with model: [:dashboard, collection] do |f| %>
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <%# Main Content %>
+    <div class="lg:col-span-2 space-y-6">
+      <div class="bg-white p-8 rounded-3xl border border-gray-200 shadow-sm">
+        <div class="space-y-6">
+          <div>
+            <%= f.label :name, "Title", class: "block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2" %>
+            <%= f.text_field :name, placeholder: "e.g. Summer Collection", class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all" %>
+          </div>
+
+          <div>
+            <%= f.label :description, "Description", class: "block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2" %>
+            <%= f.text_area :description, rows: 6, placeholder: "Describe this collection...", class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all" %>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white p-8 rounded-3xl border border-gray-200 shadow-sm">
+        <h3 class="text-sm font-bold text-gray-900 uppercase tracking-widest mb-6">Select Products</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <%= f.collection_check_boxes :product_ids, Product.all, :id, :name do |b| %>
+            <div class="flex items-center gap-3 p-3 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors">
+              <%= b.check_box class: "w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" %>
+              <%= b.label class: "text-sm font-medium text-gray-700 cursor-pointer" %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <%# Sidebar %>
+    <div class="space-y-6">
+      <div class="bg-white p-8 rounded-3xl border border-gray-200 shadow-sm">
+        <h3 class="text-sm font-bold text-gray-900 uppercase tracking-widest mb-6">Publishing</h3>
+        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+          <span class="text-xs font-bold text-gray-600 uppercase tracking-widest">Active Status</span>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <%= f.check_box :active, class: "sr-only peer" %>
+            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+          </label>
+        </div>
+        <div class="mt-6">
+          <%= f.submit class: "w-full bg-gray-900 text-white py-4 rounded-2xl font-bold hover:bg-gray-800 transition-all shadow-xl active:scale-95 cursor-pointer" %>
+        </div>
+      </div>
+    </div>
+  </div>
+<% end %>

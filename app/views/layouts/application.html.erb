@@ -26,9 +26,10 @@
 
         <%# Nav %>
         <nav class="hidden md:flex items-center gap-8">
-          <a href="/#products" class="text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors">Products</a>
-          <a href="#" class="text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors">Categories</a>
-          <a href="#" class="text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors">About</a>
+          <%= link_to "All Products", root_path, class: "text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors" %>
+          <% Collection.where(active: true).limit(4).each do |collection| %>
+            <%= link_to collection.name, root_path(collection: collection.slug), class: "text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors" %>
+          <% end %>
         </nav>
 
         <%# Actions %>

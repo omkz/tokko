@@ -7,6 +7,8 @@ class Product < ApplicationRecord
            dependent: :destroy
 
   has_many_attached :images
+  has_many :collection_memberships, dependent: :destroy
+  has_many :collections, through: :collection_memberships
 
   validates :name, presence: true
 

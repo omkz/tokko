@@ -73,7 +73,8 @@ class Dashboard::ProductsController < Dashboard::BaseController
       :slug,
       :description,
       :status,
-      images: []
+      images: [],
+      collection_ids: []
     )
   end
 end
