@@ -10,5 +10,15 @@ class Order < ApplicationRecord
     cancelled: 4
   }, default: :pending
 
+  scope :successful, -> { where(status: [:paid, :shipped, :completed]) }
+
+  def self.total_revenue
+    successful.sum(:total_price)
+  end
+
+  def self.revenue_on(date)
+    where(created_at: date.beginning_of_day..date.end_of_day).successful.sum(:total_price)
+  end
+
   validates :customer_name, :customer_email, presence: true
 end

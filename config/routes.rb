@@ -4,6 +4,7 @@ Rails.application.routes.draw do
   get "up" => "rails/health#show", as: :rails_health_check
 
   namespace :dashboard do
+    get "home/index"
     resources :products do
       member do
         post :generate_variants
@@ -15,7 +16,7 @@ Rails.application.routes.draw do
     resources :product_options, only: %i[destroy]
     resources :product_variants, only: %i[destroy]
     resources :orders, only: %i[index show update]
-    root to: "products#index"
+    root to: "home#index"
   end
 
   # Storefront
