@@ -64,7 +64,8 @@ class ProductsController < ApplicationController
       :name,
       :slug,
       :description,
-      :status
+      :status,
+      images: []
     )
   end
 end

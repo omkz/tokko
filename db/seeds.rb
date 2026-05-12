@@ -1,5 +1,32 @@
 puts "🧹 Cleaning up database..."
+Session.destroy_all
+User.destroy_all
 Product.destroy_all
+
+puts "👤 Creating default users..."
+# Create the main Owner account
+owner = User.create!(
+  email_address: "owner@tokko.com",
+  password: "password123",
+  role: :owner
+)
+puts "➡️ Created Owner: #{owner.email_address} (password: password123)"
+
+# Create an Admin account
+admin = User.create!(
+  email_address: "admin@tokko.com",
+  password: "password123",
+  role: :admin
+)
+puts "➡️ Created Admin: #{admin.email_address} (password: password123)"
+
+# Create a Staff account
+staff = User.create!(
+  email_address: "staff@tokko.com",
+  password: "password123",
+  role: :staff
+)
+puts "➡️ Created Staff: #{staff.email_address} (password: password123)"
 
 puts "🌱 Seeding products..."
 
@@ -67,7 +94,6 @@ p3 = Product.create!(
   slug: "eco-canvas-tote-bag",
   status: "active"
 )
-# generate_variants! is automatically called by after_create for default variant
 # Just update the default variant
 p3.product_variants.first.update!(price: 50000, stock: 100)
 
@@ -82,5 +108,7 @@ Product.create!(
 )
 
 puts "✅ Seeding complete!"
+puts "📊 Total Users: #{User.count}"
 puts "📊 Total Products: #{Product.count}"
 puts "📊 Total Variants: #{ProductVariant.count}"
+puts "🚀 You can now login with: admin@tokko.com / password123"

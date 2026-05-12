@@ -6,6 +6,8 @@ class Product < ApplicationRecord
   has_many :product_variants,
            dependent: :destroy
 
+  has_many_attached :images
+
   validates :name, presence: true
 
   after_create :create_default_variant
