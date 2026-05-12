@@ -102,7 +102,28 @@
           <p class="text-sm text-gray-500 mt-1">Found <%= @pagy.count %> products matching your search.</p>
         <% end %>
       </div>
-      <div class="flex flex-wrap gap-4">
+      <div class="flex flex-wrap items-center gap-4">
+        <div class="relative group" data-controller="dropdown">
+          <button type="button" class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-700 hover:border-gray-900 transition-all">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" /></svg>
+            <span>Sort: <%= params[:sort] == 'price_asc' ? 'Lowest Price' : (params[:sort] == 'price_desc' ? 'Highest Price' : 'Newest') %></span>
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+          </button>
+          
+          <div class="absolute right-0 mt-2 w-48 bg-white border border-gray-100 rounded-2xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-20 overflow-hidden">
+            <div class="py-2">
+              <%= link_to root_path(q: params[:q], collection: params[:collection], sort: "newest"), class: "block px-5 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 #{params[:sort] == 'newest' || params[:sort].blank? ? 'text-indigo-600 bg-indigo-50' : ''}" do %>
+                Newest Arrivals
+              <% end %>
+              <%= link_to root_path(q: params[:q], collection: params[:collection], sort: "price_asc"), class: "block px-5 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 #{params[:sort] == 'price_asc' ? 'text-indigo-600 bg-indigo-50' : ''}" do %>
+                Price: Low to High
+              <% end %>
+              <%= link_to root_path(q: params[:q], collection: params[:collection], sort: "price_desc"), class: "block px-5 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 #{params[:sort] == 'price_desc' ? 'text-indigo-600 bg-indigo-50' : ''}" do %>
+                Price: High to Low
+              <% end %>
+            </div>
+          </div>
+        </div>
         <%= link_to "All", root_path, class: "text-sm font-bold #{params[:collection].blank? ? 'text-indigo-600' : 'text-gray-400 hover:text-gray-900'} transition-colors" %>
         <% @collections.each do |col| %>
           <%= link_to col.name, root_path(collection: col.slug), class: "text-sm font-bold #{params[:collection] == col.slug ? 'text-indigo-600' : 'text-gray-400 hover:text-gray-900'} transition-colors" %>
