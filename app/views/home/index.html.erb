@@ -11,6 +11,78 @@
     </div>
   </div>
 
+  </div>
+
+  <%# Trust Bar %>
+  <div class="border-b border-gray-100">
+    <div class="max-w-7xl mx-auto px-6 py-10">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+          </div>
+          <div>
+            <p class="text-xs font-bold text-gray-900 uppercase tracking-widest">Free Shipping</p>
+            <p class="text-[10px] text-gray-500 font-medium">On orders over Rp 500k</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 bg-green-50 rounded-2xl flex items-center justify-center text-green-600">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+          </div>
+          <div>
+            <p class="text-xs font-bold text-gray-900 uppercase tracking-widest">Secure Payment</p>
+            <p class="text-[10px] text-gray-500 font-medium">100% protected checkout</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 bg-orange-50 rounded-2xl flex items-center justify-center text-orange-600">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+          </div>
+          <div>
+            <p class="text-xs font-bold text-gray-900 uppercase tracking-widest">Easy Returns</p>
+            <p class="text-[10px] text-gray-500 font-medium">30-day return policy</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+          </div>
+          <div>
+            <p class="text-xs font-bold text-gray-900 uppercase tracking-widest">Expert Support</p>
+            <p class="text-[10px] text-gray-500 font-medium">Friendly 24/7 assistance</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <%# Collection Grid %>
+  <div class="max-w-7xl mx-auto px-6 py-20">
+    <div class="flex items-center justify-between mb-10">
+      <div>
+        <h2 class="text-2xl font-bold text-gray-900">Shop by Category</h2>
+        <p class="text-sm text-gray-500 mt-1">Explore our curated collections of essentials.</p>
+      </div>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <% @collections.limit(3).each_with_index do |col, idx| %>
+        <div class="relative group h-[300px] overflow-hidden rounded-3xl bg-gray-100">
+          <img src="https://images.unsplash.com/photo-<%= idx == 0 ? '1523381210434-271e8be1f52b' : (idx == 1 ? '1515886657613-9f3515b0c78f' : '1539109132381-315125a27ea9') %>?q=80&w=800&auto=format&fit=crop" 
+               class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-80" />
+          <div class="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-gray-900/20 to-transparent flex flex-col justify-end p-8">
+            <h3 class="text-xl font-bold text-white"><%= col.name %></h3>
+            <p class="text-xs text-gray-200 mt-1 mb-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300"><%= col.description %></p>
+            <%= link_to root_path(collection: col.slug), class: "w-fit bg-white text-gray-900 px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-gray-100 transition-colors shadow-lg" do %>
+              Shop Now
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
   <%# Product Grid %>
   <div id="products" class="max-w-7xl mx-auto px-6 py-24">
     <div class="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-6">
@@ -78,10 +150,80 @@
     </div>
   </div>
 
-  <%# Footer Placeholder %>
-  <footer class="bg-gray-50 border-t border-gray-100 py-12 mt-12">
-    <div class="max-w-7xl mx-auto px-6 text-center">
-      <p class="text-gray-400 text-sm">&copy; 2026 Tokko Store. Built with ❤️ for your business.</p>
+    </div>
+  </div>
+
+  <%# Newsletter Section %>
+  <div class="bg-gray-900 py-24 overflow-hidden relative">
+    <div class="max-w-7xl mx-auto px-6 relative z-10">
+      <div class="max-w-2xl">
+        <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">Join the club.</h2>
+        <p class="text-lg text-gray-400 mb-8">Subscribe to get special offers, free giveaways, and once-in-a-lifetime deals.</p>
+        <form class="flex flex-col sm:flex-row gap-4">
+          <input type="email" placeholder="Enter your email" class="flex-1 bg-white/10 border border-white/20 rounded-2xl px-6 py-4 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" />
+          <button type="submit" class="bg-white text-gray-900 px-8 py-4 rounded-2xl font-bold hover:bg-gray-100 transition-all shadow-xl active:scale-95">
+            Subscribe Now
+          </button>
+        </form>
+        <p class="text-[10px] text-gray-500 mt-4 uppercase tracking-widest font-bold">By signing up, you agree to our Privacy Policy</p>
+      </div>
+    </div>
+    <%# Abstract background glow %>
+    <div class="absolute -right-20 -top-20 w-96 h-96 bg-indigo-500/20 rounded-full blur-[120px]"></div>
+    <div class="absolute -left-20 -bottom-20 w-96 h-96 bg-blue-500/10 rounded-full blur-[100px]"></div>
+  </div>
+
+  <%# Footer %>
+  <footer class="bg-white border-t border-gray-100 pt-24 pb-12">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-12 mb-16">
+        <div class="col-span-2 md:col-span-1">
+          <%= link_to root_path, class: "flex items-center gap-2.5 mb-6" do %>
+            <div class="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center text-white font-black">T</div>
+            <span class="text-lg font-bold tracking-tight text-gray-900">Tokko<span class="text-indigo-600">.</span></span>
+          <% end %>
+          <p class="text-sm text-gray-500 leading-relaxed">
+            Premium essentials for your everyday life. Crafted with care and delivered to your doorstep.
+          </p>
+        </div>
+        <div>
+          <h4 class="text-xs font-bold text-gray-900 uppercase tracking-widest mb-6">Shop</h4>
+          <ul class="space-y-4 text-sm text-gray-500 font-medium">
+            <% @collections.limit(4).each do |col| %>
+              <li><%= link_to col.name, root_path(collection: col.slug), class: "hover:text-gray-900 transition-colors" %></li>
+            <% end %>
+            <li><%= link_to "All Products", root_path, class: "hover:text-gray-900 transition-colors" %></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-xs font-bold text-gray-900 uppercase tracking-widest mb-6">Support</h4>
+          <ul class="space-y-4 text-sm text-gray-500 font-medium">
+            <li><a href="#" class="hover:text-gray-900 transition-colors">Shipping Policy</a></li>
+            <li><a href="#" class="hover:text-gray-900 transition-colors">Returns & Exchanges</a></li>
+            <li><a href="#" class="hover:text-gray-900 transition-colors">Contact Us</a></li>
+            <li><a href="#" class="hover:text-gray-900 transition-colors">FAQ</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-xs font-bold text-gray-900 uppercase tracking-widest mb-6">Connect</h4>
+          <div class="flex gap-4">
+            <a href="#" class="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 hover:bg-gray-900 hover:text-white transition-all">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/></svg>
+            </a>
+            <a href="#" class="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 hover:bg-gray-900 hover:text-white transition-all">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.441 1.441 1.441c.795 0 1.439-.645 1.439-1.441s-.644-1.44-1.439-1.44z"/></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="border-t border-gray-100 pt-12 flex flex-col md:flex-row items-center justify-between gap-6">
+        <p class="text-xs text-gray-400 font-medium">&copy; 2026 Tokko Store. Built with ❤️ for your business.</p>
+        <div class="flex gap-8 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+          <a href="#" class="hover:text-gray-900 transition-colors">Privacy Policy</a>
+          <a href="#" class="hover:text-gray-900 transition-colors">Terms of Service</a>
+          <a href="#" class="hover:text-gray-900 transition-colors">Cookies</a>
+        </div>
+      </div>
     </div>
   </footer>
 </div>
