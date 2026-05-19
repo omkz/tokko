@@ -26,8 +26,8 @@ class HomeController < ApplicationController
     
     @pagy, @products = pagy(@products)
     
-    # Load variants without breaking the GROUP BY query
-    @products = @products.preload(:product_variants)
+    # Load variants and image attachments/blobs without breaking the GROUP BY query
+    @products = @products.preload(:product_variants, images_attachments: :blob)
     
     @collections = Collection.where(active: true)
   end

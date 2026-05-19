@@ -154,8 +154,8 @@
               </a>
             </h3>
             <div class="flex items-center justify-between mt-1">
-              <p class="text-xs text-gray-400 font-medium"><%= product.product_variants.count %> styles</p>
-              <% prices = product.product_variants.pluck(:price).compact %>
+              <p class="text-xs text-gray-400 font-medium"><%= product.product_variants.size %> styles</p>
+              <% prices = product.product_variants.map(&:price).compact %>
               <p class="text-sm font-bold text-gray-900">
                 <% if prices.any? %>
                   Rp <%= number_with_delimiter(prices.min.to_i) %>
