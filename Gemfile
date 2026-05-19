@@ -64,3 +64,5 @@ end
 gem "pagy", "~> 43.5"
 
 gem "faker", "~> 3.8"
+gem 'prosopite'
+gem 'pg_query'
