@@ -37,7 +37,7 @@ class Dashboard::CollectionsController < Dashboard::BaseController
   private
 
   def set_collection
-    @collection = Collection.find(params[:id])
+    @collection = Collection.find_by(slug: params[:id]) || Collection.find(params[:id])
   end
 
   def collection_params
