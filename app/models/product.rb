@@ -9,13 +9,44 @@ class Product < ApplicationRecord
   has_many_attached :images
   has_many :collection_memberships, dependent: :destroy
   has_many :collections, through: :collection_memberships
+  
+  belongs_to :category, optional: true
+  has_many :product_filter_options, dependent: :destroy
+  has_many :filter_options, through: :product_filter_options
 
   validates :name, presence: true
 
-  scope :search, ->(query) {
+  # Scopes
+  scope :in_category, ->(category) { where(category_id: category.self_and_descendant_ids) }
+  
+  scope :filter_by_facets, ->(filters) do
+    return all if filters.blank?
+    
+    scope = all
+    filters.each do |group_slug, option_slugs|
+      matching_product_ids = ProductFilterOption.joins(filter_option: :filter_group)
+                                                .where(filter_groups: { slug: group_slug }, filter_options: { slug: option_slugs })
+                                                .select(:product_id)
+      scope = scope.where(id: matching_product_ids)
+    end
+    scope
+  end
+
+  scope :sort_by_param, ->(sort_param) do
+    case sort_param
+    when "price_asc"
+      joins(:product_variants).group("products.id").order("MIN(product_variants.price) ASC")
+    when "price_desc"
+      joins(:product_variants).group("products.id").order("MIN(product_variants.price) DESC")
+    else
+      order(created_at: :desc)
+    end
+  end
+
+  def self.search(query)
     return all if query.blank?
     where("products.name ILIKE ? OR products.description ILIKE ?", "%#{query}%", "%#{query}%")
-  }
+  end
 
   after_create :create_default_variant
 

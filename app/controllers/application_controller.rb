@@ -17,4 +17,13 @@ class ApplicationController < ActionController::Base
       Prosopite.finish
     end
   end
+
+  before_action :set_nav_data
+
+  private
+
+  def set_nav_data
+    @nav_categories = Category.roots.ordered.includes(:children)
+    @nav_collections = Collection.featured_for_nav
+  end
 end

@@ -63,19 +63,16 @@
       </div>
     </div>
     
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <% @collections.limit(3).each_with_index do |col, idx| %>
-        <div class="relative group h-[300px] overflow-hidden rounded-3xl bg-gray-100">
-          <img src="https://images.unsplash.com/photo-<%= idx == 0 ? '1523381210434-271e8be1f52b' : (idx == 1 ? '1515886657613-9f3515b0c78f' : '1539109132381-315125a27ea9') %>?q=80&w=800&auto=format&fit=crop" 
-               class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-80" />
-          <div class="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-gray-900/20 to-transparent flex flex-col justify-end p-8">
-            <h3 class="text-xl font-bold text-white"><%= col.name %></h3>
-            <p class="text-xs text-gray-200 mt-1 mb-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300"><%= col.description %></p>
-            <%= link_to collection_path(col), class: "w-fit bg-white text-gray-900 px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-gray-100 transition-colors shadow-lg" do %>
-              Shop Now
-            <% end %>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <% @nav_categories&.each do |cat| %>
+        <%= link_to category_path(cat), class: "group relative overflow-hidden rounded-2xl bg-gray-100 aspect-[4/3] flex items-end p-5 hover:shadow-xl transition-all duration-300" do %>
+          <div class="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-gray-900/20 to-transparent"></div>
+          <div class="relative z-10">
+            <h3 class="text-xl font-bold text-white group-hover:translate-x-1 transition-transform duration-300"><%= cat.name %></h3>
+            <p class="text-[10px] text-gray-300 mt-1"><%= cat.description %></p>
+            <p class="text-xs font-bold text-indigo-400 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">Explore &rarr;</p>
           </div>
-        </div>
+        <% end %>
       <% end %>
     </div>
   </div>
@@ -122,8 +119,8 @@
           </div>
         </div>
         <%= link_to "All", root_path, class: "text-sm font-bold #{@collection.blank? ? 'text-indigo-600' : 'text-gray-400 hover:text-gray-900'} transition-colors" %>
-        <% @collections.each do |col| %>
-          <%= link_to col.name, collection_path(col), class: "text-sm font-bold #{@collection == col ? 'text-indigo-600' : 'text-gray-400 hover:text-gray-900'} transition-colors" %>
+        <% @nav_collections.each do |col| %>
+          <%= link_to col.name, collection_path(col), class: "text-sm font-bold #{(@collection == col) ? 'text-indigo-600' : 'text-gray-400 hover:text-gray-900'} transition-colors" %>
         <% end %>
       </div>
     </div>
@@ -174,7 +171,7 @@
         <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl opacity-40">🔍</div>
         <h3 class="text-xl font-bold text-gray-900">No products found</h3>
         <p class="text-gray-500 mt-2">Try adjusting your search or filters to find what you're looking for.</p>
-        <%= link_to "Clear all filters", root_path, class: "inline-block mt-8 text-sm font-bold text-indigo-600 hover:text-indigo-800" %>
+        <%= link_to "Clear search", root_path, class: "inline-block mt-8 text-sm font-bold text-indigo-600 hover:text-indigo-800" %>
       </div>
     <% end %>
 
@@ -224,7 +221,7 @@
         <div>
           <h4 class="text-xs font-bold text-gray-900 uppercase tracking-widest mb-6">Shop</h4>
           <ul class="space-y-4 text-sm text-gray-500 font-medium">
-            <% @collections.limit(4).each do |col| %>
+            <% @nav_collections.each do |col| %>
               <li><%= link_to col.name, collection_path(col), class: "hover:text-gray-900 transition-colors" %></li>
             <% end %>
             <li><%= link_to "All Products", root_path, class: "hover:text-gray-900 transition-colors" %></li>

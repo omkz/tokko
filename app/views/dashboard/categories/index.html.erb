@@ -1,0 +1,53 @@
+<div class="flex items-center justify-between mb-8">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900">Categories</h1>
+    <p class="text-sm text-gray-500 mt-1">Manage product taxonomies.</p>
+  </div>
+  <%= link_to "New Category", new_dashboard_category_path, class: "bg-gray-900 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-gray-800 transition-colors shadow-sm" %>
+</div>
+
+<div class="bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-sm">
+  <table class="w-full text-left text-sm">
+    <thead class="bg-gray-50 border-b border-gray-200 text-gray-600 font-semibold">
+      <tr>
+        <th class="py-4 px-6">Name</th>
+        <th class="py-4 px-6">Parent</th>
+        <th class="py-4 px-6">Products</th>
+        <th class="py-4 px-6 text-right">Actions</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100">
+      <% @categories.each do |category| %>
+        <tr class="hover:bg-gray-50 transition-colors">
+          <td class="py-4 px-6">
+            <span class="font-bold text-gray-900"><%= category.name %></span>
+            <div class="text-xs text-gray-500 mt-1">/<%= category.slug %></div>
+          </td>
+          <td class="py-4 px-6">
+            <% if category.parent %>
+              <span class="bg-gray-100 text-gray-700 px-2.5 py-1 rounded-md text-xs font-semibold"><%= category.parent.name %></span>
+            <% else %>
+              <span class="text-gray-400 italic">None (Root)</span>
+            <% end %>
+          </td>
+          <td class="py-4 px-6 text-gray-600 font-medium">
+            <%= category.products.count %>
+          </td>
+          <td class="py-4 px-6 text-right">
+            <div class="flex items-center justify-end gap-3">
+              <%= link_to "Edit", edit_dashboard_category_path(category), class: "text-sm font-bold text-indigo-600 hover:text-indigo-800" %>
+              <%= button_to "Delete", dashboard_category_path(category), method: :delete, data: { turbo_confirm: "Are you sure?" }, class: "text-sm font-bold text-red-600 hover:text-red-800" %>
+            </div>
+          </td>
+        </tr>
+      <% end %>
+      <% if @categories.empty? %>
+        <tr>
+          <td colspan="4" class="py-12 text-center text-gray-500">
+            No categories found. <%= link_to "Create your first category.", new_dashboard_category_path, class: "text-indigo-600 hover:underline font-medium" %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

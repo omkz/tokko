@@ -1,0 +1,42 @@
+<%= form_with(model: [:dashboard, category], class: "bg-white border border-gray-200 rounded-3xl p-8 space-y-6 shadow-sm") do |f| %>
+  <% if category.errors.any? %>
+    <div class="p-4 bg-red-50 text-red-600 rounded-2xl mb-6">
+      <h3 class="font-bold mb-2"><%= pluralize(category.errors.count, "error") %> prohibited this category from being saved:</h3>
+      <ul class="list-disc list-inside text-sm">
+        <% category.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= f.label :name, class: "block text-sm font-bold text-gray-900 mb-2" %>
+    <%= f.text_field :name, class: "w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all outline-none", placeholder: "e.g. Tops, Shirts, Laptops" %>
+  </div>
+
+  <div>
+    <%= f.label :slug, "URL Slug (Optional)", class: "block text-sm font-bold text-gray-900 mb-2" %>
+    <%= f.text_field :slug, class: "w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all outline-none", placeholder: "Will be generated automatically if left blank" %>
+  </div>
+
+  <div>
+    <%= f.label :parent_id, "Parent Category", class: "block text-sm font-bold text-gray-900 mb-2" %>
+    <%= f.collection_select :parent_id, Category.where.not(id: category.id).ordered, :id, :name, { include_blank: "None (Root Category)" }, class: "w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all outline-none" %>
+  </div>
+
+  <div>
+    <%= f.label :description, class: "block text-sm font-bold text-gray-900 mb-2" %>
+    <%= f.text_area :description, rows: 4, class: "w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all outline-none", placeholder: "Optional description for this category." %>
+  </div>
+
+  <div>
+    <%= f.label :position, class: "block text-sm font-bold text-gray-900 mb-2" %>
+    <%= f.number_field :position, class: "w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all outline-none" %>
+  </div>
+
+  <div class="pt-4 flex items-center justify-end gap-3 border-t border-gray-100">
+    <%= link_to "Cancel", dashboard_categories_path, class: "px-6 py-3 text-sm font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors" %>
+    <%= f.submit class: "bg-gray-900 text-white px-8 py-3 rounded-xl text-sm font-bold hover:bg-gray-800 transition-all shadow-lg active:scale-95 cursor-pointer" %>
+  </div>
+<% end %>

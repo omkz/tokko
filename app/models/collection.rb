@@ -2,6 +2,8 @@ class Collection < ApplicationRecord
   has_many :collection_memberships, dependent: :destroy
   has_many :products, through: :collection_memberships
 
+  scope :featured_for_nav, -> { where(active: true).limit(4) }
+
   validates :name, presence: true
   validates :slug, presence: true, uniqueness: true
 

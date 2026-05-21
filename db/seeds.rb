@@ -7,100 +7,84 @@ VariantOptionValue.delete_all
 ProductVariant.delete_all
 ProductOptionValue.delete_all
 ProductOption.delete_all
+ProductFilterOption.delete_all
+FilterOption.delete_all
+FilterGroup.delete_all
 Product.delete_all
+Category.delete_all
+User.delete_all if defined?(User)
+
+puts "Creating Admin User..."
+admin = User.find_or_create_by!(email_address: "admin@tokko.com") do |user|
+  user.password = "password"
+  user.role = "admin" if user.respond_to?(:role=)
+end
+
+puts "Creating Categories (Taxonomy) for Fashion Store..."
+tops = Category.create!(name: "Tops")
+bottoms = Category.create!(name: "Bottoms")
+outerwear = Category.create!(name: "Outerwear")
+shoes = Category.create!(name: "Shoes")
+
+categories = [tops, bottoms, outerwear, shoes]
+
+puts "Creating Filter Groups & Options (Facets)..."
+gender_filter = FilterGroup.create!(name: "Gender", position: 1)
+men_opt = gender_filter.filter_options.create!(value: "Men", position: 1)
+women_opt = gender_filter.filter_options.create!(value: "Women", position: 2)
+unisex_opt = gender_filter.filter_options.create!(value: "Unisex", position: 3)
+
+brand_filter = FilterGroup.create!(name: "Brand", position: 2)
+zara_opt = brand_filter.filter_options.create!(value: "Zara", position: 1)
+uniqlo_opt = brand_filter.filter_options.create!(value: "Uniqlo", position: 2)
+hm_opt = brand_filter.filter_options.create!(value: "H&M", position: 3)
+
+material_filter = FilterGroup.create!(name: "Material", position: 3)
+cotton_opt = material_filter.filter_options.create!(value: "Cotton", position: 1)
+leather_opt = material_filter.filter_options.create!(value: "Leather", position: 2)
+denim_opt = material_filter.filter_options.create!(value: "Denim", position: 3)
 
 puts "Creating Collections..."
 collections = [
   { name: "Summer Collection", description: "Bright and airy essentials for the sunny days." },
-  { name: "Winter Essentials", description: "Stay warm and cozy with our premium winter gear." },
-  { name: "Limited Edition", description: "Exclusive drops you won't find anywhere else." },
-  { name: "Best Sellers", description: "The products everyone is talking about." },
-  { name: "New Arrivals", description: "Freshly added to our curated catalog." }
+  { name: "Winter Essentials", description: "Stay warm and cozy with our premium winter gear." }
 ].map { |c| Collection.create!(c.merge(active: true)) }
 
-puts "Creating 1000 Products (this may take a minute)..."
-categories = ["T-Shirt", "Hoodie", "Pants", "Cap", "Jacket", "Sneakers", "Bag", "Watch"]
-colors = ["Black", "White", "Navy", "Grey", "Olive", "Maroon"]
-sizes = ["S", "M", "L", "XL"]
-
-# We'll use a small pool of placeholder images to avoid downloading 1000 times
-image_urls = [
-  "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=1000&auto=format&fit=crop", # White Tee
-  "https://images.unsplash.com/photo-1556821840-3a63f95609a7?q=80&w=1000&auto=format&fit=crop", # Hoodie
-  "https://images.unsplash.com/photo-1542272604-787c3835535d?q=80&w=1000&auto=format&fit=crop", # Jeans
-  "https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=1000&auto=format&fit=crop", # Watch
-  "https://images.unsplash.com/photo-1527719327859-c6ce80353573?q=80&w=1000&auto=format&fit=crop", # Sneakers
-  "https://images.unsplash.com/photo-1584917865442-de89df76afd3?q=80&w=1000&auto=format&fit=crop"  # Bag
-]
-
-# Create some cached downloads
-require "open-uri"
-downloaded_images = image_urls.map do |url|
-  { io: URI.open(url), filename: File.basename(URI.parse(url).path) }
-end
-
-1000.times do |i|
-  category = categories.sample
-  name = "#{category} #{Faker::Appliance.equipment} #{i+1}"
+puts "Creating 100 Fashion Products without images..."
+100.times do |i|
+  cat = categories.sample
   
   product = Product.create!(
-    name: name,
-    description: Faker::Lorem.paragraph(sentence_count: 5),
-    slug: "#{name.parameterize}-#{i}"
+    name: "Premium #{cat.name} #{i+1}",
+    description: "High quality #{cat.name.downcase} designed for everyday use. Comfortable to wear all day.",
+    category: cat
   )
 
-  # Attach one random image from our pool
-  img = downloaded_images.sample
-  product.images.attach(io: File.open(img[:io].path), filename: img[:filename])
+  # Assign Filters
+  product.filter_options << [men_opt, women_opt, unisex_opt].sample
+  product.filter_options << [cotton_opt, leather_opt, denim_opt].sample
+  product.filter_options << [zara_opt, uniqlo_opt, hm_opt].sample
 
-  # Add to random collections
-  product.collections << collections.sample(rand(1..3))
+  # Assign Collections
+  product.collections << collections.sample(rand(0..2))
 
-  # Add Options
-  size_opt = product.product_options.create!(name: "Size", position: 1)
-  sizes.each_with_index { |s, idx| size_opt.product_option_values.create!(value: s, position: idx + 1) }
-
+  # Add Product Options (For Variants)
+  if cat == shoes
+    size_opt = product.product_options.create!(name: "Size", position: 1)
+    ["39", "40", "41", "42"].each_with_index { |s, idx| size_opt.product_option_values.create!(value: s, position: idx + 1) }
+  else
+    size_opt = product.product_options.create!(name: "Size", position: 1)
+    ["S", "M", "L", "XL"].each_with_index { |s, idx| size_opt.product_option_values.create!(value: s, position: idx + 1) }
+  end
+  
   color_opt = product.product_options.create!(name: "Color", position: 2)
-  colors.sample(3).each_with_index { |c, idx| color_opt.product_option_values.create!(value: c, position: idx + 1) }
+  ["Black", "White", "Navy"].each_with_index { |c, idx| color_opt.product_option_values.create!(value: c, position: idx + 1) }
 
-  # Generate variants
   product.generate_variants!
   
-  # Set prices and stock for variants
   product.product_variants.each do |v|
-    v.update!(
-      price: rand(150..950) * 1000,
-      stock: rand(10..100),
-      sku: "TK-#{product.id}-#{v.id}"
-    )
-  end
-
-  print "." if (i + 1) % 50 == 0
-end
-
-puts "\nCreating sample Orders..."
-25.times do |i|
-  order = Order.create!(
-    customer_name: Faker::Name.name,
-    customer_email: Faker::Internet.email,
-    customer_phone: Faker::PhoneNumber.phone_number,
-    shipping_address: Faker::Address.full_address,
-    status: Order.statuses.keys.sample,
-    total_price: 0,
-    created_at: rand(0..7).days.ago
-  )
-
-  # Add 1-3 random items
-  rand(1..3).times do
-    variant = ProductVariant.all.sample
-    quantity = rand(1..2)
-    order.order_items.create!(
-      product_variant: variant,
-      quantity: quantity,
-      unit_price: variant.price
-    )
-    order.update!(total_price: order.total_price + (variant.price * quantity))
+    v.update!(price: rand(150..500) * 1000, stock: rand(10..100), sku: "TK-#{product.id}-#{v.id}")
   end
 end
 
-puts "\nDone! Seeded 1000 products, 5 collections, and 25 orders."
+puts "\nDone! Seeded Fashion Categories, Facets, and 100 fashion products."

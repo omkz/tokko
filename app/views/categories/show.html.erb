@@ -1,0 +1,143 @@
+<div class="max-w-7xl mx-auto px-6 py-12">
+  <%# Breadcrumb & Header %>
+  <div class="mb-12">
+    <div class="flex items-center gap-2 text-sm text-gray-500 mb-4">
+      <%= link_to "Home", root_path, class: "hover:text-gray-900 transition-colors" %>
+      <span>/</span>
+      <span class="text-gray-900 font-medium"><%= @category.name %></span>
+    </div>
+    
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <div>
+        <h1 class="text-4xl font-bold text-gray-900"><%= @category.name %></h1>
+        <% if @category.description.present? %>
+          <p class="text-gray-500 mt-2"><%= @category.description %></p>
+        <% end %>
+        <p class="text-sm font-medium text-indigo-600 mt-3"><%= @pagy.count %> products</p>
+      </div>
+
+      <%# Sort Dropdown %>
+      <div class="relative group" data-controller="dropdown">
+        <button type="button" class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-700 hover:border-gray-900 transition-all">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" /></svg>
+          <span>Sort: <%= params[:sort] == 'price_asc' ? 'Lowest Price' : (params[:sort] == 'price_desc' ? 'Highest Price' : 'Newest') %></span>
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+        </button>
+        
+        <div class="absolute right-0 mt-2 w-48 bg-white border border-gray-100 rounded-2xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-20 overflow-hidden">
+          <div class="py-2">
+            <%= link_to url_for(request.params.merge(sort: "newest")), class: "block px-5 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 #{params[:sort] == 'newest' || params[:sort].blank? ? 'text-indigo-600 bg-indigo-50' : ''}" do %>
+              Newest Arrivals
+            <% end %>
+            <%= link_to url_for(request.params.merge(sort: "price_asc")), class: "block px-5 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 #{params[:sort] == 'price_asc' ? 'text-indigo-600 bg-indigo-50' : ''}" do %>
+              Price: Low to High
+            <% end %>
+            <%= link_to url_for(request.params.merge(sort: "price_desc")), class: "block px-5 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 #{params[:sort] == 'price_desc' ? 'text-indigo-600 bg-indigo-50' : ''}" do %>
+              Price: High to Low
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex flex-col lg:flex-row gap-12">
+    <%# Sidebar Filter %>
+    <% if FilterGroup.any? %>
+      <div class="w-full lg:w-64 flex-shrink-0">
+        <div class="sticky top-24">
+          <h3 class="text-xs font-bold text-gray-900 uppercase tracking-widest mb-6 flex items-center justify-between">
+            Filters
+            <% if params[:filter].present? %>
+              <%= link_to "Clear", request.path, class: "text-indigo-600 hover:text-indigo-800 normal-case" %>
+            <% end %>
+          </h3>
+          
+          <%= form_with url: request.path, method: :get, class: "space-y-8" do |f| %>
+            <%# Preserve existing params like search and sort %>
+            <% if params[:q].present? %><%= f.hidden_field :q, value: params[:q] %><% end %>
+            <% if params[:sort].present? %><%= f.hidden_field :sort, value: params[:sort] %><% end %>
+
+            <% FilterGroup.ordered.includes(:filter_options).each do |group| %>
+              <div>
+                <h4 class="text-sm font-bold text-gray-900 mb-4"><%= group.name %></h4>
+                <div class="space-y-3">
+                  <% group.filter_options.each do |option| %>
+                    <label class="flex items-center gap-3 cursor-pointer group/label">
+                      <%= check_box_tag "filter[#{group.slug}][]", option.slug, Array(params.dig(:filter, group.slug)).include?(option.slug), class: "w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-600 focus:ring-offset-0 transition-colors" %>
+                      <span class="text-sm font-medium text-gray-600 group-hover/label:text-gray-900 transition-colors"><%= option.value %></span>
+                    </label>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+            
+            <div class="pt-4 border-t border-gray-100">
+              <button type="submit" class="w-full bg-gray-900 text-white py-3 rounded-xl text-sm font-bold hover:bg-gray-800 transition-all active:scale-95">
+                Apply Filters
+              </button>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <%# Main Grid %>
+    <div class="flex-1">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
+        <% @products.each do |product| %>
+          <div class="group relative">
+            <div class="aspect-[4/5] w-full overflow-hidden rounded-2xl bg-gray-100 group-hover:shadow-xl transition-all duration-500">
+              <% if product.images.attached? %>
+                <%= image_tag product.images.first.variant(resize_to_limit: [600, 800]), class: "h-full w-full object-cover object-center group-hover:scale-105 transition-transform duration-700" %>
+              <% else %>
+                <div class="h-full w-full flex items-center justify-center bg-gray-50 text-6xl opacity-20">📦</div>
+              <% end %>
+              
+              <%# Quick Add Overlay %>
+              <div class="absolute inset-x-0 bottom-0 p-4 opacity-0 group-hover:opacity-100 transition-all translate-y-4 group-hover:translate-y-0 duration-300">
+                <button class="w-full bg-white/95 backdrop-blur-sm text-gray-900 py-3 rounded-xl font-bold text-sm shadow-lg hover:bg-white transition-colors">
+                  Quick View
+                </button>
+              </div>
+            </div>
+            
+            <div class="mt-4">
+              <h3 class="text-sm font-semibold text-gray-700">
+                <a href="<%= product_path(product) %>">
+                  <span aria-hidden="true" class="absolute inset-0"></span>
+                  <%= product.name %>
+                </a>
+              </h3>
+              <div class="flex items-center justify-between mt-1">
+                <p class="text-xs text-gray-400 font-medium"><%= product.product_variants.size %> styles</p>
+                <% prices = product.product_variants.map(&:price).compact %>
+                <p class="text-sm font-bold text-gray-900">
+                  <% if prices.any? %>
+                    Rp <%= number_with_delimiter(prices.min.to_i) %>
+                  <% else %>
+                    —
+                  <% end %>
+                </p>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <% if @products.empty? %>
+        <div class="py-24 text-center">
+          <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl opacity-40">🔍</div>
+          <h3 class="text-xl font-bold text-gray-900">No products found</h3>
+          <p class="text-gray-500 mt-2">Try adjusting your filters to find what you're looking for.</p>
+        </div>
+      <% end %>
+
+      <div class="mt-16 flex justify-center">
+        <div class="pagy">
+          <%== @pagy.series_nav %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
