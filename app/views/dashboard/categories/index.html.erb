@@ -1,53 +1,75 @@
-<div class="flex items-center justify-between mb-8">
-  <div>
-    <h1 class="text-2xl font-bold text-gray-900">Categories</h1>
-    <p class="text-sm text-gray-500 mt-1">Manage product taxonomies.</p>
-  </div>
-  <%= link_to "New Category", new_dashboard_category_path, class: "bg-gray-900 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-gray-800 transition-colors shadow-sm" %>
-</div>
+<div class="pb-12">
 
-<div class="bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-sm">
-  <table class="w-full text-left text-sm">
-    <thead class="bg-gray-50 border-b border-gray-200 text-gray-600 font-semibold">
-      <tr>
-        <th class="py-4 px-6">Name</th>
-        <th class="py-4 px-6">Parent</th>
-        <th class="py-4 px-6">Products</th>
-        <th class="py-4 px-6 text-right">Actions</th>
-      </tr>
-    </thead>
-    <tbody class="divide-y divide-gray-100">
-      <% @categories.each do |category| %>
-        <tr class="hover:bg-gray-50 transition-colors">
-          <td class="py-4 px-6">
-            <span class="font-bold text-gray-900"><%= category.name %></span>
-            <div class="text-xs text-gray-500 mt-1">/<%= category.slug %></div>
-          </td>
-          <td class="py-4 px-6">
-            <% if category.parent %>
-              <span class="bg-gray-100 text-gray-700 px-2.5 py-1 rounded-md text-xs font-semibold"><%= category.parent.name %></span>
-            <% else %>
-              <span class="text-gray-400 italic">None (Root)</span>
-            <% end %>
-          </td>
-          <td class="py-4 px-6 text-gray-600 font-medium">
-            <%= category.products.count %>
-          </td>
-          <td class="py-4 px-6 text-right">
-            <div class="flex items-center justify-end gap-3">
-              <%= link_to "Edit", edit_dashboard_category_path(category), class: "text-sm font-bold text-indigo-600 hover:text-indigo-800" %>
-              <%= button_to "Delete", dashboard_category_path(category), method: :delete, data: { turbo_confirm: "Are you sure?" }, class: "text-sm font-bold text-red-600 hover:text-red-800" %>
-            </div>
-          </td>
-        </tr>
+  <%# Header %>
+  <div class="bg-white border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-6 py-8 flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">Categories</h1>
+        <p class="text-sm text-gray-500 mt-1">Manage product taxonomies.</p>
+      </div>
+      <%= link_to new_dashboard_category_path, class: "bg-gray-900 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-gray-800 transition-all shadow-lg shadow-gray-200 flex items-center gap-2" do %>
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" /></svg>
+        New Category
       <% end %>
-      <% if @categories.empty? %>
-        <tr>
-          <td colspan="4" class="py-12 text-center text-gray-500">
-            No categories found. <%= link_to "Create your first category.", new_dashboard_category_path, class: "text-indigo-600 hover:underline font-medium" %>
-          </td>
-        </tr>
-      <% end %>
-    </tbody>
-  </table>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-6 mt-8">
+    <div class="bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-sm">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="border-b border-gray-100 bg-gray-50/50">
+            <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Name</th>
+            <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Parent</th>
+            <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Products</th>
+            <th class="px-6 py-4"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          <% @categories.each do |category| %>
+            <tr class="group hover:bg-gray-50/50 transition-colors">
+              <td class="px-6 py-4">
+                <p class="text-sm font-bold text-gray-900"><%= category.name %></p>
+                <p class="text-[10px] text-gray-400 font-medium">/<%= category.slug %></p>
+              </td>
+              <td class="px-6 py-4">
+                <% if category.parent %>
+                  <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-gray-100 text-gray-700">
+                    <%= category.parent.name %>
+                  </span>
+                <% else %>
+                  <span class="text-xs text-gray-400 font-medium">Root</span>
+                <% end %>
+              </td>
+              <td class="px-6 py-4">
+                <span class="text-xs font-bold text-gray-600 bg-gray-100 px-2.5 py-1 rounded-lg">
+                  <%= category.products.count %> products
+                </span>
+              </td>
+              <td class="px-6 py-4 text-right">
+                <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <%= link_to edit_dashboard_category_path(category), class: "p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all" do %>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                  <% end %>
+                  <%= button_to dashboard_category_path(category), method: :delete, data: { turbo_confirm: "Delete \"#{category.name}\"? This cannot be undone." }, class: "p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all cursor-pointer" do %>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                  <% end %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+          <% if @categories.empty? %>
+            <tr>
+              <td colspan="4" class="px-6 py-12 text-center">
+                <div class="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl opacity-40">🏷️</div>
+                <p class="text-sm font-bold text-gray-900">No categories yet</p>
+                <p class="text-xs text-gray-500 mt-1">Start by creating your first category.</p>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
 </div>
