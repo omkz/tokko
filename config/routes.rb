@@ -28,12 +28,12 @@ Rails.application.routes.draw do
   resources :products,    only: [:index, :show]
   resources :categories,  only: [:show], param: :slug
   resources :collections, only: [:show], param: :slug
+  resources :orders,      only: [:index, :show]
   resource  :cart, only: [:show, :update, :destroy] do
     post "add", to: "carts#add", as: :add_to
   end
   resource  :checkout, only: [:new, :create] do
     get :success
   end
-  get "search", to: "home#search", as: :search
   root "home#index"
 end

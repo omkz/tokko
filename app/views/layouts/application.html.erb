@@ -63,6 +63,9 @@
 
           <%# Account %>
           <% if authenticated? %>
+            <%= link_to orders_path, class: "text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors" do %>
+              My Orders
+            <% end %>
             <%= link_to dashboard_root_path, class: "text-sm font-bold text-gray-900 bg-gray-100 px-4 py-2 rounded-xl hover:bg-gray-200 transition-colors" do %>
               Dashboard
             <% end %>
