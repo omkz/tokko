@@ -54,10 +54,18 @@ group :development, :test do
 
   # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
   gem "rubocop-rails-omakase", require: false
-  gem 'rspec-rails', '~> 8.0.0'
-  
-  gem 'prosopite'
-  gem 'pg_query'
+  gem "rspec-rails", "~> 8.0.0"
+  gem "factory_bot_rails"
+
+  gem "prosopite"
+  gem "pg_query"
+end
+
+group :test do
+  gem "shoulda-matchers", "~> 6.0"
+  gem "capybara"
+  gem "selenium-webdriver"
+  gem "simplecov", require: false
 end
 
 group :development do
