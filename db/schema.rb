@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_23_040302) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_23_050918) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -165,6 +165,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_23_040302) do
     t.string "title"
     t.datetime "updated_at", null: false
     t.index ["product_id"], name: "index_product_variants_on_product_id"
+    t.check_constraint "stock >= 0", name: "stock_non_negative"
   end
 
   create_table "products", force: :cascade do |t|
