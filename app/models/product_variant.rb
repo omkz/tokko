@@ -15,6 +15,11 @@ class ProductVariant < ApplicationRecord
 
   validates :sku, presence: true
   validates :price, presence: true
+  validates :stock, presence: true, numericality: { greater_than_or_equal_to: 0 }
+
+  def out_of_stock?
+    stock <= 0
+  end
 
   def option_text
     values = product_option_values.map(&:value)

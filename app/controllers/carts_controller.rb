@@ -17,12 +17,23 @@ class CartsController < ApplicationController
   end
 
   def add
-    variant_id = params[:variant_id].to_s
+    variant = ProductVariant.find(params[:variant_id])
+    variant_id = variant.id.to_s
     quantity = params[:quantity].to_i > 0 ? params[:quantity].to_i : 1
-    
+    current_in_cart = session[:cart][variant_id].to_i
+
+    if (current_in_cart + quantity) > variant.stock
+      message = variant.stock == 0 ? "#{variant.product.name} is out of stock." : "Only #{variant.stock} left in stock."
+      respond_to do |format|
+        format.turbo_stream { render turbo_stream: turbo_stream.replace("flash", partial: "layouts/flash", locals: { alert: message }) }
+        format.html { redirect_to request.referer || root_path, alert: message }
+      end
+      return
+    end
+
     session[:cart][variant_id] ||= 0
     session[:cart][variant_id] += quantity
-    
+
     respond_to do |format|
       format.turbo_stream
       format.html { redirect_to cart_path, notice: "Added to cart" }

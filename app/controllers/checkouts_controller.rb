@@ -8,6 +8,15 @@ class CheckoutsController < ApplicationController
   end
 
   def create
+    stock_errors = validate_cart_stock
+    if stock_errors.any?
+      @order = Order.new(order_params)
+      @total_price = cart_total_price
+      flash.now[:alert] = stock_errors.to_sentence
+      render :new, status: :unprocessable_entity
+      return
+    end
+
     @order = Order.new(order_params)
     @order.total_price = cart_total_price
     @order.status = :pending
@@ -57,5 +66,19 @@ class CheckoutsController < ApplicationController
 
   def cart_total_price
     helpers.cart_total_price
+  end
+
+  def validate_cart_stock
+    errors = []
+    session[:cart].each do |variant_id, quantity|
+      variant = ProductVariant.includes(:product).find_by(id: variant_id)
+      next unless variant
+      if variant.stock == 0
+        errors << "#{variant.product.name} (#{variant.option_text}) is out of stock"
+      elsif variant.stock < quantity.to_i
+        errors << "#{variant.product.name} (#{variant.option_text}) only has #{variant.stock} left in stock"
+      end
+    end
+    errors
   end
 end
