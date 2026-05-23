@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body style="margin:0;padding:0;background:#f9fafb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;padding:40px 0;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+
+          <%# Header %>
+          <tr>
+            <td style="background:#111827;border-radius:16px 16px 0 0;padding:32px 40px;text-align:center;">
+              <p style="margin:0;color:#ffffff;font-size:22px;font-weight:800;letter-spacing:-0.5px;">Tokko</p>
+              <p style="margin:8px 0 0;color:#9ca3af;font-size:13px;">Order Confirmation</p>
+            </td>
+          </tr>
+
+          <%# Body %>
+          <tr>
+            <td style="background:#ffffff;padding:40px;">
+
+              <p style="margin:0 0 8px;font-size:24px;font-weight:800;color:#111827;">
+                Thank you, <%= @order.customer_name.split.first %>!
+              </p>
+              <p style="margin:0 0 32px;font-size:15px;color:#6b7280;">
+                Your order <strong style="color:#111827;">#<%= @order.id %></strong> has been received and is being processed.
+              </p>
+
+              <%# Order Items %>
+              <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;margin-bottom:32px;">
+                <tr style="background:#f9fafb;">
+                  <td style="padding:12px 16px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;">Item</td>
+                  <td style="padding:12px 16px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;text-align:center;">Qty</td>
+                  <td style="padding:12px 16px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;text-align:right;">Price</td>
+                </tr>
+                <% @items.each do |item| %>
+                  <tr style="border-top:1px solid #e5e7eb;">
+                    <td style="padding:16px;font-size:14px;color:#111827;">
+                      <strong><%= item.product_variant.product.name %></strong>
+                      <% if item.product_variant.option_text.present? && item.product_variant.option_text != "Default Title" %>
+                        <br><span style="color:#9ca3af;font-size:12px;"><%= item.product_variant.option_text %></span>
+                      <% end %>
+                    </td>
+                    <td style="padding:16px;font-size:14px;color:#374151;text-align:center;"><%= item.quantity %></td>
+                    <td style="padding:16px;font-size:14px;font-weight:600;color:#111827;text-align:right;">Rp <%= number_with_delimiter(item.unit_price.to_i * item.quantity) %></td>
+                  </tr>
+                <% end %>
+                <tr style="border-top:2px solid #e5e7eb;background:#f9fafb;">
+                  <td colspan="2" style="padding:16px;font-size:15px;font-weight:800;color:#111827;">Total</td>
+                  <td style="padding:16px;font-size:15px;font-weight:800;color:#111827;text-align:right;">Rp <%= number_with_delimiter(@order.total_price.to_i) %></td>
+                </tr>
+              </table>
+
+              <%# Shipping Address %>
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;border-radius:12px;padding:20px;margin-bottom:32px;">
+                <tr>
+                  <td>
+                    <p style="margin:0 0 8px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;">Shipping To</p>
+                    <p style="margin:0;font-size:14px;color:#111827;line-height:1.6;">
+                      <strong><%= @order.customer_name %></strong><br>
+                      <%= simple_format @order.shipping_address, {}, wrapper_tag: "span", sanitize: false %>
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:0;font-size:14px;color:#6b7280;line-height:1.6;">
+                If you have any questions about your order, reply to this email or contact us.
+              </p>
+
+            </td>
+          </tr>
+
+          <%# Footer %>
+          <tr>
+            <td style="background:#f3f4f6;border-radius:0 0 16px 16px;padding:24px 40px;text-align:center;">
+              <p style="margin:0;font-size:12px;color:#9ca3af;">
+                &copy; <%= Date.current.year %> Tokko. All rights reserved.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>

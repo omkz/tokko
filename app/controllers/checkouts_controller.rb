@@ -1,6 +1,6 @@
 class CheckoutsController < ApplicationController
   allow_unauthenticated_access
-  before_action :ensure_cart_not_empty
+  before_action :ensure_cart_not_empty, only: [ :new, :create ]
 
   def new
     @order = Order.new
@@ -41,6 +41,8 @@ class CheckoutsController < ApplicationController
 
       # Clear cart
       session[:cart] = {}
+
+      OrderMailer.confirmation(@order).deliver_later
 
       redirect_to success_checkout_path(order_id: @order.id), notice: "Order placed successfully!"
     else

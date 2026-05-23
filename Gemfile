@@ -71,10 +71,11 @@ end
 group :development do
   # Use console on exceptions pages [https://github.com/rails/web-console]
   gem "web-console"
-  
-  gem 'rack-mini-profiler'
-  gem 'memory_profiler'
-  gem 'stackprof'
+
+  gem "rack-mini-profiler"
+  gem "memory_profiler"
+  gem "stackprof"
+  gem "letter_opener"
 end
 
 gem "pagy", "~> 43.5"
