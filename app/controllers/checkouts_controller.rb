@@ -4,6 +4,7 @@ class CheckoutsController < ApplicationController
 
   def new
     @order = Order.new
+    @order.customer_email = Current.user.email_address if Current.user
     @total_price = cart_total_price
   end
 

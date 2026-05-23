@@ -20,5 +20,6 @@ class Order < ApplicationRecord
     where(created_at: date.beginning_of_day..date.end_of_day).successful.sum(:total_price)
   end
 
-  validates :customer_name, :customer_email, presence: true
+  validates :customer_name, :customer_email, :shipping_address, presence: true
+  validates :customer_email, format: { with: URI::MailTo::EMAIL_REGEXP }
 end

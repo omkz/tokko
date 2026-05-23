@@ -18,6 +18,7 @@ class ApplicationController < ActionController::Base
     end
   end
 
+  before_action :resume_session
   before_action :set_nav_data
 
   private

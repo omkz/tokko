@@ -13,26 +13,44 @@
     <%= form_with model: @order, url: checkout_path, class: "grid grid-cols-1 lg:grid-cols-3 gap-12" do |f| %>
       <%# Left: Shipping Details %>
       <div class="lg:col-span-2 space-y-8">
+
+        <% if @order.errors.any? %>
+          <div class="bg-red-50 border border-red-200 rounded-2xl px-6 py-4">
+            <p class="text-sm font-bold text-red-700 mb-1">Please fix the following errors:</p>
+            <ul class="list-disc list-inside space-y-0.5">
+              <% @order.errors.full_messages.each do |msg| %>
+                <li class="text-sm text-red-600"><%= msg %></li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+
         <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
           <h2 class="text-sm font-black text-gray-900 uppercase tracking-widest mb-8 flex items-center gap-3">
             <span class="w-6 h-6 bg-gray-900 text-white rounded-full flex items-center justify-center text-[10px]">1</span>
             Contact Information
           </h2>
-          
+
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="md:col-span-2">
               <%= f.label :customer_name, "Full Name", class: "block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2" %>
-              <%= f.text_field :customer_name, placeholder: "e.g. John Doe", 
-                  class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition" %>
+              <%= f.text_field :customer_name, placeholder: "e.g. John Doe", required: true,
+                  class: "w-full rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition #{@order.errors[:customer_name].any? ? 'border-2 border-red-400 bg-red-50' : 'border border-gray-200'}" %>
+              <% if @order.errors[:customer_name].any? %>
+                <p class="text-xs text-red-500 mt-1 font-medium"><%= @order.errors[:customer_name].first %></p>
+              <% end %>
             </div>
             <div>
               <%= f.label :customer_email, "Email Address", class: "block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2" %>
-              <%= f.email_field :customer_email, placeholder: "john@example.com", 
-                  class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition" %>
+              <%= f.email_field :customer_email, placeholder: "john@example.com", required: true,
+                  class: "w-full rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition #{@order.errors[:customer_email].any? ? 'border-2 border-red-400 bg-red-50' : 'border border-gray-200'}" %>
+              <% if @order.errors[:customer_email].any? %>
+                <p class="text-xs text-red-500 mt-1 font-medium"><%= @order.errors[:customer_email].first %></p>
+              <% end %>
             </div>
             <div>
               <%= f.label :customer_phone, "Phone Number", class: "block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2" %>
-              <%= f.text_field :customer_phone, placeholder: "0812...", 
+              <%= f.text_field :customer_phone, placeholder: "0812...",
                   class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition" %>
             </div>
           </div>
@@ -43,11 +61,14 @@
             <span class="w-6 h-6 bg-gray-900 text-white rounded-full flex items-center justify-center text-[10px]">2</span>
             Shipping Address
           </h2>
-          
+
           <div>
             <%= f.label :shipping_address, class: "block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2" %>
-            <%= f.text_area :shipping_address, rows: 4, placeholder: "House number, street name, city, province...", 
-                class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition resize-none" %>
+            <%= f.text_area :shipping_address, rows: 4, placeholder: "House number, street name, city, province...", required: true,
+                class: "w-full rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition resize-none #{@order.errors[:shipping_address].any? ? 'border-2 border-red-400 bg-red-50' : 'border border-gray-200'}" %>
+            <% if @order.errors[:shipping_address].any? %>
+              <p class="text-xs text-red-500 mt-1 font-medium"><%= @order.errors[:shipping_address].first %></p>
+            <% end %>
           </div>
         </div>
 
