@@ -18,6 +18,16 @@ class Product < ApplicationRecord
 
   # Scopes
   scope :in_category, ->(category) { where(category_id: category.self_and_descendant_ids) }
+
+  scope :best_sellers, ->(limit = 4) {
+    joins(product_variants: { order_items: :order })
+      .where.not(orders: { status: :cancelled })
+      .select("products.*, SUM(order_items.quantity) AS total_sold")
+      .group("products.id")
+      .order("total_sold DESC")
+      .limit(limit)
+      .includes(images_attachments: :blob)
+  }
   
   scope :filter_by_facets, ->(filters) do
     return all if filters.blank?
