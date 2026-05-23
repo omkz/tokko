@@ -10,16 +10,24 @@ class Dashboard::InventoriesController < Dashboard::BaseController
 
   def update_all
     updates = params[:variants] || {}
-    
+
     success_count = 0
     updates.each do |variant_id, variant_params|
       variant = ProductVariant.find(variant_id)
-      if variant.update(stock: variant_params[:stock])
-        success_count += 1
-      end
+      delta = variant_params[:stock].to_i - variant.stock.to_i
+      next if delta == 0
+
+      InventoryMovement.create!(
+        product_variant: variant,
+        quantity: delta,
+        reason: :adjustment,
+        user: Current.user,
+        note: "Manual adjustment via dashboard"
+      )
+      success_count += 1
     end
 
-    redirect_to dashboard_inventory_path(q: params[:q], page: params[:page]), 
-                notice: "Successfully updated stock for #{success_count} variants."
+    redirect_to dashboard_inventory_path(q: params[:q], page: params[:page]),
+                notice: "Updated inventory for #{success_count} variants."
   end
 end

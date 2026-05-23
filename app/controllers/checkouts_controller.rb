@@ -13,13 +13,19 @@ class CheckoutsController < ApplicationController
     @order.status = :pending
 
     if @order.save
-      # Move items from cart to OrderItems
+      # Move items from cart to OrderItems and record inventory movements
       session[:cart].each do |variant_id, quantity|
         variant = ProductVariant.find(variant_id)
-        @order.order_items.create!(
+        order_item = @order.order_items.create!(
           product_variant: variant,
           quantity: quantity,
           unit_price: variant.price
+        )
+        InventoryMovement.create!(
+          product_variant: variant,
+          quantity: -quantity.to_i,
+          reason: :sale,
+          order_item: order_item
         )
       end
 

@@ -1,6 +1,7 @@
 class ProductVariant < ApplicationRecord
   belongs_to :product
 
+  has_many :inventory_movements, dependent: :destroy
   has_many :variant_option_values,
            dependent: :destroy
 
