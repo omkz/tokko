@@ -59,3 +59,17 @@ RSpec 8 with transactional fixtures. Prosopite raises on N+1s in tests, so alway
 - Pagination via Pagy — `include Pagy::Method` in ApplicationController.
 - `Current.session` / `Current.user` via `ActiveSupport::CurrentAttributes` (`app/models/current.rb`).
 - Stimulus controllers live in `app/javascript/controllers/`. Importmap handles JS loading — no npm/yarn.
+
+## Code Style & Philosophy
+
+- **The Rails Way:** Lean heavily on native Rails features. Prefer ActiveRecord, Concerns, Callbacks, and Hotwire (Turbo/Stimulus) over heavy custom abstractions.
+- **Keep It Simple:** Avoid adding architectural patterns like Service Objects or Form Objects unless a feature becomes explicitly too complex for a Model/Concern.
+- **Pragmatic Controllers:** Aim for standard REST actions, but adding custom actions is acceptable if creating a new controller feels like overkill for the task.
+
+## Code Quality & Best Practices
+
+- **Fat Model, Skinny Controller:** Controllers should only handle routing, request parameters, status changes, and response formats. Complex business logic and data aggregation belong in Models or Concerns.
+- **Database Queries & Scopes:** Never chain complex queries (e.g., `.where.not(...).order(...)`) inside controllers. Encapsulate them into descriptive model scopes or class methods.
+- **Strict Eager Loading:** Because Prosopite is enabled, always explicitly eager-load associations (use `.includes`, `.preload`, or `.eager_load`) in controllers and system tests to prevent N+1 queries.
+- **Pragmatic Error Handling:** Use `rescue_from` in controllers for global exceptions (like `ActiveRecord::RecordNotFound`). For business logic failures, lean on model validations and standard ActiveRecord errors (`errors.add`) instead of catching custom exceptions everywhere.
+- **Consistent UI Components:** Reuse existing Tailwind classes and partials. For dynamic element updates via Turbo Streams, ensure target IDs are semantic and consistent between the view template and the controller response.
