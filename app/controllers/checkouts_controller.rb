@@ -4,7 +4,7 @@ class CheckoutsController < ApplicationController
 
   def new
     @order = Order.new
-    @order.customer_email = Current.user.email_address if Current.user
+    @order.customer_email = Current.user&.email_address
     @total_price = cart_total_price
   end
 
@@ -22,10 +22,25 @@ class CheckoutsController < ApplicationController
     @order.total_price = cart_total_price
     @order.status = :pending
 
-    if @order.save
-      # Move items from cart to OrderItems and record inventory movements
-      session[:cart].each do |variant_id, quantity|
-        variant = ProductVariant.find(variant_id)
+    locked_errors = []
+    sorted_cart = session[:cart].sort_by { |variant_id, _| variant_id.to_i }
+
+    ActiveRecord::Base.transaction do
+      sorted_cart.each do |variant_id, quantity|
+        variant = ProductVariant.lock.includes(:product).find(variant_id)
+        if variant.stock < quantity.to_i
+          msg = variant.stock == 0 ?
+            "#{variant.product.name} (#{variant.option_text}) is out of stock" :
+            "#{variant.product.name} (#{variant.option_text}) only has #{variant.stock} left in stock"
+          locked_errors << msg
+        end
+      end
+
+      raise ActiveRecord::Rollback if locked_errors.any?
+      raise ActiveRecord::Rollback unless @order.save
+
+      sorted_cart.each do |variant_id, quantity|
+        variant = ProductVariant.lock.find(variant_id)
         order_item = @order.order_items.create!(
           product_variant: variant,
           quantity: quantity,
@@ -38,12 +53,15 @@ class CheckoutsController < ApplicationController
           order_item: order_item
         )
       end
+    end
 
-      # Clear cart
+    if locked_errors.any?
+      @total_price = cart_total_price
+      flash.now[:alert] = locked_errors.to_sentence
+      render :new, status: :unprocessable_entity
+    elsif @order.persisted?
       session[:cart] = {}
-
       OrderMailer.confirmation(@order).deliver_later
-
       redirect_to success_checkout_path(order_id: @order.id), notice: "Order placed successfully!"
     else
       @total_price = cart_total_price
