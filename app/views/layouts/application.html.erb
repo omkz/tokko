@@ -27,7 +27,7 @@
 
         <%# Nav %>
         <nav class="hidden md:flex items-center gap-8">
-          <%= link_to "All Products", root_path, class: "text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors" %>
+          <%= link_to "All Products", products_path, class: "text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors" %>
           <% @nav_categories&.each do |category| %>
             <%= link_to category.name, category_path(category), class: "text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors" %>
           <% end %>
@@ -36,7 +36,7 @@
         <%# Actions %>
         <div class="flex items-center gap-5">
           <%# Search Form %>
-          <%= form_with url: root_path, method: :get, class: "hidden lg:flex items-center relative group" do |f| %>
+          <%= form_with url: products_path, method: :get, class: "hidden lg:flex items-center relative group" do |f| %>
             <%= f.text_field :q, value: params[:q], placeholder: "Search products...", 
                 class: "bg-gray-100 border-none rounded-full pl-10 pr-4 py-2 text-sm w-48 focus:w-64 focus:ring-2 focus:ring-indigo-500 transition-all outline-none" %>
             <div class="absolute left-3.5 text-gray-400 group-focus-within:text-indigo-600 transition-colors">
@@ -45,7 +45,7 @@
               </svg>
             </div>
             <% if params[:q].present? %>
-              <%= link_to root_path, class: "absolute right-3 text-gray-400 hover:text-red-500" do %>
+              <%= link_to products_path, class: "absolute right-3 text-gray-400 hover:text-red-500" do %>
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" /></svg>
               <% end %>
             <% end %>
