@@ -77,113 +77,56 @@
     </div>
   </div>
 
-  <%# Product Grid %>
-  <div id="products" class="max-w-7xl mx-auto px-6 py-24">
-    <div class="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-6">
-      <div>
-        <h2 class="text-3xl font-bold text-gray-900">
-          <% if params[:q].present? %>
-            Results for "<%= params[:q] %>"
-          <% elsif @collection %>
-            <%= @collection.name %>
-          <% else %>
-            Featured Products
-          <% end %>
-        </h2>
-        <% if @collection %>
-          <p class="text-sm text-gray-500 mt-1"><%= @collection.description %></p>
-        <% elsif params[:q].present? %>
-          <p class="text-sm text-gray-500 mt-1">Found <%= @pagy.count %> products matching your search.</p>
-        <% end %>
-      </div>
-      <div class="flex flex-wrap items-center gap-4">
-        <div class="relative group" data-controller="dropdown">
-          <button type="button" class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-700 hover:border-gray-900 transition-all">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" /></svg>
-            <span>Sort: <%= params[:sort] == 'price_asc' ? 'Lowest Price' : (params[:sort] == 'price_desc' ? 'Highest Price' : 'Newest') %></span>
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
-          </button>
-          
-          <div class="absolute right-0 mt-2 w-48 bg-white border border-gray-100 rounded-2xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-20 overflow-hidden">
-            <div class="py-2">
-              <%= link_to url_for(request.params.merge(sort: "newest")), class: "block px-5 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 #{params[:sort] == 'newest' || params[:sort].blank? ? 'text-indigo-600 bg-indigo-50' : ''}" do %>
-                Newest Arrivals
-              <% end %>
-              <%= link_to url_for(request.params.merge(sort: "price_asc")), class: "block px-5 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 #{params[:sort] == 'price_asc' ? 'text-indigo-600 bg-indigo-50' : ''}" do %>
-                Price: Low to High
-              <% end %>
-              <%= link_to url_for(request.params.merge(sort: "price_desc")), class: "block px-5 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 #{params[:sort] == 'price_desc' ? 'text-indigo-600 bg-indigo-50' : ''}" do %>
-                Price: High to Low
-              <% end %>
-            </div>
-          </div>
-        </div>
-        <%= link_to "All", root_path, class: "text-sm font-bold #{@collection.blank? ? 'text-indigo-600' : 'text-gray-400 hover:text-gray-900'} transition-colors" %>
-        <% @nav_collections.each do |col| %>
-          <%= link_to col.name, collection_path(col), class: "text-sm font-bold #{(@collection == col) ? 'text-indigo-600' : 'text-gray-400 hover:text-gray-900'} transition-colors" %>
-        <% end %>
-      </div>
-    </div>
+  <%# Collections %>
+  <% @collections.each do |collection| %>
+    <% products = collection.products.first(4) %>
+    <% next if products.empty? %>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-12">
-      <% @products.each do |product| %>
-        <div class="group relative">
-          <div class="aspect-[4/5] w-full overflow-hidden rounded-2xl bg-gray-100 group-hover:shadow-xl transition-all duration-500">
-            <% if product.images.attached? %>
-              <%= image_tag product.images.first.variant(resize_to_limit: [600, 800]), class: "h-full w-full object-cover object-center group-hover:scale-105 transition-transform duration-700" %>
-            <% else %>
-              <div class="h-full w-full flex items-center justify-center bg-gray-50 text-6xl opacity-20">📦</div>
-            <% end %>
-            
-            <%# Quick Add Overlay %>
-            <div class="absolute inset-x-0 bottom-0 p-4 opacity-0 group-hover:opacity-100 transition-all translate-y-4 group-hover:translate-y-0 duration-300">
-              <button class="w-full bg-white/95 backdrop-blur-sm text-gray-900 py-3 rounded-xl font-bold text-sm shadow-lg hover:bg-white transition-colors">
-                Quick View
-              </button>
+    <div class="max-w-7xl mx-auto px-6 py-12 border-b border-gray-100 last:border-0">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h2 class="text-lg font-bold text-gray-900"><%= collection.name %></h2>
+          <% if collection.description.present? %>
+            <p class="text-xs text-gray-400 mt-0.5"><%= collection.description %></p>
+          <% end %>
+        </div>
+        <%= link_to collection_path(collection), class: "flex items-center gap-1 text-sm font-bold text-indigo-600 hover:text-indigo-800 transition-colors" do %>
+          View all
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+        <% end %>
+      </div>
+
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-5">
+        <% products.each do |product| %>
+          <% prices = product.product_variants.map(&:price).compact %>
+          <div class="group relative">
+            <div class="aspect-[4/5] w-full overflow-hidden rounded-2xl bg-gray-100 group-hover:shadow-xl transition-all duration-500">
+              <% if product.images.attached? %>
+                <%= image_tag product.images.first.variant(resize_to_limit: [600, 800]), class: "h-full w-full object-cover object-center group-hover:scale-105 transition-transform duration-700" %>
+              <% else %>
+                <div class="h-full w-full flex items-center justify-center bg-gray-50 text-5xl opacity-20">📦</div>
+              <% end %>
             </div>
-          </div>
-          
-          <div class="mt-4">
-            <h3 class="text-sm font-semibold text-gray-700">
-              <a href="<%= product_path(product) %>">
-                <span aria-hidden="true" class="absolute inset-0"></span>
-                <%= product.name %>
-              </a>
-            </h3>
-            <div class="flex items-center justify-between mt-1">
-              <p class="text-xs text-gray-400 font-medium"><%= product.product_variants.size %> styles</p>
-              <% prices = product.product_variants.map(&:price).compact %>
-              <p class="text-sm font-bold text-gray-900">
-                <% if prices.any? %>
-                  Rp <%= number_with_delimiter(prices.min.to_i) %>
-                <% else %>
-                  —
-                <% end %>
+            <div class="mt-3">
+              <p class="text-sm font-semibold text-gray-800 truncate"><%= product.name %></p>
+              <p class="text-sm font-bold text-gray-900 mt-0.5">
+                <% if prices.any? %>Rp <%= number_with_delimiter(prices.min.to_i) %><% else %>—<% end %>
               </p>
             </div>
+            <%= link_to "", product_path(product), class: "absolute inset-0", aria: { label: product.name } %>
           </div>
-        </div>
-      <% end %>
-    </div>
-
-    <% if @products.empty? %>
-      <div class="py-24 text-center">
-        <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl opacity-40">🔍</div>
-        <h3 class="text-xl font-bold text-gray-900">No products found</h3>
-        <p class="text-gray-500 mt-2">Try adjusting your search or filters to find what you're looking for.</p>
-        <%= link_to "Clear search", root_path, class: "inline-block mt-8 text-sm font-bold text-indigo-600 hover:text-indigo-800" %>
-      </div>
-    <% end %>
-
-    <div class="mt-16 flex justify-center">
-      <div class="pagy">
-        <%== @pagy.series_nav %>
+        <% end %>
       </div>
     </div>
-  </div>
+  <% end %>
 
+  <% if @collections.empty? || @collections.none? { |c| c.products.any? } %>
+    <div class="max-w-7xl mx-auto px-6 py-24 text-center">
+      <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl opacity-40">🛍️</div>
+      <h3 class="text-xl font-bold text-gray-900">No products yet</h3>
+      <p class="text-gray-500 mt-2 text-sm">Check back soon for new arrivals.</p>
     </div>
-  </div>
+  <% end %>
 
   <%# Newsletter Section %>
   <div class="bg-gray-900 py-24 overflow-hidden relative">
