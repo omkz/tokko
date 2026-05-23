@@ -13,6 +13,8 @@ class InventoryMovement < ApplicationRecord
   private
 
   def update_variant_stock
-    product_variant.increment!(:stock, quantity)
+    product_variant.with_lock do
+      product_variant.increment!(:stock, quantity)
+    end
   end
 end
