@@ -1,10 +1,25 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title><%= content_for(:title) || "Tokko Store" %></title>
+    <% _title = content_for?(:title) ? "#{yield(:title)} — Tokko Store" : "Tokko Store" %>
+    <% _desc  = content_for?(:description) ? yield(:description).strip : "Premium essentials for your everyday life." %>
+    <title><%= _title %></title>
+    <meta name="description" content="<%= _desc %>">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
+    <meta property="og:site_name" content="Tokko Store">
+    <meta property="og:title"       content="<%= _title %>">
+    <meta property="og:description" content="<%= _desc %>">
+    <meta property="og:url"         content="<%= request.url %>">
+    <meta property="og:type"        content="<%= content_for?(:og_type) ? yield(:og_type) : "website" %>">
+    <% if content_for?(:og_image) %>
+      <meta property="og:image" content="<%= yield(:og_image) %>">
+      <meta name="twitter:image"  content="<%= yield(:og_image) %>">
+    <% end %>
+    <meta name="twitter:card"        content="<%= content_for?(:og_image) ? "summary_large_image" : "summary" %>">
+    <meta name="twitter:title"       content="<%= _title %>">
+    <meta name="twitter:description" content="<%= _desc %>">
     <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>

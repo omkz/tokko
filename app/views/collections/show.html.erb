@@ -1,3 +1,5 @@
+<% content_for :title, @collection.name %>
+<% content_for :description, @collection.description&.truncate(160) if @collection.description.present? %>
 <%= render "shared/catalog",
            title: @collection.name,
            description: @collection.description,

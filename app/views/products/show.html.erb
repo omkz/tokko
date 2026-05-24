@@ -1,3 +1,10 @@
+<% content_for :title, @product.name %>
+<% content_for :description, @product.description&.truncate(160) %>
+<% content_for :og_type, "product" %>
+<% if @product.images.attached? %>
+  <% content_for :og_image, "#{request.base_url}#{rails_blob_path(@product.images.first)}" %>
+<% end %>
+
 <div class="bg-white min-h-screen pb-24"
      data-controller="product-selection"
      data-product-selection-variants-value="<%= @variants.map { |v| { id: v.id, price: v.price.to_i, active: v.active?, stock: v.stock, options: v.product_option_values.map { |ov| [ov.product_option.name, ov.value] }.to_h } }.to_json %>">

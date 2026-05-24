@@ -1,3 +1,5 @@
+<% content_for :title, @category.name %>
+<% content_for :description, @category.description&.truncate(160) if @category.description.present? %>
 <%= render "shared/catalog",
            title: @category.name,
            description: @category.description,
