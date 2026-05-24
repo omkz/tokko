@@ -17,7 +17,7 @@
   <body class="bg-white">
     <%= render "layouts/flash" %>
     <%# Storefront Header %>
-    <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
+    <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100" data-controller="nav-mobile">
       <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
         <%# Logo %>
         <%= link_to root_path, class: "flex items-center gap-2.5 group" do %>
@@ -25,7 +25,7 @@
           <span class="text-xl font-bold tracking-tight text-gray-900">Tokko<span class="text-indigo-600">.</span></span>
         <% end %>
 
-        <%# Nav %>
+        <%# Desktop Nav %>
         <nav class="hidden md:flex items-center gap-8">
           <%= link_to "All Products", products_path, class: "text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors" %>
           <% @nav_categories&.each do |category| %>
@@ -34,10 +34,10 @@
         </nav>
 
         <%# Actions %>
-        <div class="flex items-center gap-5">
-          <%# Search Form %>
+        <div class="flex items-center gap-3">
+          <%# Desktop Search %>
           <%= form_with url: products_path, method: :get, class: "hidden lg:flex items-center relative group" do |f| %>
-            <%= f.text_field :q, value: params[:q], placeholder: "Search products...", 
+            <%= f.text_field :q, value: params[:q], placeholder: "Search products...",
                 class: "bg-gray-100 border-none rounded-full pl-10 pr-4 py-2 text-sm w-48 focus:w-64 focus:ring-2 focus:ring-indigo-500 transition-all outline-none" %>
             <div class="absolute left-3.5 text-gray-400 group-focus-within:text-indigo-600 transition-colors">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -51,7 +51,7 @@
             <% end %>
           <% end %>
 
-          <%# Cart Icon %>
+          <%# Cart %>
           <%= link_to cart_path, class: "relative group p-2 rounded-full hover:bg-gray-50 transition-all" do %>
             <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-gray-700 group-hover:text-gray-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
@@ -61,18 +61,69 @@
             </span>
           <% end %>
 
-          <%# Account %>
+          <%# Desktop Account %>
           <% if authenticated? %>
-            <%= link_to orders_path, class: "text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors" do %>
+            <%= link_to orders_path, class: "hidden md:block text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors" do %>
               My Orders
             <% end %>
-            <%= link_to dashboard_root_path, class: "text-sm font-bold text-gray-900 bg-gray-100 px-4 py-2 rounded-xl hover:bg-gray-200 transition-colors" do %>
+            <%= link_to dashboard_root_path, class: "hidden md:block text-sm font-bold text-gray-900 bg-gray-100 px-4 py-2 rounded-xl hover:bg-gray-200 transition-colors" do %>
               Dashboard
             <% end %>
           <% else %>
-            <%= link_to new_session_path, class: "text-sm font-bold text-gray-900" do %>
+            <%= link_to new_session_path, class: "hidden md:block text-sm font-bold text-gray-900" do %>
               Login
             <% end %>
+          <% end %>
+
+          <%# Hamburger — mobile only %>
+          <button type="button"
+                  data-action="click->nav-mobile#toggle"
+                  class="md:hidden p-2 rounded-xl text-gray-600 hover:bg-gray-50 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <%# Mobile Menu %>
+      <div data-nav-mobile-target="menu" class="hidden md:hidden border-t border-gray-100 bg-white/95 backdrop-blur-md px-6 py-5 space-y-5">
+        <%# Mobile Search %>
+        <%= form_with url: products_path, method: :get, class: "relative" do |f| %>
+          <%= f.text_field :q, value: params[:q], placeholder: "Search products...",
+              class: "w-full bg-gray-100 border-none rounded-full pl-10 pr-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" %>
+          <div class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+        <% end %>
+
+        <%# Mobile Nav Links %>
+        <nav class="space-y-1">
+          <%= link_to "All Products", products_path,
+              class: "block px-3 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 rounded-xl transition-colors",
+              data: { action: "click->nav-mobile#close" } %>
+          <% @nav_categories&.each do |category| %>
+            <%= link_to category.name, category_path(category),
+                class: "block px-3 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 rounded-xl transition-colors",
+                data: { action: "click->nav-mobile#close" } %>
+          <% end %>
+        </nav>
+
+        <%# Mobile Account %>
+        <div class="border-t border-gray-100 pt-4 space-y-1">
+          <% if authenticated? %>
+            <%= link_to "My Orders", orders_path,
+                class: "block px-3 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 rounded-xl transition-colors",
+                data: { action: "click->nav-mobile#close" } %>
+            <%= link_to "Dashboard", dashboard_root_path,
+                class: "block px-3 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 rounded-xl transition-colors",
+                data: { action: "click->nav-mobile#close" } %>
+          <% else %>
+            <%= link_to "Login", new_session_path,
+                class: "block px-3 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 rounded-xl transition-colors",
+                data: { action: "click->nav-mobile#close" } %>
           <% end %>
         </div>
       </div>
