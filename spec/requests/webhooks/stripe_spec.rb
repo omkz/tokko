@@ -48,6 +48,22 @@ RSpec.describe "Webhooks::Stripe", type: :request do
       end
     end
 
+    context "when the event is delivered twice (idempotency)" do
+      let(:order) { create(:order, :paid, stripe_checkout_session_id: "cs_test_abc123") }
+      let(:payload) { stripe_event(type: "checkout.session.completed", session_id: order.stripe_checkout_session_id) }
+
+      it "does not send a duplicate confirmation email" do
+        expect {
+          post_webhook(payload)
+        }.not_to have_enqueued_mail(OrderMailer, :confirmation)
+      end
+
+      it "returns 200 OK" do
+        post_webhook(payload)
+        expect(response).to have_http_status(:ok)
+      end
+    end
+
     context "when no matching order exists" do
       let(:payload) { stripe_event(type: "checkout.session.completed", session_id: "cs_unknown") }
 

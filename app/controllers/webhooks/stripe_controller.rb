@@ -26,6 +26,7 @@ class Webhooks::StripeController < ApplicationController
   def handle_checkout_completed(session)
     order = Order.find_by(stripe_checkout_session_id: session["id"])
     return unless order
+    return if order.paid?
 
     order.update!(status: :paid)
     OrderMailer.confirmation(order).deliver_later
