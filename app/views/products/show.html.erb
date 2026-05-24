@@ -25,7 +25,10 @@
       <%# Left: Gallery %>
       <% images = @product.images.attached? ? @product.images.to_a : [] %>
       <div class="space-y-4"<% if images.size > 1 %> data-controller="gallery"<% end %>>
-        <div class="aspect-square rounded-3xl overflow-hidden bg-gray-50 border border-gray-100 shadow-sm">
+        <div class="relative aspect-square rounded-3xl overflow-hidden bg-gray-50 border border-gray-100 shadow-sm">
+          <div class="absolute top-4 right-4 z-10">
+            <%= render "shared/wishlist_button", product: @product %>
+          </div>
           <% if images.any? %>
             <%= image_tag images.first.variant(resize_to_limit: [800, 800]),
                   class: "w-full h-full object-cover object-center",
@@ -93,8 +96,8 @@
             </div>
           <% end %>
 
-          <%# Add to Cart Form %>
-          <%= form_with url: add_to_cart_path, method: :post, class: "pt-4 space-y-4" do |f| %>
+          <%# Add to Cart Form — submit button lives outside via form="cart-form" %>
+          <%= form_with url: add_to_cart_path, method: :post, id: "cart-form", class: "pt-4 space-y-4" do |f| %>
             <%= hidden_field_tag :variant_id, @variants.first&.id, data: { product_selection_target: "variantId" } %>
 
             <%# Quantity selector %>
@@ -120,21 +123,14 @@
                 </button>
               </div>
             </div>
-
-            <div class="flex gap-4">
-              <button type="submit"
-                      data-product-selection-target="button"
-                      class="flex-1 bg-gray-900 text-white py-4 rounded-2xl font-bold hover:bg-gray-800 transition-all shadow-xl active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
-                Add to Cart
-              </button>
-
-              <button type="button" class="p-4 border border-gray-200 rounded-2xl hover:bg-gray-50 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
-              </button>
-            </div>
           <% end %>
+
+          <button type="submit"
+                  form="cart-form"
+                  data-product-selection-target="button"
+                  class="w-full mt-4 bg-gray-900 text-white py-4 rounded-2xl font-bold hover:bg-gray-800 transition-all shadow-xl active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+            Add to Cart
+          </button>
         </div>
 
         <%# Features %>
