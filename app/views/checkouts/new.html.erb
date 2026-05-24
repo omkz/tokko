@@ -96,17 +96,14 @@
           <h2 class="text-sm font-black text-gray-900 uppercase tracking-widest mb-6">Your Order</h2>
           
           <div class="space-y-4 mb-8">
-            <% session[:cart].each do |variant_id, quantity| %>
-              <% variant = ProductVariant.find_by(id: variant_id) %>
-              <% if variant %>
-                <div class="flex justify-between text-sm">
-                  <div class="flex flex-col">
-                    <span class="font-bold text-gray-900"><%= variant.product.name %></span>
-                    <span class="text-[10px] text-gray-400 font-bold uppercase"><%= variant.option_text %> x <%= quantity %></span>
-                  </div>
-                  <span class="font-bold text-gray-900">Rp <%= number_with_delimiter(variant.price.to_i * quantity.to_i) %></span>
+            <% current_cart&.cart_items&.includes(product_variant: :product)&.each do |item| %>
+              <div class="flex justify-between text-sm">
+                <div class="flex flex-col">
+                  <span class="font-bold text-gray-900"><%= item.product_variant.product.name %></span>
+                  <span class="text-[10px] text-gray-400 font-bold uppercase"><%= item.product_variant.option_text %> x <%= item.quantity %></span>
                 </div>
-              <% end %>
+                <span class="font-bold text-gray-900">Rp <%= number_with_delimiter(item.product_variant.price.to_i * item.quantity) %></span>
+              </div>
             <% end %>
           </div>
 
