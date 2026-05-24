@@ -57,7 +57,8 @@ puts "Creating 100 Fashion Products without images..."
   product = Product.create!(
     name: "Premium #{cat.name} #{i+1}",
     description: "High quality #{cat.name.downcase} designed for everyday use. Comfortable to wear all day.",
-    category: cat
+    category: cat,
+    status: :active
   )
 
   # Assign Filters
