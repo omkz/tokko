@@ -27,7 +27,7 @@ class Dashboard::ProductsController < Dashboard::BaseController
     @product = Product.new(product_params)
 
     if @product.save
-      redirect_to dashboard_products_path, notice: "Product was successfully created."
+      redirect_to edit_dashboard_product_path(@product), notice: "Product created. Now add images, options, and variants."
     else
       render :new, status: :unprocessable_entity
     end

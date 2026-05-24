@@ -1,13 +1,13 @@
 <div class="max-w-2xl mx-auto py-10">
   <div class="mb-6">
-    <%= link_to "← Back to Products", products_path, class: "text-sm text-gray-500 hover:text-gray-900 transition-colors" %>
+    <%= link_to "← Back to Products", dashboard_products_path, class: "text-sm text-gray-500 hover:text-gray-900 transition-colors" %>
   </div>
 
   <div class="bg-white rounded-2xl border border-gray-200 p-8">
     <h1 class="text-2xl font-bold text-gray-900 mb-1">New Product</h1>
     <p class="text-gray-500 text-sm mb-8">Fill in basic info — you can add options & variants after saving.</p>
 
-    <%= form_with model: @product, class: "space-y-5" do |f| %>
+    <%= form_with model: [:dashboard, @product], class: "space-y-5" do |f| %>
 
       <% if @product.errors.any? %>
         <div class="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
@@ -43,7 +43,7 @@
       <div class="flex gap-3 pt-2">
         <%= f.submit "Create Product",
           class: "bg-gray-900 text-white text-sm font-medium px-6 py-3 rounded-xl hover:bg-gray-700 cursor-pointer transition-colors" %>
-        <%= link_to "Cancel", products_path,
+        <%= link_to "Cancel", dashboard_products_path,
           class: "text-sm text-gray-500 hover:text-gray-700 px-4 py-3 transition-colors" %>
       </div>
 
