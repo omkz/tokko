@@ -175,7 +175,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_24_030444) do
     t.text "description"
     t.string "name"
     t.string "slug"
-    t.string "status", default: "draft"
+    t.string "status", default: "draft", null: false
     t.datetime "updated_at", null: false
     t.index ["category_id"], name: "index_products_on_category_id"
   end
@@ -192,8 +192,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_24_030444) do
   create_table "users", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "email_address", null: false
-    t.string "password_digest", null: false
-    t.integer "role"
+    t.string "password_digest"
+    t.integer "role", default: 0, null: false
     t.datetime "updated_at", null: false
     t.index ["email_address"], name: "index_users_on_email_address", unique: true
   end

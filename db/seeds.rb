@@ -17,7 +17,7 @@ User.delete_all if defined?(User)
 puts "Creating Admin User..."
 admin = User.find_or_create_by!(email_address: "admin@tokko.com") do |user|
   user.password = "password"
-  user.role = "admin" if user.respond_to?(:role=)
+  user.role = :admin
 end
 
 puts "Creating Categories (Taxonomy) for Fashion Store..."
