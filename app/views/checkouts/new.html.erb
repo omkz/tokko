@@ -62,14 +62,59 @@
             Shipping Address
           </h2>
 
-          <div>
-            <%= f.label :shipping_address, class: "block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2" %>
-            <%= f.text_area :shipping_address, rows: 4, placeholder: "House number, street name, city, province...", required: true,
-                class: "w-full rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition resize-none #{@order.errors[:shipping_address].any? ? 'border-2 border-red-400 bg-red-50' : 'border border-gray-200'}" %>
-            <% if @order.errors[:shipping_address].any? %>
-              <p class="text-xs text-red-500 mt-1 font-medium"><%= @order.errors[:shipping_address].first %></p>
-            <% end %>
-          </div>
+          <% if @saved_addresses.any? %>
+            <div data-controller="address-selector">
+              <%# Hidden field that carries the final value %>
+              <%= f.hidden_field :shipping_address,
+                    value: @saved_addresses.find(&:is_default?)&.full_address || @saved_addresses.first.full_address,
+                    data: { address_selector_target: "field" } %>
+
+              <%# Saved address cards %>
+              <div class="space-y-3 mb-4">
+                <% @saved_addresses.each_with_index do |address, i| %>
+                  <div class="border-2 rounded-2xl px-5 py-4 cursor-pointer transition-all hover:border-indigo-400
+                              <%= i == 0 ? 'border-indigo-600 bg-indigo-50/30' : 'border-gray-200' %>"
+                       data-address-selector-target="card"
+                       data-address="<%= address.full_address %>"
+                       data-action="click->address-selector#select">
+                    <p class="text-sm font-bold text-gray-900"><%= address.full_name %> &middot; <span class="font-medium text-gray-500"><%= address.phone %></span></p>
+                    <p class="text-sm text-gray-500 mt-0.5"><%= address.full_address %></p>
+                    <% if address.is_default? %>
+                      <span class="inline-block mt-2 px-2 py-0.5 bg-indigo-50 text-indigo-600 text-[10px] font-bold uppercase tracking-wider rounded-full border border-indigo-100">Default</span>
+                    <% end %>
+                  </div>
+                <% end %>
+              </div>
+
+              <%# Enter manually toggle %>
+              <button type="button" class="text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
+                      data-action="click->address-selector#enterManually">
+                + Enter a different address
+              </button>
+
+              <%# Manual textarea (hidden by default) %>
+              <div class="hidden mt-4" data-address-selector-target="manual">
+                <textarea rows="4"
+                          placeholder="House number, street name, city, province..."
+                          class="w-full rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition resize-none border border-gray-200"
+                          data-address-selector-target="textarea"
+                          data-action="input->address-selector#syncField"></textarea>
+              </div>
+
+              <% if @order.errors[:shipping_address].any? %>
+                <p class="text-xs text-red-500 mt-2 font-medium"><%= @order.errors[:shipping_address].first %></p>
+              <% end %>
+            </div>
+          <% else %>
+            <div>
+              <%= f.label :shipping_address, class: "block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2" %>
+              <%= f.text_area :shipping_address, rows: 4, placeholder: "House number, street name, city, province...", required: true,
+                  class: "w-full rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition resize-none #{@order.errors[:shipping_address].any? ? 'border-2 border-red-400 bg-red-50' : 'border border-gray-200'}" %>
+              <% if @order.errors[:shipping_address].any? %>
+                <p class="text-xs text-red-500 mt-1 font-medium"><%= @order.errors[:shipping_address].first %></p>
+              <% end %>
+            </div>
+          <% end %>
         </div>
 
         <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">

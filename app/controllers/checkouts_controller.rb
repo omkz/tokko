@@ -1,10 +1,12 @@
 class CheckoutsController < ApplicationController
   allow_unauthenticated_access
   before_action :ensure_cart_not_empty, only: [ :new, :create ]
+  before_action :set_saved_addresses, only: [ :new, :create ]
 
   def new
     @order = Order.new
     @order.customer_email = Current.user&.email_address
+    @order.customer_name  = Current.user&.full_name
     @total_price = current_cart.total_price
   end
 
@@ -52,6 +54,10 @@ class CheckoutsController < ApplicationController
     if current_cart.nil? || current_cart.cart_items.empty?
       redirect_to root_path, alert: "Your cart is empty"
     end
+  end
+
+  def set_saved_addresses
+    @saved_addresses = Current.user&.addresses&.order(is_default: :desc, created_at: :asc) || []
   end
 
   def order_params
