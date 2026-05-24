@@ -19,6 +19,7 @@ class Dashboard::ProductsController < Dashboard::BaseController
 
   # GET /dashboard/products/1/edit
   def edit
+    @filter_groups = FilterGroup.ordered.includes(:filter_options)
   end
 
   # POST /dashboard/products
@@ -55,6 +56,6 @@ class Dashboard::ProductsController < Dashboard::BaseController
 
     # Only allow a list of trusted parameters through.
     def product_params
-      params.require(:product).permit(:name, :description, :slug, images: [], collection_ids: [])
+      params.require(:product).permit(:name, :description, :slug, images: [], collection_ids: [], filter_option_ids: [])
     end
 end
