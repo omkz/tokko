@@ -4,7 +4,7 @@ class CollectionsController < ApplicationController
   def show
     @collection = Collection.find_by!(slug: params[:slug])
     
-    products_query = @collection.products
+    products_query = @collection.products.published
                                 .search(params[:q])
                                 .filter_by_facets(params[:filter])
                                 .sort_by_param(params[:sort])

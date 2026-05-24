@@ -14,10 +14,13 @@ class Product < ApplicationRecord
   has_many :product_filter_options, dependent: :destroy
   has_many :filter_options, through: :product_filter_options
 
+  enum :status, { draft: "draft", active: "active", archived: "archived" }, default: "draft"
+
   validates :name, presence: true
 
   # Scopes
-  scope :in_category, ->(category) { where(category_id: category.self_and_descendant_ids) }
+  scope :published,    -> { where(status: :active) }
+  scope :in_category,  ->(category) { where(category_id: category.self_and_descendant_ids) }
 
   scope :best_sellers, ->(limit = 4) {
     joins(product_variants: { order_items: :order })
@@ -61,7 +64,8 @@ class Product < ApplicationRecord
   after_create :create_default_variant
 
   def related_products(limit = 4)
-    Product.joins(:collections)
+    Product.published
+           .joins(:collections)
            .where(collections: { id: collection_ids })
            .where.not(id: id)
            .distinct

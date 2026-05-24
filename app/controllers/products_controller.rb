@@ -2,7 +2,8 @@ class ProductsController < ApplicationController
   allow_unauthenticated_access only: %i[index show]
   
   def index
-    products_query = Product.search(params[:q])
+    products_query = Product.published
+                            .search(params[:q])
                             .filter_by_facets(params[:filter])
                             .sort_by_param(params[:sort])
 
@@ -13,7 +14,7 @@ class ProductsController < ApplicationController
   end
   
   def show
-    @product = Product.includes(
+    @product = Product.published.includes(
       product_variants: { product_option_values: :product_option },
       images_attachments: :blob
     ).find(params[:id])

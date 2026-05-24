@@ -4,7 +4,7 @@ class CategoriesController < ApplicationController
   def show
     @category = Category.find_by!(slug: params[:slug])
     
-    products_query = Product.in_category(@category)
+    products_query = Product.published.in_category(@category)
                             .search(params[:q])
                             .filter_by_facets(params[:filter])
                             .sort_by_param(params[:sort])
