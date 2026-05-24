@@ -10,9 +10,8 @@ class CheckoutsController < ApplicationController
 
   def create
     cart = current_cart
-    cart_items = cart.cart_items.includes(product_variant: :product).to_a
 
-    stock_errors = validate_stock(cart_items)
+    stock_errors = validate_stock(cart.cart_items.includes(product_variant: :product))
     if stock_errors.any?
       @order = Order.new(order_params)
       @total_price = cart.total_price
@@ -21,45 +20,7 @@ class CheckoutsController < ApplicationController
       return
     end
 
-    @order = Order.new(order_params)
-    @order.total_price = cart.total_price
-    @order.status = :pending
-
-    locked_errors = []
-    sorted_items = cart_items.sort_by { |i| i.product_variant_id }
-
-    ActiveRecord::Base.transaction do
-      variant_ids = sorted_items.map(&:product_variant_id)
-      locked_variants = ProductVariant.lock.includes(:product).where(id: variant_ids).index_by(&:id)
-
-      sorted_items.each do |item|
-        variant = locked_variants[item.product_variant_id]
-        if variant.stock < item.quantity
-          msg = variant.stock == 0 ?
-            "#{variant.product.name} (#{variant.option_text}) is out of stock" :
-            "#{variant.product.name} (#{variant.option_text}) only has #{variant.stock} left in stock"
-          locked_errors << msg
-        end
-      end
-
-      raise ActiveRecord::Rollback if locked_errors.any?
-      raise ActiveRecord::Rollback unless @order.save
-
-      sorted_items.each do |item|
-        variant = locked_variants[item.product_variant_id]
-        order_item = @order.order_items.create!(
-          product_variant: variant,
-          quantity: item.quantity,
-          unit_price: variant.price
-        )
-        InventoryMovement.create!(
-          product_variant: variant,
-          quantity: -item.quantity,
-          reason: :sale,
-          order_item: order_item
-        )
-      end
-    end
+    @order, locked_errors = Order.create_from_cart!(cart, order_params)
 
     if locked_errors.any?
       @total_price = cart.total_price
