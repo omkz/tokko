@@ -1,0 +1,19 @@
+<% content_for :title, "Add Address" %>
+
+<div class="bg-gray-50/50 min-h-screen pb-24">
+  <div class="max-w-lg mx-auto px-6 py-12">
+    <div class="mb-8">
+      <%= link_to addresses_path, class: "inline-flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-gray-900 transition-colors mb-6" do %>
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+        Saved Addresses
+      <% end %>
+      <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Add Address</h1>
+    </div>
+
+    <div class="bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
+      <%= render "form", address: @address %>
+    </div>
+  </div>
+</div>

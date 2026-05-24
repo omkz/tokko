@@ -4,6 +4,7 @@ class User < ApplicationRecord
   has_many :inventory_movements
   has_many :wishlist_items, dependent: :destroy
   has_many :wishlisted_products, through: :wishlist_items, source: :product
+  has_many :addresses, dependent: :destroy
 
   enum :role, { customer: 0, staff: 1, admin: 2, owner: 3 }, default: :customer
 

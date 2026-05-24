@@ -35,6 +35,9 @@ Rails.application.routes.draw do
   resources :categories,  only: [ :show ], param: :slug
   resources :collections, only: [ :show ], param: :slug
   resource  :account,     only: [ :show, :edit, :update ]
+  resources :addresses,   only: [ :index, :new, :create, :edit, :update, :destroy ] do
+    member { patch :set_default }
+  end
   resources :orders,      only: [ :index, :show ]
   resources :wishlist_items, only: [ :index, :create, :destroy ]
   resource  :cart, only: [ :show, :update, :destroy ] do

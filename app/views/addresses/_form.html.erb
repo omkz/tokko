@@ -1,0 +1,57 @@
+<%= form_with model: address, url: address.new_record? ? addresses_path : address_path(address), class: "space-y-5" do |f| %>
+  <% if address.errors.any? %>
+    <div class="p-4 bg-red-50 rounded-2xl border border-red-100">
+      <ul class="text-sm text-red-600 space-y-1">
+        <% address.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <%= f.label :first_name, class: "block text-xs font-bold text-gray-700 uppercase tracking-widest mb-2" %>
+      <%= f.text_field :first_name, class: "w-full px-4 py-3 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all", placeholder: "John" %>
+    </div>
+    <div>
+      <%= f.label :last_name, class: "block text-xs font-bold text-gray-700 uppercase tracking-widest mb-2" %>
+      <%= f.text_field :last_name, class: "w-full px-4 py-3 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all", placeholder: "Doe" %>
+    </div>
+  </div>
+
+  <div>
+    <%= f.label :phone, class: "block text-xs font-bold text-gray-700 uppercase tracking-widest mb-2" %>
+    <%= f.telephone_field :phone, class: "w-full px-4 py-3 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all", placeholder: "+62 812 3456 7890" %>
+  </div>
+
+  <div>
+    <%= f.label :address1, "Address", class: "block text-xs font-bold text-gray-700 uppercase tracking-widest mb-2" %>
+    <%= f.text_field :address1, class: "w-full px-4 py-3 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all", placeholder: "Jl. Sudirman No. 123" %>
+  </div>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <%= f.label :city, class: "block text-xs font-bold text-gray-700 uppercase tracking-widest mb-2" %>
+      <%= f.text_field :city, class: "w-full px-4 py-3 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all", placeholder: "Jakarta" %>
+    </div>
+    <div>
+      <%= f.label :state, "Province", class: "block text-xs font-bold text-gray-700 uppercase tracking-widest mb-2" %>
+      <%= f.text_field :state, class: "w-full px-4 py-3 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all", placeholder: "DKI Jakarta" %>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <%= f.label :zipcode, "Zip Code", class: "block text-xs font-bold text-gray-700 uppercase tracking-widest mb-2" %>
+      <%= f.text_field :zipcode, class: "w-full px-4 py-3 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all", placeholder: "10220" %>
+    </div>
+    <div>
+      <%= f.label :country, class: "block text-xs font-bold text-gray-700 uppercase tracking-widest mb-2" %>
+      <%= f.text_field :country, class: "w-full px-4 py-3 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" %>
+    </div>
+  </div>
+
+  <%= f.submit address.new_record? ? "Save Address" : "Update Address",
+        class: "w-full bg-gray-900 text-white py-4 rounded-2xl font-bold hover:bg-gray-800 transition-all shadow-lg active:scale-95 cursor-pointer" %>
+<% end %>
