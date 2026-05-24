@@ -1,0 +1,86 @@
+<div class="pb-12">
+
+  <%# Header %>
+  <div class="bg-white border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-6 py-8">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">Users</h1>
+        <p class="text-sm text-gray-500 mt-1">Manage team members and their roles.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-6 mt-8">
+
+    <div class="bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-sm">
+      <table class="w-full">
+        <thead class="bg-gray-50/50 border-b border-gray-100">
+          <tr>
+            <th class="text-left text-xs font-bold text-gray-400 uppercase tracking-widest px-6 py-4">User</th>
+            <th class="text-left text-xs font-bold text-gray-400 uppercase tracking-widest px-6 py-4">Joined</th>
+            <th class="text-left text-xs font-bold text-gray-400 uppercase tracking-widest px-6 py-4">Role</th>
+            <% if Current.user.owner? %>
+              <th class="px-6 py-4"></th>
+            <% end %>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          <% @users.each do |user| %>
+            <tr class="group hover:bg-gray-50/50 transition-colors">
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-600">
+                    <%= user.email_address.first.upcase %>
+                  </div>
+                  <div>
+                    <p class="text-sm font-semibold text-gray-900"><%= user.email_address %></p>
+                    <% if user == Current.user %>
+                      <p class="text-[10px] text-gray-400 font-medium">You</p>
+                    <% end %>
+                  </div>
+                </div>
+              </td>
+              <td class="px-6 py-4">
+                <span class="text-sm text-gray-500"><%= user.created_at.strftime("%b %d, %Y") %></span>
+              </td>
+              <td class="px-6 py-4">
+                <% if Current.user.owner? && user != Current.user %>
+                  <%= form_with url: dashboard_user_path(user), method: :patch, class: "inline" do |f| %>
+                    <%= f.select :role, User.roles.keys.map { |r| [r.capitalize, r] },
+                        { selected: user.role },
+                        class: "text-xs font-bold border border-gray-200 rounded-lg px-2 py-1 bg-white text-gray-700 focus:ring-2 focus:ring-indigo-500 outline-none",
+                        onchange: "this.form.submit()" %>
+                  <% end %>
+                <% else %>
+                  <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider
+                    <%= case user.role
+                        when 'owner'    then 'bg-purple-50 text-purple-700 border border-purple-100'
+                        when 'admin'    then 'bg-indigo-50 text-indigo-700 border border-indigo-100'
+                        when 'staff'    then 'bg-blue-50 text-blue-700 border border-blue-100'
+                        else                 'bg-gray-50 text-gray-500 border border-gray-100'
+                        end %>">
+                    <%= user.role.capitalize %>
+                  </span>
+                <% end %>
+              </td>
+              <% if Current.user.owner? %>
+                <td class="px-6 py-4 text-right text-xs text-gray-300">
+                  <% if user == Current.user %>
+                    <span class="italic">cannot edit self</span>
+                  <% end %>
+                </td>
+              <% end %>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="mt-12 flex justify-center">
+      <div class="pagy">
+        <%== @pagy.series_nav %>
+      </div>
+    </div>
+
+  </div>
+</div>

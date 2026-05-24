@@ -19,6 +19,7 @@ Rails.application.routes.draw do
     resources :collections
     resources :categories
     resources :orders, only: %i[index show update]
+    resources :users, only: %i[index update]
     resources :filter_groups do
       resources :filter_options, only: [:create], shallow: true
     end
