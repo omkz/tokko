@@ -60,9 +60,9 @@ class CheckoutsController < ApplicationController
       flash.now[:alert] = locked_errors.to_sentence
       render :new, status: :unprocessable_entity
     elsif @order.persisted?
-      session[:cart] = {}
       stripe_session = create_stripe_session(@order)
       @order.update_column(:stripe_checkout_session_id, stripe_session.id)
+      session[:cart] = {}
       redirect_to stripe_session.url, allow_other_host: true
     else
       @total_price = cart_total_price
