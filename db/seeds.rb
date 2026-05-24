@@ -12,7 +12,8 @@ FilterOption.delete_all
 FilterGroup.delete_all
 Product.delete_all
 Category.delete_all
-User.delete_all if defined?(User)
+Session.delete_all
+User.delete_all
 
 puts "Creating Admin User..."
 admin = User.find_or_create_by!(email_address: "admin@tokko.com") do |user|
