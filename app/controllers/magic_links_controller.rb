@@ -20,6 +20,7 @@ class MagicLinksController < ApplicationController
     if user
       user.touch
       start_new_session_for(user)
+      merge_guest_cart_into_user(user)
       redirect_to after_authentication_url, notice: "Welcome back!"
     else
       redirect_to new_magic_link_path, alert: "Link expired or invalid. Please request a new one."

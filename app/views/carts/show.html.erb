@@ -1,6 +1,6 @@
 <div class="bg-gray-50/50 min-h-screen pb-24">
   <div class="max-w-4xl mx-auto px-6 py-12">
-    
+
     <div class="flex items-center justify-between mb-10">
       <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Shopping Bag</h1>
       <span class="text-sm font-medium text-gray-500"><%= cart_count %> items</span>
@@ -14,8 +14,8 @@
             <div class="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex gap-6">
               <%# Image %>
               <div class="w-24 h-24 rounded-2xl bg-gray-50 border border-gray-100 overflow-hidden shrink-0">
-                <% if item[:variant].product.images.attached? %>
-                  <%= image_tag item[:variant].product.images.first.variant(resize_to_limit: [200, 200]), class: "w-full h-full object-cover" %>
+                <% if item.product_variant.product.images.attached? %>
+                  <%= image_tag item.product_variant.product.images.first.variant(resize_to_limit: [200, 200]), class: "w-full h-full object-cover" %>
                 <% else %>
                   <div class="w-full h-full flex items-center justify-center text-2xl opacity-20">📦</div>
                 <% end %>
@@ -25,25 +25,25 @@
               <div class="flex-1 flex flex-col justify-between">
                 <div>
                   <div class="flex items-start justify-between">
-                    <h3 class="font-bold text-gray-900"><%= item[:variant].product.name %></h3>
-                    <p class="font-bold text-gray-900 text-sm">Rp <%= number_with_delimiter(item[:variant].price.to_i) %></p>
+                    <h3 class="font-bold text-gray-900"><%= item.product_variant.product.name %></h3>
+                    <p class="font-bold text-gray-900 text-sm">Rp <%= number_with_delimiter(item.product_variant.price.to_i) %></p>
                   </div>
-                  <p class="text-xs text-gray-400 mt-1"><%= item[:variant].option_text %></p>
+                  <p class="text-xs text-gray-400 mt-1"><%= item.product_variant.option_text %></p>
                 </div>
 
                 <div class="flex items-center justify-between mt-4">
                   <%# Quantity Controls %>
                   <div class="flex items-center border border-gray-100 rounded-xl px-2 py-1 bg-gray-50">
-                    <%= button_to cart_path(variant_id: item[:variant].id, quantity: item[:quantity] - 1), method: :patch, class: "p-1 text-gray-400 hover:text-gray-900 transition-colors" do %>
+                    <%= button_to cart_path(variant_id: item.product_variant.id, quantity: item.quantity - 1), method: :patch, class: "p-1 text-gray-400 hover:text-gray-900 transition-colors" do %>
                       <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" /></svg>
                     <% end %>
-                    <span class="px-3 text-xs font-bold text-gray-700"><%= item[:quantity] %></span>
-                    <%= button_to cart_path(variant_id: item[:variant].id, quantity: item[:quantity] + 1), method: :patch, class: "p-1 text-gray-400 hover:text-gray-900 transition-colors" do %>
+                    <span class="px-3 text-xs font-bold text-gray-700"><%= item.quantity %></span>
+                    <%= button_to cart_path(variant_id: item.product_variant.id, quantity: item.quantity + 1), method: :patch, class: "p-1 text-gray-400 hover:text-gray-900 transition-colors" do %>
                       <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
                     <% end %>
                   </div>
 
-                  <%= button_to cart_path(variant_id: item[:variant].id, quantity: 0), method: :patch, class: "text-xs font-bold text-red-400 hover:text-red-600 transition-colors" do %>
+                  <%= button_to cart_path(variant_id: item.product_variant.id, quantity: 0), method: :patch, class: "text-xs font-bold text-red-400 hover:text-red-600 transition-colors" do %>
                     Remove
                   <% end %>
                 </div>
@@ -63,7 +63,7 @@
         <div class="space-y-6">
           <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
             <h2 class="text-sm font-black text-gray-900 uppercase tracking-widest mb-6">Order Summary</h2>
-            
+
             <div class="space-y-4 text-sm font-medium">
               <div class="flex justify-between text-gray-500">
                 <span>Subtotal</span>
@@ -100,9 +100,6 @@
         <p class="text-gray-400 text-sm max-w-xs mx-auto mb-8">Looks like you haven't added anything to your bag yet.</p>
         <%= link_to "Browse Products", root_path, class: "inline-block bg-gray-900 text-white px-8 py-3 rounded-xl font-bold hover:bg-gray-800 transition-all shadow-lg active:scale-95" %>
       </div>
-    <% if params[:debug] %>
-      <pre class="mt-10 text-[10px]"><%= session[:cart].inspect %></pre>
-    <% end %>
     <% end %>
 
   </div>

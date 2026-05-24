@@ -1,28 +1,25 @@
 class CartsController < ApplicationController
   allow_unauthenticated_access
-  before_action :initialize_cart
 
   def show
-    @cart_items = []
-    @total_price = 0
-    
-    session[:cart].each do |variant_id, quantity|
-      variant = ProductVariant.includes(:product).find_by(id: variant_id)
-      if variant
-        item_total = variant.price.to_i * quantity.to_i
-        @cart_items << { variant: variant, quantity: quantity, total: item_total }
-        @total_price += item_total
-      end
+    cart = current_cart
+    if cart
+      @cart_items = cart.cart_items.includes(product_variant: :product)
+      @total_price = cart.total_price
+    else
+      @cart_items = []
+      @total_price = 0
     end
   end
 
   def add
     variant = ProductVariant.find(params[:variant_id])
-    variant_id = variant.id.to_s
-    quantity = params[:quantity].to_i > 0 ? params[:quantity].to_i : 1
-    current_in_cart = session[:cart][variant_id].to_i
+    quantity = [ params[:quantity].to_i, 1 ].max
+    cart = find_or_create_cart
+    item = cart.cart_items.find_or_initialize_by(product_variant: variant)
+    new_quantity = item.new_record? ? quantity : item.quantity + quantity
 
-    if (current_in_cart + quantity) > variant.stock
+    if new_quantity > variant.stock
       message = variant.stock == 0 ? "#{variant.product.name} is out of stock." : "Only #{variant.stock} left in stock."
       respond_to do |format|
         format.turbo_stream { render turbo_stream: turbo_stream.replace("flash", partial: "layouts/flash", locals: { alert: message }) }
@@ -31,8 +28,8 @@ class CartsController < ApplicationController
       return
     end
 
-    session[:cart][variant_id] ||= 0
-    session[:cart][variant_id] += quantity
+    item.quantity = new_quantity
+    item.save!
 
     respond_to do |format|
       format.turbo_stream
@@ -41,26 +38,20 @@ class CartsController < ApplicationController
   end
 
   def update
-    variant_id = params[:variant_id].to_s
     quantity = params[:quantity].to_i
-    
-    if quantity <= 0
-      session[:cart].delete(variant_id)
-    else
-      session[:cart][variant_id] = quantity
+    cart = current_cart
+    return redirect_to cart_path unless cart
+
+    item = cart.cart_items.find_by(product_variant_id: params[:variant_id].to_i)
+    if item
+      quantity <= 0 ? item.destroy : item.update!(quantity: quantity)
     end
-    
+
     redirect_to cart_path
   end
 
   def destroy
-    session[:cart] = {}
+    current_cart&.cart_items&.destroy_all
     redirect_to cart_path, notice: "Cart cleared"
-  end
-
-  private
-
-  def initialize_cart
-    session[:cart] ||= {}
   end
 end
