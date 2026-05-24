@@ -31,7 +31,6 @@ class CheckoutsController < ApplicationController
     elsif @order.persisted?
       stripe_session = create_stripe_session(@order)
       @order.update_column(:stripe_checkout_session_id, stripe_session.id)
-      cart.cart_items.destroy_all
       redirect_to stripe_session.url, allow_other_host: true
     else
       @total_price = cart.total_price
@@ -42,6 +41,7 @@ class CheckoutsController < ApplicationController
   def payment_success
     stripe_session = Stripe::Checkout::Session.retrieve(params[:session_id])
     @order = Order.find_by!(stripe_checkout_session_id: stripe_session.id)
+    current_cart&.cart_items&.destroy_all
   end
 
   def success

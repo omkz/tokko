@@ -86,9 +86,9 @@ RSpec.describe "Checkouts", type: :request do
         expect(variant.reload.stock).to eq(8)
       end
 
-      it "clears cart items after checkout" do
+      it "does not clear cart items until payment is confirmed" do
         post checkout_path, params: valid_order_params
-        expect(Cart.find_by(user: nil)&.cart_items).to be_blank
+        expect(Cart.find_by(user: nil)&.cart_items).not_to be_blank
       end
 
       it "redirects to Stripe checkout URL" do

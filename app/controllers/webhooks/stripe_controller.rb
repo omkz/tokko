@@ -30,5 +30,8 @@ class Webhooks::StripeController < ApplicationController
 
     order.update!(status: :paid)
     OrderMailer.confirmation(order).deliver_later
+
+    user = User.find_by(email_address: order.customer_email)
+    Cart.find_by(user: user)&.cart_items&.destroy_all
   end
 end
