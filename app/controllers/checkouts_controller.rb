@@ -29,8 +29,11 @@ class CheckoutsController < ApplicationController
     sorted_items = cart_items.sort_by { |i| i.product_variant_id }
 
     ActiveRecord::Base.transaction do
+      variant_ids = sorted_items.map(&:product_variant_id)
+      locked_variants = ProductVariant.lock.includes(:product).where(id: variant_ids).index_by(&:id)
+
       sorted_items.each do |item|
-        variant = ProductVariant.lock.includes(:product).find(item.product_variant_id)
+        variant = locked_variants[item.product_variant_id]
         if variant.stock < item.quantity
           msg = variant.stock == 0 ?
             "#{variant.product.name} (#{variant.option_text}) is out of stock" :
@@ -43,7 +46,7 @@ class CheckoutsController < ApplicationController
       raise ActiveRecord::Rollback unless @order.save
 
       sorted_items.each do |item|
-        variant = ProductVariant.lock.find(item.product_variant_id)
+        variant = locked_variants[item.product_variant_id]
         order_item = @order.order_items.create!(
           product_variant: variant,
           quantity: item.quantity,

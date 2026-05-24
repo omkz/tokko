@@ -55,10 +55,30 @@ RSpec.describe "Checkouts", type: :request do
         }.to change(Order, :count).by(1)
       end
 
+      it "sets order status to pending" do
+        post checkout_path, params: valid_order_params
+        expect(Order.last.status).to eq("pending")
+      end
+
+      it "sets order total_price correctly" do
+        post checkout_path, params: valid_order_params
+        expect(Order.last.total_price).to eq(variant.price * 2)
+      end
+
       it "creates order items with unit_price snapshot" do
         post checkout_path, params: valid_order_params
         order = Order.last
         expect(order.order_items.first.unit_price).to eq(variant.price)
+      end
+
+      it "creates an inventory movement for each item" do
+        expect {
+          post checkout_path, params: valid_order_params
+        }.to change(InventoryMovement, :count).by(1)
+
+        movement = InventoryMovement.last
+        expect(movement.quantity).to eq(-2)
+        expect(movement.reason).to eq("sale")
       end
 
       it "decrements variant stock" do
@@ -77,6 +97,50 @@ RSpec.describe "Checkouts", type: :request do
       end
     end
 
+    context "with multiple variants in cart" do
+      let(:variant2) { create(:product_variant, price: 30_000, stock: 5) }
+
+      before do
+        setup_cart(quantity: 1)
+        post add_to_cart_path, params: { variant_id: variant2.id, quantity: 2 }
+        allow(Stripe::Checkout::Session).to receive(:create).and_return(fake_stripe_session)
+      end
+
+      it "creates order items for all variants" do
+        post checkout_path, params: valid_order_params
+        expect(Order.last.order_items.count).to eq(2)
+      end
+
+      it "calculates total across all items" do
+        post checkout_path, params: valid_order_params
+        expected_total = variant.price * 1 + variant2.price * 2
+        expect(Order.last.total_price).to eq(expected_total)
+      end
+
+      it "decrements stock for all variants" do
+        post checkout_path, params: valid_order_params
+        expect(variant.reload.stock).to eq(9)
+        expect(variant2.reload.stock).to eq(3)
+      end
+    end
+
+    context "with an out of stock variant" do
+      before { setup_cart(quantity: 1) }
+
+      it "does not create an order when stock is 0" do
+        variant.update!(stock: 0)
+        expect {
+          post checkout_path, params: valid_order_params
+        }.not_to change(Order, :count)
+      end
+
+      it "renders the checkout form with an error" do
+        variant.update!(stock: 0)
+        post checkout_path, params: valid_order_params
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
+    end
+
     context "with stock that runs out during checkout" do
       before do
         setup_cart(quantity: 2)
@@ -87,6 +151,11 @@ RSpec.describe "Checkouts", type: :request do
         expect {
           post checkout_path, params: valid_order_params
         }.not_to change(Order, :count)
+      end
+
+      it "does not decrement stock" do
+        post checkout_path, params: valid_order_params
+        expect(variant.reload.stock).to eq(1)
       end
 
       it "renders the checkout form with an error" do
