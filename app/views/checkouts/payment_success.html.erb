@@ -1,24 +1,27 @@
+<% content_for :title, "Order Confirmed" %>
+
 <div class="bg-white min-h-screen flex items-center justify-center py-24">
   <div class="max-w-md w-full px-6 text-center">
-    
-    <div class="w-24 h-24 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-8 animate-bounce">
+
+    <div class="w-24 h-24 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-8">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
       </svg>
     </div>
 
-    <h1 class="text-3xl font-black text-gray-900 tracking-tight mb-4">Order Confirmed!</h1>
+    <h1 class="text-3xl font-black text-gray-900 tracking-tight mb-4">Payment Successful!</h1>
     <p class="text-gray-500 mb-8 leading-relaxed">
-      Thank you for your purchase, <span class="font-bold text-gray-900"><%= @order.customer_name %></span>! 
-      Your order <span class="font-bold text-gray-900">#<%= @order.id.to_s.rjust(5, '0') %></span> has been placed and is being processed.
+      Thank you, <span class="font-bold text-gray-900"><%= @order.customer_name %></span>!
+      Your order <span class="font-bold text-gray-900">#<%= @order.id.to_s.rjust(5, "0") %></span>
+      has been paid and is now being processed.
     </p>
 
     <div class="bg-gray-50 rounded-3xl p-6 mb-8 text-left border border-gray-100">
-      <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Next Steps</h3>
+      <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">What's next</h3>
       <ul class="space-y-4">
         <li class="flex gap-3">
           <span class="w-5 h-5 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0">1</span>
-          <p class="text-xs text-gray-600 font-medium">Check your email (<%= @order.customer_email %>) for order confirmation details.</p>
+          <p class="text-xs text-gray-600 font-medium">A confirmation email will be sent to <span class="font-bold text-gray-900"><%= @order.customer_email %></span>.</p>
         </li>
         <li class="flex gap-3">
           <span class="w-5 h-5 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0">2</span>
@@ -32,10 +35,10 @@
         <%= link_to "View Order Details", order_path(@order),
             class: "block w-full bg-gray-900 text-white py-4 rounded-2xl font-bold hover:bg-gray-800 transition-all shadow-xl active:scale-95 text-center" %>
       <% end %>
-      <%= link_to "Return to Home", root_path,
+      <%= link_to "Continue Shopping", root_path,
           class: "block w-full py-4 rounded-2xl font-bold border border-gray-200 text-gray-700 hover:bg-gray-50 transition-all text-center" %>
     </div>
-    
+
     <p class="mt-8 text-xs text-gray-400 font-medium italic">
       "Happy shopping with Tokko!"
     </p>

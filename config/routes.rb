@@ -38,6 +38,11 @@ Rails.application.routes.draw do
   end
   resource  :checkout, only: [:new, :create] do
     get :success
+    get :payment_success
+  end
+
+  namespace :webhooks do
+    post :stripe, to: "stripe#create"
   end
   root "home#index"
 end

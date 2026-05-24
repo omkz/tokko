@@ -61,12 +61,18 @@ class CheckoutsController < ApplicationController
       render :new, status: :unprocessable_entity
     elsif @order.persisted?
       session[:cart] = {}
-      OrderMailer.confirmation(@order).deliver_later
-      redirect_to success_checkout_path(order_id: @order.id), notice: "Order placed successfully!"
+      stripe_session = create_stripe_session(@order)
+      @order.update_column(:stripe_checkout_session_id, stripe_session.id)
+      redirect_to stripe_session.url, allow_other_host: true
     else
       @total_price = cart_total_price
       render :new, status: :unprocessable_entity
     end
+  end
+
+  def payment_success
+    stripe_session = Stripe::Checkout::Session.retrieve(params[:session_id])
+    @order = Order.find_by!(stripe_checkout_session_id: stripe_session.id)
   end
 
   def success
@@ -87,6 +93,28 @@ class CheckoutsController < ApplicationController
 
   def cart_total_price
     helpers.cart_total_price
+  end
+
+  def create_stripe_session(order)
+    line_items = order.order_items.includes(product_variant: :product).map do |item|
+      {
+        price_data: {
+          currency: "usd",
+          product_data: { name: "#{item.product_variant.product.name} — #{item.product_variant.title}" },
+          unit_amount: (item.unit_price * 100).to_i
+        },
+        quantity: item.quantity
+      }
+    end
+
+    Stripe::Checkout::Session.create(
+      mode: "payment",
+      customer_email: order.customer_email,
+      line_items: line_items,
+      metadata: { order_id: order.id },
+      success_url: "#{request.base_url}/checkout/payment_success?session_id={CHECKOUT_SESSION_ID}",
+      cancel_url: "#{request.base_url}/checkout/new"
+    )
   end
 
   def validate_cart_stock
