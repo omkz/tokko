@@ -1,0 +1,80 @@
+<% content_for :title, "My Account" %>
+
+<div class="bg-gray-50/50 min-h-screen pb-24">
+  <div class="max-w-4xl mx-auto px-6 py-12">
+
+    <%# Header %>
+    <div class="mb-10">
+      <p class="text-sm font-semibold text-indigo-600 uppercase tracking-widest mb-1">Account</p>
+      <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">
+        Hello, <%= Current.user.email_address.split("@").first.capitalize %> 👋
+      </h1>
+    </div>
+
+    <%# Stats %>
+    <div class="grid grid-cols-2 gap-4 mb-10">
+      <%= link_to orders_path, class: "bg-white rounded-3xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-all group" do %>
+        <p class="text-3xl font-black text-gray-900 group-hover:text-indigo-600 transition-colors"><%= @orders_count %></p>
+        <p class="text-sm font-semibold text-gray-500 mt-1">Orders</p>
+      <% end %>
+
+      <%= link_to wishlist_items_path, class: "bg-white rounded-3xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-all group" do %>
+        <p class="text-3xl font-black text-gray-900 group-hover:text-red-500 transition-colors"><%= @wishlist_count %></p>
+        <p class="text-sm font-semibold text-gray-500 mt-1">Wishlist</p>
+      <% end %>
+    </div>
+
+    <%# Recent Orders %>
+    <div class="mb-10">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-base font-bold text-gray-900">Recent Orders</h2>
+        <%= link_to "View all", orders_path, class: "text-sm font-semibold text-indigo-600 hover:text-indigo-800" %>
+      </div>
+
+      <% if @recent_orders.any? %>
+        <div class="space-y-3">
+          <% @recent_orders.each do |order| %>
+            <%= link_to order_path(order), class: "flex items-center justify-between bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-4 hover:shadow-md transition-all group" do %>
+              <div class="flex items-center gap-4">
+                <div class="w-10 h-10 bg-gray-50 rounded-xl border border-gray-100 flex items-center justify-center flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-sm font-bold text-gray-900">Order #<%= order.id.to_s.rjust(5, "0") %></p>
+                  <p class="text-xs text-gray-400"><%= order.created_at.strftime("%B %d, %Y") %> &middot; <%= order.order_items.size %> items</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-4">
+                <span class="text-sm font-bold text-gray-900">Rp <%= number_with_delimiter(order.total_price.to_i) %></span>
+                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider
+                  <%= order.paid? || order.shipped? || order.completed? ? 'bg-green-50 text-green-700' : order.cancelled? ? 'bg-red-50 text-red-600' : 'bg-yellow-50 text-yellow-700' %>">
+                  <%= order.status %>
+                </span>
+              </div>
+            <% end %>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-10 text-center">
+          <p class="text-sm text-gray-400">No orders yet.</p>
+          <%= link_to "Start shopping", products_path, class: "inline-block mt-3 text-sm font-semibold text-indigo-600 hover:text-indigo-800" %>
+        </div>
+      <% end %>
+    </div>
+
+    <%# Account Links %>
+    <div class="bg-white rounded-3xl border border-gray-100 shadow-sm divide-y divide-gray-50">
+      <%= button_to session_path, method: :delete, class: "w-full flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors rounded-3xl group text-left" do %>
+        <div class="flex items-center gap-3">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          <span class="text-sm font-semibold text-red-500">Sign Out</span>
+        </div>
+      <% end %>
+    </div>
+
+  </div>
+</div>

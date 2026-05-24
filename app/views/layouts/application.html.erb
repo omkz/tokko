@@ -83,8 +83,10 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
             <% end %>
-            <%= link_to orders_path, class: "hidden md:block text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors" do %>
-              My Orders
+            <%= link_to account_path, class: "relative group p-2 rounded-full hover:bg-gray-50 transition-all", title: "My Account" do %>
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-gray-700 group-hover:text-gray-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
             <% end %>
             <% if Current.user.dashboard_access? %>
               <%= link_to dashboard_root_path, class: "hidden md:block text-sm font-bold text-gray-900 bg-gray-100 px-4 py-2 rounded-xl hover:bg-gray-200 transition-colors" do %>
@@ -136,7 +138,7 @@
         <%# Mobile Account %>
         <div class="border-t border-gray-100 pt-4 space-y-1">
           <% if authenticated? %>
-            <%= link_to "My Orders", orders_path,
+            <%= link_to "My Account", account_path,
                 class: "block px-3 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 rounded-xl transition-colors",
                 data: { action: "click->nav-mobile#close" } %>
             <% if Current.user.dashboard_access? %>
