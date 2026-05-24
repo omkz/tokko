@@ -81,8 +81,10 @@
             <%= link_to orders_path, class: "hidden md:block text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors" do %>
               My Orders
             <% end %>
-            <%= link_to dashboard_root_path, class: "hidden md:block text-sm font-bold text-gray-900 bg-gray-100 px-4 py-2 rounded-xl hover:bg-gray-200 transition-colors" do %>
-              Dashboard
+            <% if Current.user.dashboard_access? %>
+              <%= link_to dashboard_root_path, class: "hidden md:block text-sm font-bold text-gray-900 bg-gray-100 px-4 py-2 rounded-xl hover:bg-gray-200 transition-colors" do %>
+                Dashboard
+              <% end %>
             <% end %>
           <% else %>
             <%= link_to new_session_path, class: "hidden md:block text-sm font-bold text-gray-900" do %>
@@ -132,9 +134,11 @@
             <%= link_to "My Orders", orders_path,
                 class: "block px-3 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 rounded-xl transition-colors",
                 data: { action: "click->nav-mobile#close" } %>
-            <%= link_to "Dashboard", dashboard_root_path,
-                class: "block px-3 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 rounded-xl transition-colors",
-                data: { action: "click->nav-mobile#close" } %>
+            <% if Current.user.dashboard_access? %>
+              <%= link_to "Dashboard", dashboard_root_path,
+                  class: "block px-3 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 rounded-xl transition-colors",
+                  data: { action: "click->nav-mobile#close" } %>
+            <% end %>
           <% else %>
             <%= link_to "Login", new_session_path,
                 class: "block px-3 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 rounded-xl transition-colors",
