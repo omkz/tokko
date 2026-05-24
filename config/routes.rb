@@ -18,6 +18,10 @@ Rails.application.routes.draw do
     resources :collections
     resources :categories
     resources :orders, only: %i[index show update]
+    resources :filter_groups do
+      resources :filter_options, only: [:create], shallow: true
+    end
+    resources :filter_options, only: [:destroy]
     get   'inventory',            to: 'inventories#index',         as: :inventory
     patch 'inventory/update_all', to: 'inventories#update_all',    as: :inventory_update_all
     get   'inventory/movements',  to: 'inventory_movements#index', as: :inventory_movements

@@ -1,0 +1,21 @@
+<div class="pb-12">
+  <div class="bg-white border-b border-gray-200">
+    <div class="max-w-2xl mx-auto px-6 py-8 flex items-center gap-4">
+      <%= link_to dashboard_filter_groups_path, class: "text-gray-400 hover:text-gray-700 transition-colors" do %>
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+      <% end %>
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">New Filter Group</h1>
+        <p class="text-sm text-gray-500 mt-1">Add a new filter dimension like Size or Color.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-2xl mx-auto px-6 mt-8">
+    <div class="bg-white border border-gray-200 rounded-3xl p-8 shadow-sm">
+      <%= render "form", filter_group: @filter_group %>
+    </div>
+  </div>
+</div>

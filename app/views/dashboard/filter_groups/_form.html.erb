@@ -1,0 +1,33 @@
+<%= form_with model: [:dashboard, filter_group], class: "space-y-6" do |f| %>
+  <% if filter_group.errors.any? %>
+    <div class="bg-red-50 border border-red-200 rounded-2xl px-5 py-4">
+      <ul class="text-sm text-red-700 space-y-1 list-disc list-inside">
+        <% filter_group.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= f.label :name, "Name", class: "block text-xs font-bold text-gray-700 uppercase tracking-widest mb-2" %>
+    <%= f.text_field :name, placeholder: "e.g. Size, Color, Material", class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" %>
+  </div>
+
+  <div>
+    <%= f.label :slug, "Slug", class: "block text-xs font-bold text-gray-700 uppercase tracking-widest mb-2" %>
+    <%= f.text_field :slug, placeholder: "auto-generated from name", class: "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" %>
+    <p class="text-[10px] text-gray-400 mt-1.5">Leave blank to auto-generate. Used in storefront filter URLs.</p>
+  </div>
+
+  <div>
+    <%= f.label :position, "Position", class: "block text-xs font-bold text-gray-700 uppercase tracking-widest mb-2" %>
+    <%= f.number_field :position, min: 0, class: "w-32 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" %>
+    <p class="text-[10px] text-gray-400 mt-1.5">Lower number appears first in the sidebar.</p>
+  </div>
+
+  <div class="flex gap-3 pt-2">
+    <%= f.submit class: "bg-gray-900 text-white px-6 py-3 rounded-xl text-sm font-bold hover:bg-gray-800 transition-all cursor-pointer shadow-lg shadow-gray-200" %>
+    <%= link_to "Cancel", dashboard_filter_groups_path, class: "px-6 py-3 rounded-xl text-sm font-bold text-gray-600 border border-gray-200 hover:bg-gray-50 transition-all" %>
+  </div>
+<% end %>
