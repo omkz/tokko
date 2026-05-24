@@ -16,10 +16,10 @@ RSpec.describe Collection, type: :model do
     it 'enforces uniqueness of the slug' do
       Collection.create!(name: 'Summer Sale')
       duplicate = Collection.new(name: 'Summer Sale')
-      
+
       # We trigger validation so the slug gets generated
       duplicate.valid?
-      
+
       expect(duplicate.errors[:slug]).to include("has already been taken")
     end
   end
@@ -35,7 +35,7 @@ RSpec.describe Collection, type: :model do
       collection = Collection.create!(name: 'Summer Sale')
       collection.slug = 'custom-slug'
       collection.save!
-      
+
       # Reload and save without changing name
       collection.reload
       collection.valid?

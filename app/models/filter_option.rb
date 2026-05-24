@@ -7,7 +7,7 @@ class FilterOption < ApplicationRecord
   validates :slug, presence: true, uniqueness: { scope: :filter_group_id }
 
   before_validation :generate_slug, on: :create
-  
+
   scope :ordered, -> { order(:position, :value) }
 
   private

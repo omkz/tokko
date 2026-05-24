@@ -73,4 +73,3 @@ RSpec.configure do |config|
     Prosopite.finish
   end
 end
-

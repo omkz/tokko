@@ -18,7 +18,7 @@ RSpec.describe "Collections storefront", type: :request do
   describe "GET /collections/:slug" do
     it "renders the collection page successfully" do
       get collection_path(collection)
-      
+
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Winter Essentials")
       expect(response.body).to include("Warm Coat")
@@ -32,27 +32,27 @@ RSpec.describe "Collections storefront", type: :request do
 
     it "supports sorting products by price ascending" do
       get collection_path(collection, sort: "price_asc")
-      
+
       expect(response).to have_http_status(:ok)
-      
+
       # Since Gloves are 50,000 and Coat is 150,000, Gloves should appear first in price_asc
       body = response.body
       coat_index = body.index("Warm Coat")
       gloves_index = body.index("Cold Gloves")
-      
+
       expect(gloves_index).to be < coat_index
     end
 
     it "supports sorting products by price descending" do
       get collection_path(collection, sort: "price_desc")
-      
+
       expect(response).to have_http_status(:ok)
-      
+
       # Coat (150,000) should appear first in price_desc
       body = response.body
       coat_index = body.index("Warm Coat")
       gloves_index = body.index("Cold Gloves")
-      
+
       expect(coat_index).to be < gloves_index
     end
   end

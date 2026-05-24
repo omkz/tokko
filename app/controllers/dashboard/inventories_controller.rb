@@ -4,7 +4,7 @@ class Dashboard::InventoriesController < Dashboard::BaseController
     @variants = ProductVariant.includes(:product, :product_option_values)
                               .joins(:product)
                               .search_by_product_name(params[:q])
-    
+
     @pagy, @variants = pagy(@variants.order("products.name ASC, product_variants.title ASC"))
   end
 

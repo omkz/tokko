@@ -18,7 +18,7 @@ class Dashboard::ProductVariantsController < Dashboard::BaseController
   def destroy
     product = @variant.product
     @variant.destroy
-    
+
     respond_to do |format|
       format.html { redirect_to edit_dashboard_product_path(product), notice: "Variant deleted" }
       format.turbo_stream { render turbo_stream: turbo_stream.remove("variant_row_#{@variant.id}") }

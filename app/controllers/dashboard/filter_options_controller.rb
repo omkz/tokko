@@ -1,6 +1,6 @@
 class Dashboard::FilterOptionsController < Dashboard::BaseController
-  before_action :set_filter_group, only: [:create]
-  before_action :set_filter_option, only: [:destroy]
+  before_action :set_filter_group, only: [ :create ]
+  before_action :set_filter_option, only: [ :destroy ]
 
   def create
     @filter_option = @filter_group.filter_options.build(filter_option_params)

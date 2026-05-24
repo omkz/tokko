@@ -24,7 +24,7 @@ class Category < ApplicationRecord
 
   # Fetch self and all descendants (subcategories) efficiently
   def self_and_descendant_ids
-    [id] + children.flat_map(&:self_and_descendant_ids)
+    [ id ] + children.flat_map(&:self_and_descendant_ids)
   end
 
   private

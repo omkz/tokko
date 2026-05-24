@@ -15,4 +15,3 @@ class User < ApplicationRecord
     staff? || admin? || owner?
   end
 end
-

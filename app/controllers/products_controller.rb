@@ -1,6 +1,6 @@
 class ProductsController < ApplicationController
   allow_unauthenticated_access only: %i[index show]
-  
+
   def index
     products_query = Product.published
                             .search(params[:q])
@@ -8,11 +8,11 @@ class ProductsController < ApplicationController
                             .sort_by_param(params[:sort])
 
     @pagy, @products = pagy(products_query)
-    
+
     # Preloads for performance
     @products = @products.preload(:product_variants, images_attachments: :blob)
   end
-  
+
   def show
     @product = Product.published.includes(
       product_variants: { product_option_values: :product_option },

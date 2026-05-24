@@ -10,7 +10,7 @@ class Order < ApplicationRecord
     cancelled: 4
   }, default: :pending
 
-  scope :successful, -> { where(status: [:paid, :shipped, :completed]) }
+  scope :successful, -> { where(status: [ :paid, :shipped, :completed ]) }
 
   def self.total_revenue
     successful.sum(:total_price)

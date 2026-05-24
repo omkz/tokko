@@ -9,7 +9,7 @@ class Product < ApplicationRecord
   has_many_attached :images
   has_many :collection_memberships, dependent: :destroy
   has_many :collections, through: :collection_memberships
-  
+
   belongs_to :category, optional: true
   has_many :product_filter_options, dependent: :destroy
   has_many :filter_options, through: :product_filter_options
@@ -31,10 +31,10 @@ class Product < ApplicationRecord
       .limit(limit)
       .includes(images_attachments: :blob)
   }
-  
+
   scope :filter_by_facets, ->(filters) do
     return all if filters.blank?
-    
+
     scope = all
     filters.each do |group_slug, option_slugs|
       matching_product_ids = ProductFilterOption.joins(filter_option: :filter_group)
@@ -141,8 +141,8 @@ class Product < ApplicationRecord
   end
 
   def cartesian_product(arrays)
-    arrays.reduce([[]]) do |acc, group|
-      acc.flat_map { |combo| group.map { |item| combo + [item] } }
+    arrays.reduce([ [] ]) do |acc, group|
+      acc.flat_map { |combo| group.map { |item| combo + [ item ] } }
     end
   end
 end

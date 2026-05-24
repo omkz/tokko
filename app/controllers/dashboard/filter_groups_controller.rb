@@ -1,5 +1,5 @@
 class Dashboard::FilterGroupsController < Dashboard::BaseController
-  before_action :set_filter_group, only: [:edit, :update, :destroy]
+  before_action :set_filter_group, only: [ :edit, :update, :destroy ]
 
   def index
     @filter_groups = FilterGroup.ordered.includes(:filter_options)

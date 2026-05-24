@@ -1,7 +1,7 @@
 Rails.application.routes.draw do
   resource :session
   resources :passwords, param: :token
-  resource :magic_link, only: [:new, :create, :show]
+  resource :magic_link, only: [ :new, :create, :show ]
   get "up" => "rails/health#show", as: :rails_health_check
 
   namespace :dashboard do
@@ -21,24 +21,24 @@ Rails.application.routes.draw do
     resources :orders, only: %i[index show update]
     resources :users, only: %i[index update]
     resources :filter_groups do
-      resources :filter_options, only: [:create], shallow: true
+      resources :filter_options, only: [ :create ], shallow: true
     end
-    resources :filter_options, only: [:destroy]
-    get   'inventory',            to: 'inventories#index',         as: :inventory
-    patch 'inventory/update_all', to: 'inventories#update_all',    as: :inventory_update_all
-    get   'inventory/movements',  to: 'inventory_movements#index', as: :inventory_movements
+    resources :filter_options, only: [ :destroy ]
+    get   "inventory",            to: "inventories#index",         as: :inventory
+    patch "inventory/update_all", to: "inventories#update_all",    as: :inventory_update_all
+    get   "inventory/movements",  to: "inventory_movements#index", as: :inventory_movements
     root to: "home#index"
   end
 
   # Storefront
-  resources :products,    only: [:index, :show]
-  resources :categories,  only: [:show], param: :slug
-  resources :collections, only: [:show], param: :slug
-  resources :orders,      only: [:index, :show]
-  resource  :cart, only: [:show, :update, :destroy] do
+  resources :products,    only: [ :index, :show ]
+  resources :categories,  only: [ :show ], param: :slug
+  resources :collections, only: [ :show ], param: :slug
+  resources :orders,      only: [ :index, :show ]
+  resource  :cart, only: [ :show, :update, :destroy ] do
     post "add", to: "carts#add", as: :add_to
   end
-  resource  :checkout, only: [:new, :create] do
+  resource :checkout, only: [ :new, :create ] do
     get :success
     get :payment_success
   end

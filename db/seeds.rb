@@ -27,7 +27,7 @@ bottoms = Category.create!(name: "Bottoms")
 outerwear = Category.create!(name: "Outerwear")
 shoes = Category.create!(name: "Shoes")
 
-categories = [tops, bottoms, outerwear, shoes]
+categories = [ tops, bottoms, outerwear, shoes ]
 
 puts "Creating Filter Groups & Options (Facets)..."
 gender_filter = FilterGroup.create!(name: "Gender", position: 1)
@@ -54,7 +54,7 @@ collections = [
 puts "Creating 100 Fashion Products without images..."
 100.times do |i|
   cat = categories.sample
-  
+
   product = Product.create!(
     name: "Premium #{cat.name} #{i+1}",
     description: "High quality #{cat.name.downcase} designed for everyday use. Comfortable to wear all day.",
@@ -63,9 +63,9 @@ puts "Creating 100 Fashion Products without images..."
   )
 
   # Assign Filters
-  product.filter_options << [men_opt, women_opt, unisex_opt].sample
-  product.filter_options << [cotton_opt, leather_opt, denim_opt].sample
-  product.filter_options << [zara_opt, uniqlo_opt, hm_opt].sample
+  product.filter_options << [ men_opt, women_opt, unisex_opt ].sample
+  product.filter_options << [ cotton_opt, leather_opt, denim_opt ].sample
+  product.filter_options << [ zara_opt, uniqlo_opt, hm_opt ].sample
 
   # Assign Collections
   product.collections << collections.sample(rand(0..2))
@@ -73,17 +73,17 @@ puts "Creating 100 Fashion Products without images..."
   # Add Product Options (For Variants)
   if cat == shoes
     size_opt = product.product_options.create!(name: "Size", position: 1)
-    ["39", "40", "41", "42"].each_with_index { |s, idx| size_opt.product_option_values.create!(value: s, position: idx + 1) }
+    [ "39", "40", "41", "42" ].each_with_index { |s, idx| size_opt.product_option_values.create!(value: s, position: idx + 1) }
   else
     size_opt = product.product_options.create!(name: "Size", position: 1)
-    ["S", "M", "L", "XL"].each_with_index { |s, idx| size_opt.product_option_values.create!(value: s, position: idx + 1) }
+    [ "S", "M", "L", "XL" ].each_with_index { |s, idx| size_opt.product_option_values.create!(value: s, position: idx + 1) }
   end
-  
+
   color_opt = product.product_options.create!(name: "Color", position: 2)
-  ["Black", "White", "Navy"].each_with_index { |c, idx| color_opt.product_option_values.create!(value: c, position: idx + 1) }
+  [ "Black", "White", "Navy" ].each_with_index { |c, idx| color_opt.product_option_values.create!(value: c, position: idx + 1) }
 
   product.generate_variants!
-  
+
   product.product_variants.each do |v|
     v.update!(price: rand(150..500) * 1000, stock: rand(10..100), sku: "TK-#{product.id}-#{v.id}")
   end
