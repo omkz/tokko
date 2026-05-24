@@ -1,0 +1,87 @@
+<div class="pb-12">
+
+  <div class="bg-white border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-6 py-8 flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">Coupons</h1>
+        <p class="text-sm text-gray-500 mt-1">Create and manage discount codes.</p>
+      </div>
+      <%= link_to new_dashboard_coupon_path, class: "bg-gray-900 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-gray-800 transition-all shadow-lg shadow-gray-200 flex items-center gap-2" do %>
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" />
+        </svg>
+        New Coupon
+      <% end %>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-6 mt-8">
+    <% if @coupons.any? %>
+      <div class="bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-sm">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="border-b border-gray-100 bg-gray-50/50">
+              <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Code</th>
+              <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Discount</th>
+              <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Used</th>
+              <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Expires</th>
+              <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
+              <th class="px-6 py-4"></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            <% @coupons.each do |coupon| %>
+              <tr class="group hover:bg-gray-50/50 transition-colors">
+                <td class="px-6 py-4">
+                  <span class="font-mono font-bold text-gray-900 text-sm bg-gray-100 px-2.5 py-1 rounded-lg"><%= coupon.code %></span>
+                </td>
+                <td class="px-6 py-4">
+                  <span class="text-sm font-semibold text-gray-900">
+                    <% if coupon.percentage? %>
+                      <%= coupon.value.to_i %>% off
+                    <% else %>
+                      Rp <%= number_with_delimiter(coupon.value.to_i) %> off
+                    <% end %>
+                  </span>
+                  <% if coupon.minimum_order.present? %>
+                    <p class="text-xs text-gray-400 mt-0.5">min. Rp <%= number_with_delimiter(coupon.minimum_order.to_i) %></p>
+                  <% end %>
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-600">
+                  <%= coupon.usage_count %>
+                  <% if coupon.usage_limit.present? %>
+                    <span class="text-gray-400">/ <%= coupon.usage_limit %></span>
+                  <% end %>
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-600">
+                  <%= coupon.expires_at ? coupon.expires_at.strftime("%b %d, %Y") : "—" %>
+                </td>
+                <td class="px-6 py-4">
+                  <% if coupon.valid_for_use? %>
+                    <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-full border border-emerald-100">Active</span>
+                  <% else %>
+                    <span class="px-2.5 py-1 bg-gray-100 text-gray-500 text-xs font-bold rounded-full">Inactive</span>
+                  <% end %>
+                </td>
+                <td class="px-6 py-4">
+                  <div class="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <%= link_to "Edit", edit_dashboard_coupon_path(coupon), class: "text-xs font-semibold text-gray-500 hover:text-gray-900 transition-colors" %>
+                    <%= button_to "Delete", dashboard_coupon_path(coupon), method: :delete,
+                          class: "text-xs font-semibold text-red-400 hover:text-red-600 transition-colors",
+                          data: { turbo_confirm: "Delete this coupon?" } %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <div class="bg-white border border-gray-200 rounded-3xl py-16 text-center shadow-sm">
+        <p class="text-gray-400 text-sm">No coupons yet.</p>
+        <%= link_to "Create your first coupon", new_dashboard_coupon_path, class: "inline-block mt-3 text-sm font-bold text-indigo-600 hover:text-indigo-800" %>
+      </div>
+    <% end %>
+  </div>
+
+</div>

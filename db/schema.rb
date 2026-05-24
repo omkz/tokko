@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_24_124231) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_24_155218) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -110,6 +110,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_24_124231) do
     t.index ["slug"], name: "index_collections_on_slug", unique: true
   end
 
+  create_table "coupons", force: :cascade do |t|
+    t.boolean "active"
+    t.string "code"
+    t.datetime "created_at", null: false
+    t.string "discount_type"
+    t.datetime "expires_at"
+    t.decimal "minimum_order"
+    t.datetime "updated_at", null: false
+    t.integer "usage_limit"
+    t.decimal "value"
+    t.index ["code"], name: "index_coupons_on_code", unique: true
+  end
+
   create_table "filter_groups", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "name"
@@ -155,15 +168,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_24_124231) do
   end
 
   create_table "orders", force: :cascade do |t|
+    t.bigint "coupon_id"
     t.datetime "created_at", null: false
     t.string "customer_email"
     t.string "customer_name"
     t.string "customer_phone"
+    t.decimal "discount_amount", default: "0.0", null: false
     t.text "shipping_address"
     t.integer "status"
     t.string "stripe_checkout_session_id"
     t.decimal "total_price"
     t.datetime "updated_at", null: false
+    t.index ["coupon_id"], name: "index_orders_on_coupon_id"
   end
 
   create_table "product_filter_options", force: :cascade do |t|
@@ -270,6 +286,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_24_124231) do
   add_foreign_key "inventory_movements", "users"
   add_foreign_key "order_items", "orders"
   add_foreign_key "order_items", "product_variants"
+  add_foreign_key "orders", "coupons"
   add_foreign_key "product_filter_options", "filter_options"
   add_foreign_key "product_filter_options", "products"
   add_foreign_key "product_option_values", "product_options"

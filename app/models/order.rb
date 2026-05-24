@@ -1,6 +1,7 @@
 class Order < ApplicationRecord
   has_many :order_items, dependent: :destroy
   has_many :product_variants, through: :order_items
+  belongs_to :coupon, optional: true
 
   enum :status, {
     pending: 0,
@@ -26,7 +27,7 @@ class Order < ApplicationRecord
   # Builds and persists an order from a cart inside a single locked transaction.
   # Returns [order, stock_errors]. If stock_errors is empty and order.persisted?,
   # the order was created successfully.
-  def self.create_from_cart!(cart, attributes)
+  def self.create_from_cart!(cart, attributes, coupon: nil)
     order = new(attributes)
     stock_errors = []
     sorted_items = cart.cart_items.includes(product_variant: :product).sort_by(&:product_variant_id)
@@ -48,7 +49,11 @@ class Order < ApplicationRecord
 
       raise ActiveRecord::Rollback if stock_errors.any?
 
-      order.total_price = cart.total_price
+      subtotal = cart.total_price
+      discount = coupon&.discount_for(subtotal) || 0
+      order.coupon = coupon
+      order.discount_amount = discount
+      order.total_price = subtotal - discount
       order.status = :pending
       raise ActiveRecord::Rollback unless order.save
 

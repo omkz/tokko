@@ -1,0 +1,67 @@
+<%= form_with model: [:dashboard, coupon], class: "bg-white border border-gray-200 rounded-3xl p-8 space-y-6 shadow-sm" do |f| %>
+  <% if coupon.errors.any? %>
+    <div class="p-4 bg-red-50 text-red-600 rounded-2xl">
+      <h3 class="font-bold mb-2"><%= pluralize(coupon.errors.count, "error") %> prohibited this coupon from being saved:</h3>
+      <ul class="list-disc list-inside text-sm space-y-1">
+        <% coupon.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div>
+      <%= f.label :code, class: "block text-sm font-bold text-gray-900 mb-2" %>
+      <%= f.text_field :code,
+            class: "w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-mono font-bold text-gray-900 uppercase focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all",
+            placeholder: "TOKKO10" %>
+    </div>
+
+    <div>
+      <%= f.label :discount_type, class: "block text-sm font-bold text-gray-900 mb-2" %>
+      <%= f.select :discount_type,
+            [["Percentage (%)", "percentage"], ["Fixed Amount (Rp)", "fixed"]],
+            {},
+            class: "w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all" %>
+    </div>
+
+    <div>
+      <%= f.label :value, "Discount Value", class: "block text-sm font-bold text-gray-900 mb-2" %>
+      <%= f.number_field :value, step: "0.01",
+            class: "w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all",
+            placeholder: "10" %>
+    </div>
+
+    <div>
+      <%= f.label :minimum_order, "Minimum Order (optional)", class: "block text-sm font-bold text-gray-900 mb-2" %>
+      <%= f.number_field :minimum_order, step: "0.01",
+            class: "w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all",
+            placeholder: "100000" %>
+    </div>
+
+    <div>
+      <%= f.label :usage_limit, "Usage Limit (optional)", class: "block text-sm font-bold text-gray-900 mb-2" %>
+      <%= f.number_field :usage_limit,
+            class: "w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all",
+            placeholder: "100" %>
+    </div>
+
+    <div>
+      <%= f.label :expires_at, "Expiry Date (optional)", class: "block text-sm font-bold text-gray-900 mb-2" %>
+      <%= f.datetime_local_field :expires_at,
+            class: "w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all" %>
+    </div>
+  </div>
+
+  <div class="flex items-center gap-3">
+    <%= f.check_box :active, class: "w-4 h-4 rounded text-indigo-600 border-gray-300 focus:ring-indigo-500" %>
+    <%= f.label :active, "Active", class: "text-sm font-semibold text-gray-900" %>
+  </div>
+
+  <div class="pt-4 flex items-center justify-end gap-3 border-t border-gray-100">
+    <%= link_to "Cancel", dashboard_coupons_path, class: "px-6 py-3 text-sm font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors" %>
+    <%= f.submit coupon.new_record? ? "Create Coupon" : "Update Coupon",
+          class: "bg-gray-900 text-white px-8 py-3 rounded-xl text-sm font-bold hover:bg-gray-800 transition-all shadow-lg active:scale-95 cursor-pointer" %>
+  </div>
+<% end %>

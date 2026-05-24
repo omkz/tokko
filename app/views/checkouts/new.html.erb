@@ -10,7 +10,8 @@
       <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Checkout</h1>
     </div>
 
-    <%= form_with model: @order, url: checkout_path, class: "grid grid-cols-1 lg:grid-cols-3 gap-12", data: { turbo: false } do |f| %>
+    <%= form_with model: @order, url: checkout_path, class: "grid grid-cols-1 lg:grid-cols-3 gap-12", data: { turbo: false, controller: "coupon", coupon_validate_url_value: validate_coupon_path } do |f| %>
+      <%= hidden_field_tag "order[coupon_code]", "", data: { coupon_target: "couponCode" } %>
       <%# Left: Shipping Details %>
       <div class="lg:col-span-2 space-y-8">
 
@@ -137,42 +138,67 @@
 
       <%# Right: Summary %>
       <div class="space-y-6">
-        <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm sticky top-24">
-          <h2 class="text-sm font-black text-gray-900 uppercase tracking-widest mb-6">Your Order</h2>
-          
-          <div class="space-y-4 mb-8">
+        <div class="bg-white rounded-3xl border border-gray-100 shadow-sm sticky top-24 overflow-hidden">
+
+          <%# Order items %>
+          <div class="p-6 space-y-4">
             <% current_cart&.cart_items&.includes(product_variant: :product)&.each do |item| %>
-              <div class="flex justify-between text-sm">
-                <div class="flex flex-col">
-                  <span class="font-bold text-gray-900"><%= item.product_variant.product.name %></span>
-                  <span class="text-[10px] text-gray-400 font-bold uppercase"><%= item.product_variant.option_text %> x <%= item.quantity %></span>
+              <div class="flex items-start justify-between gap-3 text-sm">
+                <div class="flex-1 min-w-0">
+                  <p class="font-semibold text-gray-900 truncate"><%= item.product_variant.product.name %></p>
+                  <p class="text-xs text-gray-400 mt-0.5"><%= item.product_variant.option_text %> &times; <%= item.quantity %></p>
                 </div>
-                <span class="font-bold text-gray-900">Rp <%= number_with_delimiter(item.product_variant.price.to_i * item.quantity) %></span>
+                <span class="font-bold text-gray-900 shrink-0">Rp <%= number_with_delimiter(item.product_variant.price.to_i * item.quantity) %></span>
               </div>
             <% end %>
           </div>
 
-          <div class="space-y-3 pt-6 border-t border-gray-100 text-sm font-medium">
+          <%# Coupon input %>
+          <div class="px-6 pb-5">
+            <div class="flex gap-2">
+              <input type="text" placeholder="Discount code"
+                     class="flex-1 min-w-0 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono uppercase tracking-wider placeholder:normal-case placeholder:tracking-normal placeholder:font-sans"
+                     data-coupon-target="input">
+              <button type="button"
+                      class="shrink-0 border border-gray-900 text-gray-900 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-gray-900 hover:text-white transition-all"
+                      data-action="click->coupon#apply">
+                Apply
+              </button>
+            </div>
+            <p class="mt-2 text-xs font-medium" data-coupon-target="message"></p>
+          </div>
+
+          <%# Totals %>
+          <div class="border-t border-gray-100 px-6 py-5 space-y-3 text-sm">
             <div class="flex justify-between text-gray-500">
               <span>Subtotal</span>
-              <span class="text-gray-900">Rp <%= number_with_delimiter(@total_price) %></span>
+              <span class="text-gray-900 font-medium">Rp <%= number_with_delimiter(@total_price) %></span>
+            </div>
+            <div style="display:none" class="justify-between text-emerald-600 font-semibold" data-coupon-target="discountRow">
+              <span>Discount</span>
+              <span data-coupon-target="discountAmount"></span>
             </div>
             <div class="flex justify-between text-gray-500">
               <span>Shipping</span>
-              <span class="text-green-600 font-bold uppercase text-[10px]">Free</span>
-            </div>
-            <div class="border-t border-gray-100 pt-4 flex justify-between text-lg font-black text-gray-900">
-              <span>Total</span>
-              <span>Rp <%= number_with_delimiter(@total_price) %></span>
+              <span class="text-emerald-600 font-semibold">Free</span>
             </div>
           </div>
 
-          <%= f.submit "Complete Purchase", 
-              class: "w-full bg-gray-900 text-white py-4 rounded-2xl font-bold mt-8 hover:bg-gray-800 transition-all shadow-xl active:scale-95 cursor-pointer" %>
-          
-          <p class="text-[10px] text-gray-400 text-center mt-4 font-medium px-4">
-            By completing this purchase, you agree to our Terms of Service and Privacy Policy.
-          </p>
+          <%# Total row %>
+          <div class="bg-gray-50 px-6 py-4 flex justify-between items-center">
+            <span class="text-sm font-bold text-gray-900">Total</span>
+            <span class="text-xl font-black text-gray-900" data-coupon-target="total">Rp <%= number_with_delimiter(@total_price) %></span>
+          </div>
+
+          <%# CTA %>
+          <div class="px-6 py-5">
+            <%= f.submit "Complete Purchase",
+                class: "w-full bg-gray-900 text-white py-4 rounded-2xl font-bold hover:bg-gray-800 transition-all shadow-lg active:scale-95 cursor-pointer" %>
+            <p class="text-[11px] text-gray-400 text-center mt-3 leading-relaxed">
+              By completing this purchase you agree to our Terms &amp; Privacy Policy.
+            </p>
+          </div>
+
         </div>
       </div>
     <% end %>

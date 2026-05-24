@@ -22,7 +22,9 @@ class CheckoutsController < ApplicationController
       return
     end
 
-    @order, locked_errors = Order.create_from_cart!(cart, order_params)
+    coupon = Coupon.find_by(code: params.dig(:order, :coupon_code)&.upcase)
+    coupon = nil unless coupon&.valid_for_use?
+    @order, locked_errors = Order.create_from_cart!(cart, order_params, coupon: coupon)
 
     if locked_errors.any?
       @total_price = cart.total_price
@@ -87,13 +89,24 @@ class CheckoutsController < ApplicationController
       }
     end
 
-    Stripe::Checkout::Session.create(
+    session_params = {
       mode: "payment",
       customer_email: order.customer_email,
       line_items: line_items,
       metadata: { order_id: order.id },
       success_url: "#{request.base_url}/checkout/payment_success?session_id={CHECKOUT_SESSION_ID}",
       cancel_url: "#{request.base_url}/checkout/new"
-    )
+    }
+
+    if order.coupon.present? && order.discount_amount > 0
+      stripe_coupon = Stripe::Coupon.create(
+        amount_off: (order.discount_amount * 100).to_i,
+        currency: "usd",
+        duration: "once"
+      )
+      session_params[:discounts] = [ { coupon: stripe_coupon.id } ]
+    end
+
+    Stripe::Checkout::Session.create(session_params)
   end
 end
