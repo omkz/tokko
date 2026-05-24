@@ -2,9 +2,9 @@ require 'rails_helper'
 
 RSpec.describe User, type: :model do
   describe 'role enum' do
-    it 'defaults to staff' do
+    it 'defaults to customer' do
       user = User.new
-      expect(user.role).to eq('staff')
+      expect(user.role).to eq('customer')
     end
   end
 

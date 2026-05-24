@@ -2,8 +2,8 @@ require 'rails_helper'
 
 RSpec.describe "Collections storefront", type: :request do
   let!(:collection) { Collection.create!(name: "Winter Essentials") }
-  let!(:product1) { Product.create!(name: "Warm Coat", description: "Stay warm.") }
-  let!(:product2) { Product.create!(name: "Cold Gloves", description: "Keep hands cozy.") }
+  let!(:product1) { Product.create!(name: "Warm Coat", description: "Stay warm.", status: :active) }
+  let!(:product2) { Product.create!(name: "Cold Gloves", description: "Keep hands cozy.", status: :active) }
 
   before do
     # Add products to the collection
