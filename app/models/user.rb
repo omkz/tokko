@@ -13,6 +13,10 @@ class User < ApplicationRecord
     updated_at
   end
 
+  def full_name
+    [ first_name, last_name ].compact_blank.join(" ").presence || email_address.split("@").first
+  end
+
   def dashboard_access?
     staff? || admin? || owner?
   end
