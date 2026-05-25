@@ -60,7 +60,7 @@ RSpec.describe "Products storefront", type: :request do
     end
 
     it "returns 404 for a non-existent product" do
-      get product_path(id: 0)
+      get product_path(slug: "this-does-not-exist")
       expect(response).to have_http_status(:not_found)
     end
 

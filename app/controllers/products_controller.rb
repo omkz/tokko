@@ -14,10 +14,16 @@ class ProductsController < ApplicationController
   end
 
   def show
-    @product = Product.published.includes(
+    @product = Product.friendly.includes(
       product_variants: { product_option_values: :product_option },
       images_attachments: :blob
-    ).find(params[:id])
+    ).find(params[:slug])
+
+    raise ActiveRecord::RecordNotFound unless @product.active?
+
+    if request.path != product_path(@product)
+      return redirect_to @product, status: :moved_permanently
+    end
     @variants = @product.product_variants
     @related_products = @product.related_products(4).includes(:product_variants, images_attachments: :blob)
   end

@@ -13,33 +13,24 @@ RSpec.describe Collection, type: :model do
       expect(collection.errors[:name]).to include("can't be blank")
     end
 
-    it 'enforces uniqueness of the slug' do
+    it 'generates a unique slug with suffix when name is taken' do
       Collection.create!(name: 'Summer Sale')
-      duplicate = Collection.new(name: 'Summer Sale')
-
-      # We trigger validation so the slug gets generated
-      duplicate.valid?
-
-      expect(duplicate.errors[:slug]).to include("has already been taken")
+      duplicate = Collection.create!(name: 'Summer Sale')
+      expect(duplicate.slug).to start_with('summer-sale')
+      expect(duplicate.slug).not_to eq('summer-sale')
     end
   end
 
-  describe '#generate_slug' do
+  describe 'slug generation' do
     it 'parameterizes the name into a slug' do
-      collection = Collection.new(name: 'New & Exclusive Arrivals!')
-      collection.valid?
+      collection = Collection.create!(name: 'New & Exclusive Arrivals!')
       expect(collection.slug).to eq('new-exclusive-arrivals')
     end
 
-    it 'does not overwrite custom slug if name has not changed' do
+    it 'does not overwrite a manually set slug' do
       collection = Collection.create!(name: 'Summer Sale')
-      collection.slug = 'custom-slug'
-      collection.save!
-
-      # Reload and save without changing name
-      collection.reload
-      collection.valid?
-      expect(collection.slug).to eq('custom-slug')
+      collection.update!(slug: 'custom-slug')
+      expect(collection.reload.slug).to eq('custom-slug')
     end
   end
 

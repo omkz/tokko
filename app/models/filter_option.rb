@@ -3,16 +3,10 @@ class FilterOption < ApplicationRecord
   has_many :product_filter_options, dependent: :destroy
   has_many :products, through: :product_filter_options
 
-  validates :value, presence: true
-  validates :slug, presence: true, uniqueness: { scope: :filter_group_id }
+  extend FriendlyId
+  friendly_id :value, use: [ :slugged, :scoped ], scope: :filter_group
 
-  before_validation :generate_slug, on: :create
+  validates :value, presence: true
 
   scope :ordered, -> { order(:position, :value) }
-
-  private
-
-  def generate_slug
-    self.slug = value.parameterize if value.present? && slug.blank?
-  end
 end

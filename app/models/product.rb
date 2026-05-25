@@ -14,6 +14,9 @@ class Product < ApplicationRecord
   has_many :product_filter_options, dependent: :destroy
   has_many :filter_options, through: :product_filter_options
 
+  extend FriendlyId
+  friendly_id :name, use: [ :slugged, :history ]
+
   enum :status, { draft: "draft", active: "active", archived: "archived" }, default: "draft"
 
   validates :name, presence: true

@@ -2,7 +2,11 @@ class CategoriesController < ApplicationController
   allow_unauthenticated_access
 
   def show
-    @category = Category.find_by!(slug: params[:slug])
+    @category = Category.friendly.find(params[:slug])
+
+    if request.path != category_path(@category)
+      return redirect_to @category, status: :moved_permanently
+    end
 
     products_query = Product.published.in_category(@category)
                             .search(params[:q])

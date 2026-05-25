@@ -2,7 +2,11 @@ class CollectionsController < ApplicationController
   allow_unauthenticated_access
 
   def show
-    @collection = Collection.find_by!(slug: params[:slug])
+    @collection = Collection.friendly.find(params[:slug])
+
+    if request.path != collection_path(@collection)
+      return redirect_to @collection, status: :moved_permanently
+    end
 
     products_query = @collection.products.published
                                 .search(params[:q])
