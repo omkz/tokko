@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_24_155218) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_25_013150) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -96,6 +96,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_24_155218) do
     t.datetime "created_at", null: false
     t.bigint "product_id", null: false
     t.datetime "updated_at", null: false
+    t.index ["collection_id", "product_id"], name: "index_collection_memberships_on_collection_id_and_product_id", unique: true
     t.index ["collection_id"], name: "index_collection_memberships_on_collection_id"
     t.index ["product_id"], name: "index_collection_memberships_on_product_id"
   end
@@ -140,6 +141,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_24_155218) do
     t.datetime "updated_at", null: false
     t.string "value"
     t.index ["filter_group_id"], name: "index_filter_options_on_filter_group_id"
+    t.index ["slug"], name: "index_filter_options_on_slug"
   end
 
   create_table "inventory_movements", force: :cascade do |t|
@@ -180,6 +182,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_24_155218) do
     t.decimal "total_price"
     t.datetime "updated_at", null: false
     t.index ["coupon_id"], name: "index_orders_on_coupon_id"
+    t.index ["created_at"], name: "index_orders_on_created_at"
+    t.index ["customer_email"], name: "index_orders_on_customer_email"
+    t.index ["status"], name: "index_orders_on_status"
+    t.index ["stripe_checkout_session_id"], name: "index_orders_on_stripe_checkout_session_id", unique: true
   end
 
   create_table "product_filter_options", force: :cascade do |t|
@@ -188,6 +194,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_24_155218) do
     t.bigint "product_id", null: false
     t.datetime "updated_at", null: false
     t.index ["filter_option_id"], name: "index_product_filter_options_on_filter_option_id"
+    t.index ["product_id", "filter_option_id"], name: "idx_on_product_id_filter_option_id_2630537647", unique: true
     t.index ["product_id"], name: "index_product_filter_options_on_product_id"
   end
 
@@ -231,6 +238,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_24_155218) do
     t.string "status", default: "draft", null: false
     t.datetime "updated_at", null: false
     t.index ["category_id"], name: "index_products_on_category_id"
+    t.index ["slug"], name: "index_products_on_slug", unique: true
+    t.index ["status"], name: "index_products_on_status"
   end
 
   create_table "sessions", force: :cascade do |t|
