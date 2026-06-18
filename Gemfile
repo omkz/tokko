@@ -79,7 +79,7 @@ group :development do
 end
 
 gem "pagy", "~> 43.5"
-gem "stripe", "~> 13.0"
+gem "stripe", "~> 19.2"
 gem "friendly_id", "~> 5.5"
 
 gem "faker", "~> 3.8"
