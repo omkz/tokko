@@ -11,6 +11,43 @@ RSpec.describe ProductVariant, type: :model do
   describe "associations" do
     it { is_expected.to belong_to(:product) }
     it { is_expected.to have_many(:inventory_movements).dependent(:destroy) }
+    it { is_expected.to have_many(:order_items) }
+  end
+
+  describe "deletion" do
+    it "destroys a variant with no order items" do
+      variant = create(:product_variant)
+
+      expect { variant.destroy_or_deactivate! }.to change(ProductVariant, :count).by(-1)
+      expect(variant).to be_destroyed
+    end
+
+    it "deactivates a variant that has been purchased" do
+      variant = create(:product_variant, active: true)
+      create(:order_item, product_variant: variant)
+
+      expect(variant.destroy_or_deactivate!).to eq(:deactivated)
+      expect(variant.reload).not_to be_active
+    end
+
+    it "preserves the order item and its variant reference" do
+      variant = create(:product_variant, active: true)
+      order_item = create(:order_item, product_variant: variant)
+
+      expect { variant.destroy_or_deactivate! }.not_to change(OrderItem, :count)
+
+      expect(order_item.reload.product_variant).to eq(variant.reload)
+    end
+
+    it "deactivates instead when destroy is called directly" do
+      variant = create(:product_variant, active: true)
+      order_item = create(:order_item, product_variant: variant)
+
+      expect { variant.destroy }.not_to change(ProductVariant, :count)
+
+      expect(variant.reload).not_to be_active
+      expect(order_item.reload).to be_persisted
+    end
   end
 
   describe "#out_of_stock?" do

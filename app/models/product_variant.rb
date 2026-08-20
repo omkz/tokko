@@ -2,7 +2,7 @@ class ProductVariant < ApplicationRecord
   belongs_to :product
 
   has_many :inventory_movements, dependent: :destroy
-  has_many :order_items, dependent: :nullify
+  has_many :order_items
   has_many :variant_option_values,
            dependent: :destroy
 
@@ -17,6 +17,27 @@ class ProductVariant < ApplicationRecord
   validates :sku, presence: true
   validates :price, presence: true
   validates :stock, presence: true, numericality: { greater_than_or_equal_to: 0 }
+
+  def destroyable?
+    !order_items.exists?
+  end
+
+  def destroy
+    return super if destroyable?
+
+    update!(active: false)
+    self
+  end
+
+  def destroy_or_deactivate!
+    if destroyable?
+      destroy!
+      :destroyed
+    else
+      destroy
+      :deactivated
+    end
+  end
 
   def out_of_stock?
     stock <= 0

@@ -17,12 +17,14 @@ class Dashboard::ProductVariantsController < Dashboard::BaseController
   # DELETE /product_variants/:id
   def destroy
     product = @variant.product
-    @variant.destroy
-
-    respond_to do |format|
-      format.html { redirect_to edit_dashboard_product_path(product), notice: "Variant deleted" }
-      format.turbo_stream { render turbo_stream: turbo_stream.remove("variant_row_#{@variant.id}") }
+    result = @variant.destroy_or_deactivate!
+    notice = if result == :destroyed
+      "Variant deleted"
+    else
+      "Variant was used in an order and has been deactivated instead"
     end
+
+    redirect_to edit_dashboard_product_path(product), notice: notice, status: :see_other
   end
 
   private
