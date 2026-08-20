@@ -88,19 +88,19 @@ RSpec.describe Order, type: :model do
         expect(item.unit_price).to eq(variant.price)
       end
 
-      it "decrements variant stock" do
+      it "reserves variant stock" do
         Order.create_from_cart!(cart, valid_attributes)
         expect(variant.reload.stock).to eq(8)
       end
 
-      it "creates an inventory movement" do
+      it "creates a reservation movement" do
         expect {
           Order.create_from_cart!(cart, valid_attributes)
         }.to change(InventoryMovement, :count).by(1)
 
         movement = InventoryMovement.last
         expect(movement.quantity).to eq(-2)
-        expect(movement.reason).to eq("sale")
+        expect(movement.reason).to eq("reservation")
       end
     end
 
@@ -155,6 +155,28 @@ RSpec.describe Order, type: :model do
         variant.update!(stock: 3)
         Order.create_from_cart!(cart, valid_attributes)
         expect(variant.reload.stock).to eq(3)
+      end
+    end
+
+    context "with two competing checkouts" do
+      let(:other_cart) { create(:cart) }
+
+      before do
+        variant.update!(stock: 1)
+        create(:cart_item, cart: cart, product_variant: variant, quantity: 1)
+        create(:cart_item, cart: other_cart, product_variant: variant, quantity: 1)
+      end
+
+      it "does not reserve more stock than is available" do
+        first_order, first_errors = Order.create_from_cart!(cart, valid_attributes)
+        second_order, second_errors = Order.create_from_cart!(other_cart, valid_attributes)
+
+        expect(first_order).to be_persisted
+        expect(first_errors).to be_empty
+        expect(second_order).not_to be_persisted
+        expect(second_errors).not_to be_empty
+        expect(variant.reload.stock).to eq(0)
+        expect(InventoryMovement.reservation.count).to eq(1)
       end
     end
 

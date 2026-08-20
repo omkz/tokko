@@ -71,14 +71,14 @@ RSpec.describe "Checkouts", type: :request do
         expect(order.order_items.first.unit_price).to eq(variant.price)
       end
 
-      it "creates an inventory movement for each item" do
+      it "creates an inventory reservation for each item" do
         expect {
           post checkout_path, params: valid_order_params
         }.to change(InventoryMovement, :count).by(1)
 
         movement = InventoryMovement.last
         expect(movement.quantity).to eq(-2)
-        expect(movement.reason).to eq("sale")
+        expect(movement.reason).to eq("reservation")
       end
 
       it "decrements variant stock" do
@@ -192,7 +192,7 @@ RSpec.describe "Checkouts", type: :request do
   describe "GET /checkout/payment_success" do
     it "renders the payment success page when Stripe session matches an order" do
       order = create(:order, customer_name: "Stripe Customer", stripe_checkout_session_id: "cs_test_abc")
-      stripe_session = double("Stripe::Checkout::Session", id: "cs_test_abc")
+      stripe_session = double("Stripe::Checkout::Session", id: "cs_test_abc", payment_status: "paid")
       allow(Stripe::Checkout::Session).to receive(:retrieve).with("cs_test_abc").and_return(stripe_session)
 
       get payment_success_checkout_path(session_id: "cs_test_abc")
@@ -204,7 +204,7 @@ RSpec.describe "Checkouts", type: :request do
     it "ignores an order_id that points to another order" do
       order = create(:order, customer_name: "Stripe Customer", stripe_checkout_session_id: "cs_test_abc")
       other_order = create(:order, customer_name: "Private Customer")
-      stripe_session = double("Stripe::Checkout::Session", id: order.stripe_checkout_session_id)
+      stripe_session = double("Stripe::Checkout::Session", id: order.stripe_checkout_session_id, payment_status: "paid")
       allow(Stripe::Checkout::Session).to receive(:retrieve).with("cs_test_abc").and_return(stripe_session)
 
       get payment_success_checkout_path(session_id: "cs_test_abc", order_id: other_order.id)
@@ -212,6 +212,29 @@ RSpec.describe "Checkouts", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Stripe Customer")
       expect(response.body).not_to include("Private Customer")
+    end
+
+    it "does not mark the order paid or clear the cart" do
+      setup_cart
+      cart = Cart.find_by(user: nil)
+      order = create(:order, cart: cart, stripe_checkout_session_id: "cs_test_abc")
+      stripe_session = double("Stripe::Checkout::Session", id: "cs_test_abc", payment_status: "paid")
+      allow(Stripe::Checkout::Session).to receive(:retrieve).with("cs_test_abc").and_return(stripe_session)
+
+      get payment_success_checkout_path(session_id: "cs_test_abc")
+
+      expect(order.reload).to be_pending
+      expect(cart.cart_items.reload).not_to be_empty
+    end
+
+    it "returns not found when the Stripe session is not paid" do
+      order = create(:order, stripe_checkout_session_id: "cs_test_unpaid")
+      stripe_session = double("Stripe::Checkout::Session", id: "cs_test_unpaid", payment_status: "unpaid")
+      allow(Stripe::Checkout::Session).to receive(:retrieve).with("cs_test_unpaid").and_return(stripe_session)
+
+      get payment_success_checkout_path(session_id: order.stripe_checkout_session_id)
+
+      expect(response).to have_http_status(:not_found)
     end
 
     it "returns not found for an unknown Stripe session" do

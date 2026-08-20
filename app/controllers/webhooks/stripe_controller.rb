@@ -12,6 +12,8 @@ class Webhooks::StripeController < ApplicationController
     case event["type"]
     when "checkout.session.completed"
       handle_checkout_completed(event["data"]["object"])
+    when "checkout.session.expired"
+      handle_checkout_expired(event["data"]["object"])
     end
 
     head :ok
@@ -26,12 +28,13 @@ class Webhooks::StripeController < ApplicationController
   def handle_checkout_completed(session)
     order = Order.find_by(stripe_checkout_session_id: session["id"])
     return unless order
-    return if order.paid?
+    return unless order.complete_payment!
 
-    order.update!(status: :paid)
     OrderMailer.confirmation(order).deliver_later
+    order.cart&.cart_items&.destroy_all
+  end
 
-    user = User.find_by(email_address: order.customer_email)
-    Cart.find_by(user: user)&.cart_items&.destroy_all
+  def handle_checkout_expired(session)
+    Order.find_by(stripe_checkout_session_id: session["id"])&.expire_checkout!
   end
 end

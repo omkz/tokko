@@ -1,7 +1,9 @@
 class Order < ApplicationRecord
   has_many :order_items, dependent: :destroy
   has_many :product_variants, through: :order_items
+  has_many :inventory_movements, through: :order_items
   belongs_to :coupon, optional: true
+  belongs_to :cart, optional: true
 
   enum :status, {
     pending: 0,
@@ -52,6 +54,7 @@ class Order < ApplicationRecord
       subtotal = cart.total_price
       discount = coupon&.discount_for(subtotal) || 0
       order.coupon = coupon
+      order.cart = cart
       order.discount_amount = discount
       order.total_price = subtotal - discount
       order.status = :pending
@@ -67,12 +70,43 @@ class Order < ApplicationRecord
         InventoryMovement.create!(
           product_variant: variant,
           quantity: -item.quantity,
-          reason: :sale,
+          reason: :reservation,
           order_item: order_item
         )
       end
     end
 
     [ order, stock_errors ]
+  end
+
+  def complete_payment!
+    with_lock do
+      return false unless pending?
+
+      inventory_movements.reservation.update_all(reason: "sale", updated_at: Time.current)
+      update!(status: :paid)
+      true
+    end
+  end
+
+  def expire_checkout!
+    with_lock do
+      return false unless pending?
+
+      reservations = inventory_movements.reservation.includes(:product_variant, :order_item)
+        .sort_by { |movement| [ movement.product_variant_id, movement.id ] }
+
+      reservations.each do |reservation|
+        InventoryMovement.create!(
+          product_variant: reservation.product_variant,
+          order_item: reservation.order_item,
+          quantity: -reservation.quantity,
+          reason: :release
+        )
+      end
+
+      update!(status: :cancelled)
+      true
+    end
   end
 end

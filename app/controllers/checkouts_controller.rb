@@ -44,9 +44,9 @@ class CheckoutsController < ApplicationController
     session_id = params.expect(:session_id)
     stripe_session = Stripe::Checkout::Session.retrieve(session_id)
     raise ActiveRecord::RecordNotFound unless stripe_session.id == session_id
+    raise ActiveRecord::RecordNotFound unless stripe_session.payment_status == "paid"
 
     @order = Order.find_by!(stripe_checkout_session_id: stripe_session.id)
-    current_cart&.cart_items&.destroy_all
   rescue Stripe::InvalidRequestError
     raise ActiveRecord::RecordNotFound
   end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_25_013620) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_21_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -181,6 +181,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_25_013620) do
   end
 
   create_table "orders", force: :cascade do |t|
+    t.bigint "cart_id"
     t.bigint "coupon_id"
     t.datetime "created_at", null: false
     t.string "customer_email"
@@ -192,6 +193,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_25_013620) do
     t.string "stripe_checkout_session_id"
     t.decimal "total_price"
     t.datetime "updated_at", null: false
+    t.index ["cart_id"], name: "index_orders_on_cart_id"
     t.index ["coupon_id"], name: "index_orders_on_coupon_id"
     t.index ["created_at"], name: "index_orders_on_created_at"
     t.index ["customer_email"], name: "index_orders_on_customer_email"
@@ -306,6 +308,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_25_013620) do
   add_foreign_key "inventory_movements", "users"
   add_foreign_key "order_items", "orders"
   add_foreign_key "order_items", "product_variants"
+  add_foreign_key "orders", "carts"
   add_foreign_key "orders", "coupons"
   add_foreign_key "product_filter_options", "filter_options"
   add_foreign_key "product_filter_options", "products"

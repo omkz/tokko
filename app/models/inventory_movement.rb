@@ -3,7 +3,15 @@ class InventoryMovement < ApplicationRecord
   belongs_to :user, optional: true
   belongs_to :order_item, optional: true
 
-  enum :reason, { restock: "restock", sale: "sale", return: "return", adjustment: "adjustment", damage: "damage" }
+  enum :reason, {
+    restock: "restock",
+    reservation: "reservation",
+    sale: "sale",
+    release: "release",
+    return: "return",
+    adjustment: "adjustment",
+    damage: "damage"
+  }
 
   validates :quantity, presence: true, numericality: { other_than: 0 }
   validates :reason, presence: true

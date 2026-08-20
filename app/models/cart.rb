@@ -2,6 +2,7 @@ class Cart < ApplicationRecord
   belongs_to :user, optional: true
   has_many :cart_items, dependent: :destroy
   has_many :product_variants, through: :cart_items
+  has_many :orders, dependent: :nullify
 
   validates :token, presence: true, uniqueness: true
 
@@ -18,6 +19,7 @@ class Cart < ApplicationRecord
         cart_items.create!(product_variant_id: item.product_variant_id, quantity: item.quantity)
       end
     end
+    other_cart.orders.update_all(cart_id: id)
     other_cart.destroy
   end
 
