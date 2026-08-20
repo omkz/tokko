@@ -10,13 +10,14 @@ RSpec.describe "Webhooks::Stripe", type: :request do
     end
   end
 
-  def stripe_event(type:, session_id:)
+  def stripe_event(type:, session_id:, payment_status: nil)
+    session = { "id" => session_id }
+    session["payment_status"] = payment_status if payment_status
+
     {
       "type" => type,
       "data" => {
-        "object" => {
-          "id" => session_id
-        }
+        "object" => session
       }
     }.to_json
   end
@@ -35,8 +36,14 @@ RSpec.describe "Webhooks::Stripe", type: :request do
   end
 
   describe "POST /webhooks/stripe" do
-    context "with a valid checkout.session.completed event" do
-      let(:payload) { stripe_event(type: "checkout.session.completed", session_id: order.stripe_checkout_session_id) }
+    context "with a paid checkout.session.completed event" do
+      let(:payload) do
+        stripe_event(
+          type: "checkout.session.completed",
+          session_id: order.stripe_checkout_session_id,
+          payment_status: "paid"
+        )
+      end
 
       it "returns 200 OK" do
         post_webhook(payload)
@@ -72,7 +79,13 @@ RSpec.describe "Webhooks::Stripe", type: :request do
     end
 
     context "when the event is delivered twice (idempotency)" do
-      let(:payload) { stripe_event(type: "checkout.session.completed", session_id: order.stripe_checkout_session_id) }
+      let(:payload) do
+        stripe_event(
+          type: "checkout.session.completed",
+          session_id: order.stripe_checkout_session_id,
+          payment_status: "paid"
+        )
+      end
 
       it "finalizes inventory and sends confirmation only once" do
         expect {
@@ -87,6 +100,85 @@ RSpec.describe "Webhooks::Stripe", type: :request do
       end
     end
 
+    context "with an unpaid checkout.session.completed event" do
+      let(:payload) do
+        stripe_event(
+          type: "checkout.session.completed",
+          session_id: order.stripe_checkout_session_id,
+          payment_status: "unpaid"
+        )
+      end
+
+      it "keeps the order pending and inventory reserved" do
+        post_webhook(payload)
+
+        expect(order.reload).to be_pending
+        expect(order.inventory_movements.reload.sole).to be_reservation
+        expect(variant.reload.stock).to eq(8)
+      end
+
+      it "does not send confirmation or clear the cart" do
+        item = create(:cart_item, cart: cart, product_variant: variant, quantity: 1)
+
+        expect { post_webhook(payload) }.not_to have_enqueued_mail(OrderMailer, :confirmation)
+        expect(cart.cart_items).to include(item)
+      end
+    end
+
+    context "with a checkout.session.async_payment_succeeded event" do
+      let(:payload) do
+        stripe_event(type: "checkout.session.async_payment_succeeded", session_id: order.stripe_checkout_session_id)
+      end
+
+      it "marks the order paid and finalizes the reservation" do
+        post_webhook(payload)
+
+        expect(order.reload).to be_paid
+        expect(order.inventory_movements.reload.sole).to be_sale
+        expect(variant.reload.stock).to eq(8)
+      end
+
+      it "sends confirmation and clears the originating cart" do
+        create(:cart_item, cart: cart, product_variant: variant, quantity: 1)
+
+        expect { post_webhook(payload) }.to have_enqueued_mail(OrderMailer, :confirmation).once
+        expect(cart.cart_items.reload).to be_empty
+      end
+
+      it "is idempotent when delivered twice" do
+        expect {
+          post_webhook(payload)
+          post_webhook(payload)
+        }.to have_enqueued_mail(OrderMailer, :confirmation).once
+
+        expect(order.reload).to be_paid
+        expect(order.inventory_movements.reload.sole).to be_sale
+        expect(variant.reload.stock).to eq(8)
+      end
+    end
+
+    context "with a checkout.session.async_payment_failed event" do
+      let(:payload) do
+        stripe_event(type: "checkout.session.async_payment_failed", session_id: order.stripe_checkout_session_id)
+      end
+
+      it "cancels the order and releases reserved inventory" do
+        post_webhook(payload)
+
+        expect(order.reload).to be_cancelled
+        expect(variant.reload.stock).to eq(10)
+        expect(order.inventory_movements.pluck(:reason)).to contain_exactly("reservation", "release")
+      end
+
+      it "is idempotent when delivered twice" do
+        post_webhook(payload)
+        post_webhook(payload)
+
+        expect(order.reload).to be_cancelled
+        expect(variant.reload.stock).to eq(10)
+        expect(order.inventory_movements.release.count).to eq(1)
+      end
+    end
 
     context "with a checkout.session.expired event" do
       let(:payload) { stripe_event(type: "checkout.session.expired", session_id: order.stripe_checkout_session_id) }

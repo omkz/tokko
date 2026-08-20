@@ -11,9 +11,12 @@ class Webhooks::StripeController < ApplicationController
 
     case event["type"]
     when "checkout.session.completed"
-      handle_checkout_completed(event["data"]["object"])
-    when "checkout.session.expired"
-      handle_checkout_expired(event["data"]["object"])
+      session = event["data"]["object"]
+      complete_order(session) if session["payment_status"] == "paid"
+    when "checkout.session.async_payment_succeeded"
+      complete_order(event["data"]["object"])
+    when "checkout.session.async_payment_failed", "checkout.session.expired"
+      expire_order(event["data"]["object"])
     end
 
     head :ok
@@ -25,7 +28,7 @@ class Webhooks::StripeController < ApplicationController
 
   private
 
-  def handle_checkout_completed(session)
+  def complete_order(session)
     order = Order.find_by(stripe_checkout_session_id: session["id"])
     return unless order
     return unless order.complete_payment!
@@ -34,7 +37,7 @@ class Webhooks::StripeController < ApplicationController
     order.cart&.cart_items&.destroy_all
   end
 
-  def handle_checkout_expired(session)
+  def expire_order(session)
     Order.find_by(stripe_checkout_session_id: session["id"])&.expire_checkout!
   end
 end
