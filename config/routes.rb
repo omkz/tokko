@@ -46,7 +46,6 @@ Rails.application.routes.draw do
     post "add", to: "carts#add", as: :add_to
   end
   resource :checkout, only: [ :new, :create ] do
-    get :success
     get :payment_success
   end
 

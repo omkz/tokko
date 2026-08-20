@@ -179,21 +179,48 @@ RSpec.describe "Checkouts", type: :request do
   end
 
   describe "GET /checkout/success" do
-    it "renders the success page for a valid order" do
-      order = create(:order)
-      get success_checkout_path(order_id: order.id)
-      expect(response).to have_http_status(:ok)
+    it "does not expose an order by its sequential ID" do
+      order = create(:order, customer_name: "Private Customer")
+
+      get "/checkout/success", params: { order_id: order.id }
+
+      expect(response).to have_http_status(:not_found)
+      expect(response.body).not_to include("Private Customer")
     end
   end
 
   describe "GET /checkout/payment_success" do
     it "renders the payment success page when Stripe session matches an order" do
-      order = create(:order, stripe_checkout_session_id: "cs_test_abc")
+      order = create(:order, customer_name: "Stripe Customer", stripe_checkout_session_id: "cs_test_abc")
       stripe_session = double("Stripe::Checkout::Session", id: "cs_test_abc")
       allow(Stripe::Checkout::Session).to receive(:retrieve).with("cs_test_abc").and_return(stripe_session)
 
       get payment_success_checkout_path(session_id: "cs_test_abc")
+
       expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Stripe Customer")
+    end
+
+    it "ignores an order_id that points to another order" do
+      order = create(:order, customer_name: "Stripe Customer", stripe_checkout_session_id: "cs_test_abc")
+      other_order = create(:order, customer_name: "Private Customer")
+      stripe_session = double("Stripe::Checkout::Session", id: order.stripe_checkout_session_id)
+      allow(Stripe::Checkout::Session).to receive(:retrieve).with("cs_test_abc").and_return(stripe_session)
+
+      get payment_success_checkout_path(session_id: "cs_test_abc", order_id: other_order.id)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Stripe Customer")
+      expect(response.body).not_to include("Private Customer")
+    end
+
+    it "returns not found for an unknown Stripe session" do
+      allow(Stripe::Checkout::Session).to receive(:retrieve).with("cs_test_unknown")
+        .and_raise(Stripe::InvalidRequestError.new("No such checkout session", "session_id"))
+
+      get payment_success_checkout_path(session_id: "cs_test_unknown")
+
+      expect(response).to have_http_status(:not_found)
     end
   end
 end
