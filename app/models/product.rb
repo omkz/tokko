@@ -103,8 +103,8 @@ class Product < ApplicationRecord
                             .includes(:product_option_values)
                             .map { |o| o.product_option_values.to_a }
 
-    # If no options defined, ensure single default variant
-    if option_value_groups.empty?
+    # If no usable options are defined, ensure a default variant remains.
+    if option_value_groups.empty? || option_value_groups.any?(&:empty?)
       create_default_variant
       return
     end
@@ -112,21 +112,19 @@ class Product < ApplicationRecord
     # Remove "Default Title" placeholder variant if it exists
     product_variants.where(title: "Default Title").destroy_all
 
-    combinations = cartesian_product(option_value_groups)
+    existing_combinations = product_variants
+      .includes(:variant_option_values)
+      .each_with_object({}) do |variant, combinations|
+        value_ids = variant.variant_option_values.map(&:product_option_value_id).sort
+        combinations[value_ids] = true
+      end
 
-    combinations.each do |combo|
+    cartesian_product(option_value_groups).each do |combo|
       combo   = Array(combo)
       title   = combo.map(&:value).join(" / ")
       val_ids = combo.map(&:id).sort
 
-      # Find all existing variants and check if this combo is covered
-      # by comparing the sorted set of option_value ids
-      already_exists = product_variants.includes(:variant_option_values).any? do |v|
-        existing_ids = v.variant_option_values.map(&:product_option_value_id).sort
-        existing_ids == val_ids
-      end
-
-      next if already_exists
+      next if existing_combinations.key?(val_ids)
 
       variant = product_variants.create!(
         title:  title,
@@ -141,6 +139,8 @@ class Product < ApplicationRecord
           product_option_value: option_value
         )
       end
+
+      existing_combinations[val_ids] = true
     end
   end
 
