@@ -45,7 +45,7 @@ class Order < ApplicationRecord
       end
 
       variant_ids = sorted_items.map(&:product_variant_id)
-      locked_variants = ProductVariant.lock.includes(:product).where(id: variant_ids).index_by(&:id)
+      locked_variants = ProductVariant.lock.includes(:product, :product_option_values).where(id: variant_ids).index_by(&:id)
 
       sorted_items.each do |item|
         variant = locked_variants[item.product_variant_id]
@@ -74,6 +74,9 @@ class Order < ApplicationRecord
         order_item = order.order_items.create!(
           product_variant: variant,
           quantity: item.quantity,
+          product_name: variant.product.name,
+          variant_options: variant.option_text,
+          variant_sku: variant.sku,
           unit_price: variant.price
         )
         InventoryMovement.create!(

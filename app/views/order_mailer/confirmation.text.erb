@@ -8,7 +8,7 @@ Thank you for your order! Here's a summary:
 ITEMS
 -----
 <% @items.each do |item| %>
-- <%= item.product_variant.product.name %> (<%= item.product_variant.option_text %>) x<%= item.quantity %> — Rp <%= number_with_delimiter(item.unit_price.to_i * item.quantity) %>
+- <%= item.product_name %> (<%= item.variant_options %>, SKU: <%= item.variant_sku %>) x<%= item.quantity %> — Rp <%= number_with_delimiter(item.unit_price.to_i * item.quantity) %>
 <% end %>
 
 TOTAL: Rp <%= number_with_delimiter(@order.total_price.to_i) %>

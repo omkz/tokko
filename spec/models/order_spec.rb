@@ -81,11 +81,32 @@ RSpec.describe Order, type: :model do
         expect(order.status).to eq("pending")
       end
 
-      it "creates order items with unit_price snapshot" do
+      it "creates order items with catalog snapshots" do
         order, _ = Order.create_from_cart!(cart, valid_attributes)
         item = order.order_items.first
-        expect(item.quantity).to eq(2)
-        expect(item.unit_price).to eq(variant.price)
+        expect(item).to have_attributes(
+          quantity: 2,
+          product_name: variant.product.name,
+          variant_options: variant.option_text,
+          variant_sku: variant.sku,
+          unit_price: variant.price
+        )
+      end
+
+      it "preserves snapshots after the catalog changes" do
+        option = ProductOption.create!(product: variant.product, name: "Color", position: 1)
+        option_value = ProductOptionValue.create!(product_option: option, value: "Black", position: 1)
+        VariantOptionValue.create!(product_variant: variant, product_option_value: option_value)
+        order, _ = Order.create_from_cart!(cart, valid_attributes)
+
+        item = order.order_items.first
+        snapshots = item.attributes.slice("product_name", "variant_options", "variant_sku", "unit_price")
+
+        variant.product.update!(name: "Renamed Product")
+        variant.update!(sku: "NEW-SKU", price: 75_000)
+        option_value.update!(value: "White")
+
+        expect(item.reload.attributes.slice(*snapshots.keys)).to eq(snapshots)
       end
 
       it "reserves variant stock" do

@@ -126,6 +126,26 @@ RSpec.describe "Checkouts", type: :request do
 
         expect(response).to redirect_to("https://checkout.stripe.com/pay/fake")
       end
+
+      it "uses the local order snapshots for the Stripe line item text" do
+        variant.update!(title: "Original Option")
+        original_name = variant.product.name
+        allow(Order).to receive(:create_from_cart!).and_wrap_original do |method, *args, **kwargs|
+          result = method.call(*args, **kwargs)
+          variant.product.update_columns(name: "Renamed Product")
+          variant.update_columns(title: "Changed Option")
+          result
+        end
+        allow(Stripe::Checkout::Session).to receive(:create) do |session_params, _request_options|
+          expect(session_params.dig(:line_items, 0, :price_data, :product_data, :name))
+            .to eq("#{original_name} — Original Option")
+          fake_stripe_session
+        end
+
+        post checkout_path, params: valid_order_params
+
+        expect(response).to redirect_to("https://checkout.stripe.com/pay/fake")
+      end
     end
 
     context "when Stripe Checkout Session creation definitively fails" do

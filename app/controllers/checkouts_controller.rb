@@ -100,11 +100,11 @@ class CheckoutsController < ApplicationController
   end
 
   def create_stripe_session(order, stripe_coupon)
-    line_items = order.order_items.includes(product_variant: :product).map do |item|
+    line_items = order.order_items.map do |item|
       {
         price_data: {
           currency: "usd",
-          product_data: { name: "#{item.product_variant.product.name} — #{item.product_variant.title}" },
+          product_data: { name: "#{item.product_name} — #{item.variant_options}" },
           unit_amount: (item.unit_price * 100).to_i
         },
         quantity: item.quantity

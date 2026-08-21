@@ -43,8 +43,8 @@
                   <% end %>
                 </div>
                 <div class="flex-1 min-w-0">
-                  <p class="text-sm font-bold text-gray-900 truncate"><%= item.product_variant.product.name %></p>
-                  <p class="text-xs text-gray-400 mt-0.5"><%= item.product_variant.option_text %></p>
+                  <p class="text-sm font-bold text-gray-900 truncate"><%= item.product_name %></p>
+                  <p class="text-xs text-gray-400 mt-0.5"><%= item.variant_options %> &middot; SKU: <%= item.variant_sku %></p>
                   <p class="text-xs text-gray-500 mt-1">Qty: <%= item.quantity %></p>
                 </div>
                 <div class="text-right flex-shrink-0">

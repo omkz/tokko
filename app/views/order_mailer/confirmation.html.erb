@@ -40,10 +40,11 @@
                 <% @items.each do |item| %>
                   <tr style="border-top:1px solid #e5e7eb;">
                     <td style="padding:16px;font-size:14px;color:#111827;">
-                      <strong><%= item.product_variant.product.name %></strong>
-                      <% if item.product_variant.option_text.present? && item.product_variant.option_text != "Default Title" %>
-                        <br><span style="color:#9ca3af;font-size:12px;"><%= item.product_variant.option_text %></span>
+                      <strong><%= item.product_name %></strong>
+                      <% if item.variant_options.present? && item.variant_options != "Default Title" %>
+                        <br><span style="color:#9ca3af;font-size:12px;"><%= item.variant_options %></span>
                       <% end %>
+                      <br><span style="color:#9ca3af;font-size:12px;">SKU: <%= item.variant_sku %></span>
                     </td>
                     <td style="padding:16px;font-size:14px;color:#374151;text-align:center;"><%= item.quantity %></td>
                     <td style="padding:16px;font-size:14px;font-weight:600;color:#111827;text-align:right;">Rp <%= number_with_delimiter(item.unit_price.to_i * item.quantity) %></td>
