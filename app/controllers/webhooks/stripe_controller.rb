@@ -29,7 +29,7 @@ class Webhooks::StripeController < ApplicationController
   private
 
   def complete_order(session)
-    order = Order.find_by(stripe_checkout_session_id: session["id"])
+    order = find_order(session)
     return unless order
     return unless order.complete_payment!
 
@@ -38,6 +38,31 @@ class Webhooks::StripeController < ApplicationController
   end
 
   def expire_order(session)
-    Order.find_by(stripe_checkout_session_id: session["id"])&.expire_checkout!
+    find_order(session)&.expire_checkout!
+  end
+
+  def find_order(session)
+    order = Order.find_by(stripe_checkout_session_id: session["id"])
+    return order if order
+
+    order_id = session.dig("metadata", "order_id")
+    return if order_id.blank?
+
+    order = Order.find_by(id: order_id)
+    return unless order
+
+    conflict = false
+    order.with_lock do
+      if order.stripe_checkout_session_id.blank?
+        order.update!(stripe_checkout_session_id: session["id"])
+      elsif order.stripe_checkout_session_id != session["id"]
+        Rails.logger.warn(
+          "Ignoring Stripe session #{session["id"]} for order #{order.id}: stored session ID differs"
+        )
+        conflict = true
+      end
+    end
+
+    order unless conflict
   end
 end

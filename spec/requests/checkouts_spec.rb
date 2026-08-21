@@ -22,6 +22,10 @@ RSpec.describe "Checkouts", type: :request do
     double("Stripe::Checkout::Session", id: "cs_test_fake", url: url)
   end
 
+  it "configures Stripe network retries" do
+    expect(Stripe.max_network_retries).to eq(2)
+  end
+
   describe "GET /checkout/new" do
     it "redirects to root when cart is empty" do
       get new_checkout_path
@@ -124,13 +128,14 @@ RSpec.describe "Checkouts", type: :request do
       end
     end
 
-    context "when Stripe Checkout Session creation fails" do
+    context "when Stripe Checkout Session creation definitively fails" do
       let(:coupon) { create(:coupon, usage_limit: 1) }
 
       before do
         setup_cart(quantity: 2)
+        allow(Stripe::Coupon).to receive(:create).and_return(double("Stripe::Coupon", id: "coupon_test_fake"))
         allow(Stripe::Checkout::Session).to receive(:create)
-          .and_raise(Stripe::APIConnectionError.new("Stripe is unavailable"))
+          .and_raise(Stripe::InvalidRequestError.new("Invalid request", "line_items"))
       end
 
       it "cancels the order and releases inventory and coupon reservations" do
@@ -163,6 +168,46 @@ RSpec.describe "Checkouts", type: :request do
 
         expect(Order.where(status: :pending, stripe_checkout_session_id: [ nil, "" ])).to be_empty
       end
+    end
+
+    shared_examples "an indeterminate Stripe Checkout failure" do
+      let(:coupon) { create(:coupon, usage_limit: 1) }
+
+      before do
+        setup_cart(quantity: 2)
+        allow(Stripe::Coupon).to receive(:create).and_return(double("Stripe::Coupon", id: "coupon_test_fake"))
+        allow(Stripe::Checkout::Session).to receive(:create).and_raise(stripe_error)
+      end
+
+      it "keeps the order, inventory, coupon slot, and cart reserved while reconciliation is pending" do
+        params = valid_order_params.deep_merge(order: { coupon_code: coupon.code })
+
+        expect {
+          post checkout_path, params: params
+        }.not_to have_enqueued_mail(OrderMailer, :confirmation)
+
+        order = Order.last
+        expect(order).to be_pending
+        expect(order.stripe_checkout_session_id).to be_blank
+        expect(order.inventory_movements.reload.sole).to be_reservation
+        expect(variant.reload.stock).to eq(8)
+        expect(coupon).not_to be_valid_for_use
+        expect(Cart.find_by(user: nil).cart_items).not_to be_empty
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response.body).to include("We&#39;re confirming your payment session. Please try again shortly.")
+      end
+    end
+
+    context "with a Stripe API connection error" do
+      let(:stripe_error) { Stripe::APIConnectionError.new("Connection lost") }
+
+      include_examples "an indeterminate Stripe Checkout failure"
+    end
+
+    context "with a Stripe API error" do
+      let(:stripe_error) { Stripe::APIError.new("Ambiguous Stripe response") }
+
+      include_examples "an indeterminate Stripe Checkout failure"
     end
 
     context "when the returned Stripe session ID cannot be persisted" do

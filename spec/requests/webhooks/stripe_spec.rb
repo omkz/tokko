@@ -10,9 +10,10 @@ RSpec.describe "Webhooks::Stripe", type: :request do
     end
   end
 
-  def stripe_event(type:, session_id:, payment_status: nil)
+  def stripe_event(type:, session_id:, payment_status: nil, order_id: nil)
     session = { "id" => session_id }
     session["payment_status"] = payment_status if payment_status
+    session["metadata"] = { "order_id" => order_id.to_s } if order_id
 
     {
       "type" => type,
@@ -97,6 +98,63 @@ RSpec.describe "Webhooks::Stripe", type: :request do
         expect(order.inventory_movements.reload.sole).to be_sale
         expect(variant.reload.stock).to eq(8)
         expect(response).to have_http_status(:ok)
+      end
+    end
+
+    context "when the local Stripe session ID was not persisted" do
+      let(:order) do
+        create(:order, cart: cart, stripe_checkout_session_id: nil).tap do |created_order|
+          item = create(:order_item, order: created_order, product_variant: variant, quantity: 2)
+          create(:inventory_movement, product_variant: variant, order_item: item, quantity: -2, reason: :reservation)
+        end
+      end
+      let(:payload) do
+        stripe_event(
+          type: "checkout.session.completed",
+          session_id: "cs_test_reconciled",
+          payment_status: "paid",
+          order_id: order.id
+        )
+      end
+
+      it "finds the order through metadata, persists the session ID, and completes payment" do
+        post_webhook(payload)
+
+        expect(order.reload).to be_paid
+        expect(order.stripe_checkout_session_id).to eq("cs_test_reconciled")
+        expect(order.inventory_movements.reload.sole).to be_sale
+        expect(variant.reload.stock).to eq(8)
+      end
+
+      it "remains idempotent when the reconciled webhook is delivered twice" do
+        expect {
+          post_webhook(payload)
+          post_webhook(payload)
+        }.to have_enqueued_mail(OrderMailer, :confirmation).once
+
+        expect(order.reload).to be_paid
+        expect(order.stripe_checkout_session_id).to eq("cs_test_reconciled")
+        expect(order.inventory_movements.reload.sole).to be_sale
+      end
+    end
+
+    context "when metadata conflicts with a stored Stripe session ID" do
+      let(:payload) do
+        stripe_event(
+          type: "checkout.session.completed",
+          session_id: "cs_test_conflicting",
+          payment_status: "paid",
+          order_id: order.id
+        )
+      end
+
+      it "does not overwrite or complete the order" do
+        post_webhook(payload)
+
+        expect(order.reload).to be_pending
+        expect(order.stripe_checkout_session_id).to eq("cs_test_abc123")
+        expect(order.inventory_movements.reload.sole).to be_reservation
+        expect(variant.reload.stock).to eq(8)
       end
     end
 

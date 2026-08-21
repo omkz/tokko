@@ -31,11 +31,20 @@ class CheckoutsController < ApplicationController
       render :new, status: :unprocessable_entity
     elsif @order.persisted?
       begin
-        stripe_session = create_stripe_session(@order)
+        stripe_session_request_started = false
+        stripe_coupon = create_stripe_coupon(@order)
+        stripe_session_request_started = true
+        stripe_session = create_stripe_session(@order, stripe_coupon)
         @order.update!(stripe_checkout_session_id: stripe_session.id)
         redirect_to stripe_session.url, allow_other_host: true
+      rescue Stripe::APIConnectionError, Stripe::APIError => error
+        if stripe_session_request_started
+          handle_indeterminate_checkout_session_error(error)
+        else
+          handle_definitive_checkout_session_error(error)
+        end
       rescue Stripe::StripeError, ActiveRecord::ActiveRecordError => error
-        handle_checkout_session_error(error)
+        handle_definitive_checkout_session_error(error)
       end
     else
       @total_price = cart.total_price
@@ -81,7 +90,7 @@ class CheckoutsController < ApplicationController
     end
   end
 
-  def create_stripe_session(order)
+  def create_stripe_session(order, stripe_coupon)
     line_items = order.order_items.includes(product_variant: :product).map do |item|
       {
         price_data: {
@@ -104,17 +113,7 @@ class CheckoutsController < ApplicationController
       cancel_url: "#{request.base_url}/checkout/new"
     }
 
-    if order.coupon.present? && order.discount_amount > 0
-      stripe_coupon = Stripe::Coupon.create(
-        {
-          amount_off: (order.discount_amount * 100).to_i,
-          currency: "usd",
-          duration: "once"
-        },
-        { idempotency_key: "checkout-coupon-order-#{order.id}" }
-      )
-      session_params[:discounts] = [ { coupon: stripe_coupon.id } ]
-    end
+    session_params[:discounts] = [ { coupon: stripe_coupon.id } ] if stripe_coupon
 
     Stripe::Checkout::Session.create(
       session_params,
@@ -122,10 +121,26 @@ class CheckoutsController < ApplicationController
     )
   end
 
-  def handle_checkout_session_error(error)
-    Rails.logger.error(
-      "Checkout session creation failed for order #{@order.id}: #{error.class}: #{error.message}"
+  def create_stripe_coupon(order)
+    return unless order.coupon.present? && order.discount_amount > 0
+
+    Stripe::Coupon.create(
+      {
+        amount_off: (order.discount_amount * 100).to_i,
+        currency: "usd",
+        duration: "once"
+      },
+      { idempotency_key: "checkout-coupon-order-#{order.id}" }
     )
+  end
+
+  def handle_indeterminate_checkout_session_error(error)
+    log_checkout_session_error(error)
+    render_checkout_session_error("We're confirming your payment session. Please try again shortly.")
+  end
+
+  def handle_definitive_checkout_session_error(error)
+    log_checkout_session_error(error)
 
     begin
       @order.reload
@@ -136,9 +151,19 @@ class CheckoutsController < ApplicationController
       )
     end
 
+    render_checkout_session_error("We couldn't start the payment session. Please try again.")
+  end
+
+  def log_checkout_session_error(error)
+    Rails.logger.error(
+      "Checkout session creation failed for order #{@order.id}: #{error.class}: #{error.message}"
+    )
+  end
+
+  def render_checkout_session_error(message)
     @order = Order.new(order_params)
     @total_price = current_cart.total_price
-    flash.now[:alert] = "We couldn't start the payment session. Please try again."
+    flash.now[:alert] = message
     render :new, status: :unprocessable_entity
   end
 end
