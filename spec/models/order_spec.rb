@@ -180,6 +180,50 @@ RSpec.describe Order, type: :model do
       end
     end
 
+    context "with a usage-limited coupon" do
+      let(:coupon) { create(:coupon, usage_limit: 1) }
+      let(:other_cart) { create(:cart) }
+
+      before do
+        create(:cart_item, cart: cart, product_variant: variant, quantity: 1)
+        create(:cart_item, cart: other_cart, product_variant: variant, quantity: 1)
+      end
+
+      it "locks the coupon while reserving its usage slot" do
+        expect(Coupon).to receive(:lock).and_call_original
+
+        order, errors = Order.create_from_cart!(cart, valid_attributes, coupon_code: coupon.code)
+
+        expect(order).to be_persisted
+        expect(errors).to be_empty
+      end
+
+      it "allows only one competing checkout to reserve the coupon" do
+        first_order, first_errors = Order.create_from_cart!(cart, valid_attributes, coupon_code: coupon.code)
+        second_order, second_errors = Order.create_from_cart!(other_cart, valid_attributes, coupon_code: coupon.code)
+
+        expect(first_order).to be_persisted
+        expect(first_errors).to be_empty
+        expect(second_order).not_to be_persisted
+        expect(second_errors).to be_empty
+        expect(second_order.errors.full_messages).to include("Coupon is no longer available")
+        expect(coupon.orders.pending).to contain_exactly(first_order)
+      end
+
+      it "does not create an order or reserve inventory when the coupon is unavailable" do
+        create(:order, coupon: coupon, status: :pending)
+        movement_count = InventoryMovement.count
+
+        expect {
+          order, = Order.create_from_cart!(cart, valid_attributes, coupon_code: coupon.code)
+          expect(order.errors.full_messages).to include("Coupon is no longer available")
+        }.not_to change(Order, :count)
+
+        expect(InventoryMovement.count).to eq(movement_count)
+        expect(variant.reload.stock).to eq(10)
+      end
+    end
+
     context "with invalid order attributes" do
       before { create(:cart_item, cart: cart, product_variant: variant, quantity: 1) }
 

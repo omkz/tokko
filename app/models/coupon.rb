@@ -23,11 +23,15 @@ class Coupon < ApplicationRecord
   def valid_for_use?
     return false unless active?
     return false if expires_at.present? && expires_at < Time.current
-    return false if usage_limit.present? && orders.size >= usage_limit
+    return false if usage_limit.present? && reserved_usage_count >= usage_limit
     true
   end
 
   def usage_count
-    orders.size
+    orders.successful.count
+  end
+
+  def reserved_usage_count
+    orders.where(status: [ :pending, :paid, :shipped, :completed ]).count
   end
 end

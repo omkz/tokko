@@ -22,9 +22,8 @@ class CheckoutsController < ApplicationController
       return
     end
 
-    coupon = Coupon.find_by(code: params.dig(:order, :coupon_code)&.upcase)
-    coupon = nil unless coupon&.valid_for_use?
-    @order, locked_errors = Order.create_from_cart!(cart, order_params, coupon: coupon)
+    coupon_code = params.dig(:order, :coupon_code)
+    @order, locked_errors = Order.create_from_cart!(cart, order_params, coupon_code: coupon_code)
 
     if locked_errors.any?
       @total_price = cart.total_price

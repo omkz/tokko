@@ -176,6 +176,29 @@ RSpec.describe "Checkouts", type: :request do
         }.not_to change(Order, :count)
       end
     end
+
+    context "when a submitted coupon is no longer available" do
+      let(:coupon) { create(:coupon, usage_limit: 1) }
+
+      before do
+        setup_cart
+        create(:order, coupon: coupon, status: :pending)
+      end
+
+      it "shows a clear error without creating an order or reserving inventory" do
+        params = valid_order_params.deep_merge(order: { coupon_code: coupon.code })
+        movement_count = InventoryMovement.count
+
+        expect {
+          post checkout_path, params: params
+        }.not_to change(Order, :count)
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response.body).to include("Coupon is no longer available")
+        expect(InventoryMovement.count).to eq(movement_count)
+        expect(variant.reload.stock).to eq(10)
+      end
+    end
   end
 
   describe "GET /checkout/success" do

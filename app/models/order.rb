@@ -29,12 +29,21 @@ class Order < ApplicationRecord
   # Builds and persists an order from a cart inside a single locked transaction.
   # Returns [order, stock_errors]. If stock_errors is empty and order.persisted?,
   # the order was created successfully.
-  def self.create_from_cart!(cart, attributes, coupon: nil)
+  def self.create_from_cart!(cart, attributes, coupon_code: nil)
     order = new(attributes)
     stock_errors = []
     sorted_items = cart.cart_items.includes(product_variant: :product).sort_by(&:product_variant_id)
 
     transaction do
+      normalized_coupon_code = coupon_code.to_s.upcase.strip
+      coupon = Coupon.lock.find_by(code: normalized_coupon_code) if normalized_coupon_code.present?
+
+      if normalized_coupon_code.present? && !coupon&.valid_for_use?
+        message = coupon ? "is no longer available" : "could not be found"
+        order.errors.add(:coupon, message)
+        raise ActiveRecord::Rollback
+      end
+
       variant_ids = sorted_items.map(&:product_variant_id)
       locked_variants = ProductVariant.lock.includes(:product).where(id: variant_ids).index_by(&:id)
 
