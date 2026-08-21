@@ -311,19 +311,29 @@ RSpec.describe "Checkouts", type: :request do
     end
 
     context "with an out of stock variant" do
-      before { setup_cart(quantity: 1) }
-
-      it "does not create an order when stock is 0" do
+      before do
+        setup_cart(quantity: 1)
         variant.update!(stock: 0)
+      end
+
+      it "uses the locked order creation path and does not create an order or inventory reservation" do
+        expect(Order).to receive(:create_from_cart!).and_call_original
+        movement_count = InventoryMovement.count
+
         expect {
           post checkout_path, params: valid_order_params
         }.not_to change(Order, :count)
+
+        expect(InventoryMovement.count).to eq(movement_count)
       end
 
-      it "renders the checkout form with an error" do
-        variant.update!(stock: 0)
+      it "renders the model's out-of-stock message" do
         post checkout_path, params: valid_order_params
+
         expect(response).to have_http_status(:unprocessable_entity)
+        expect(response.body).to include(
+          "#{variant.product.name} (#{variant.option_text}) is out of stock"
+        )
       end
     end
 
@@ -333,20 +343,50 @@ RSpec.describe "Checkouts", type: :request do
         variant.update!(stock: 1)
       end
 
-      it "does not create an order" do
+      it "does not create an order or change inventory" do
+        movement_count = InventoryMovement.count
+
         expect {
           post checkout_path, params: valid_order_params
         }.not_to change(Order, :count)
-      end
 
-      it "does not decrement stock" do
-        post checkout_path, params: valid_order_params
+        expect(InventoryMovement.count).to eq(movement_count)
         expect(variant.reload.stock).to eq(1)
       end
 
-      it "renders the checkout form with an error" do
+      it "renders the model's remaining-stock message" do
         post checkout_path, params: valid_order_params
+
         expect(response).to have_http_status(:unprocessable_entity)
+        expect(response.body).to include(
+          "#{variant.product.name} (#{variant.option_text}) only has 1 left in stock"
+        )
+      end
+    end
+
+    context "with a valid coupon and insufficient stock" do
+      let(:coupon) { create(:coupon, usage_limit: 1) }
+
+      before do
+        setup_cart(quantity: 2)
+        variant.update!(stock: 1)
+      end
+
+      it "rolls back the order and inventory while preserving coupon capacity" do
+        params = valid_order_params.deep_merge(order: { coupon_code: coupon.code })
+        movement_count = InventoryMovement.count
+
+        expect {
+          post checkout_path, params: params
+        }.not_to change(Order, :count)
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response.body).to include(
+          "#{variant.product.name} (#{variant.option_text}) only has 1 left in stock"
+        )
+        expect(InventoryMovement.count).to eq(movement_count)
+        expect(variant.reload.stock).to eq(1)
+        expect(coupon).to be_valid_for_use
       end
     end
 

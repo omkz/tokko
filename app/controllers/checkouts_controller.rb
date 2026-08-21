@@ -13,15 +13,6 @@ class CheckoutsController < ApplicationController
   def create
     cart = current_cart
 
-    stock_errors = validate_stock(cart.cart_items.includes(product_variant: :product))
-    if stock_errors.any?
-      @order = Order.new(order_params)
-      @total_price = cart.total_price
-      flash.now[:alert] = stock_errors.to_sentence
-      render :new, status: :unprocessable_entity
-      return
-    end
-
     coupon_code = params.dig(:order, :coupon_code)
     @order, locked_errors = Order.create_from_cart!(cart, order_params, coupon_code: coupon_code)
 
@@ -86,17 +77,6 @@ class CheckoutsController < ApplicationController
 
   def order_params
     params.require(:order).permit(:customer_name, :customer_email, :customer_phone, :shipping_address)
-  end
-
-  def validate_stock(cart_items)
-    cart_items.filter_map do |item|
-      variant = item.product_variant
-      if variant.stock == 0
-        "#{variant.product.name} (#{variant.option_text}) is out of stock"
-      elsif variant.stock < item.quantity
-        "#{variant.product.name} (#{variant.option_text}) only has #{variant.stock} left in stock"
-      end
-    end
   end
 
   def create_stripe_session(order, stripe_coupon)
