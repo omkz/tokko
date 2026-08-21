@@ -29,15 +29,6 @@ RSpec.describe "Dashboard orders", type: :request do
   end
 
   describe "PATCH /dashboard/orders/:id" do
-    it "allows pending orders to be cancelled" do
-      order = create(:order)
-
-      patch dashboard_order_path(order), params: { order: { status: :cancelled } }
-
-      expect(response).to redirect_to(dashboard_order_path(order))
-      expect(order.reload).to be_cancelled
-    end
-
     it "allows paid orders to be shipped" do
       order = create(:order, :paid)
 
@@ -45,15 +36,6 @@ RSpec.describe "Dashboard orders", type: :request do
 
       expect(response).to redirect_to(dashboard_order_path(order))
       expect(order.reload).to be_shipped
-    end
-
-    it "allows paid orders to be cancelled" do
-      order = create(:order, :paid)
-
-      patch dashboard_order_path(order), params: { order: { status: :cancelled } }
-
-      expect(response).to redirect_to(dashboard_order_path(order))
-      expect(order.reload).to be_cancelled
     end
 
     it "allows shipped orders to be completed" do
@@ -65,8 +47,8 @@ RSpec.describe "Dashboard orders", type: :request do
       expect(order.reload).to be_completed
     end
 
-    it "does not let the dashboard move a pending order to paid, shipped, or completed" do
-      %w[paid shipped completed].each do |target_status|
+    it "does not let the dashboard change a pending order" do
+      %w[cancelled paid shipped completed].each do |target_status|
         order = create(:order)
 
         patch dashboard_order_path(order), params: { order: { status: target_status } }
@@ -76,8 +58,17 @@ RSpec.describe "Dashboard orders", type: :request do
       end
     end
 
+    it "does not let the dashboard cancel a paid order" do
+      order = create(:order, :paid)
+
+      patch dashboard_order_path(order), params: { order: { status: :cancelled } }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(order.reload).to be_paid
+    end
+
     it "does not let the dashboard move a cancelled order to any other status" do
-      %w[pending paid shipped completed].each do |target_status|
+      %w[pending paid shipped completed cancelled].each do |target_status|
         order = create(:order, :cancelled)
 
         patch dashboard_order_path(order), params: { order: { status: target_status } }
@@ -90,8 +81,8 @@ RSpec.describe "Dashboard orders", type: :request do
 
   describe "available transition controls" do
     {
-      pending: %w[cancelled],
-      paid: %w[shipped cancelled],
+      pending: [],
+      paid: %w[shipped],
       shipped: %w[completed],
       completed: [],
       cancelled: []
@@ -101,8 +92,12 @@ RSpec.describe "Dashboard orders", type: :request do
 
         get dashboard_order_path(order)
 
-        option_values = response.body.scan(/<option value="([^"]+)"/).flatten
+        options = response.parsed_body.css("option")
+        option_values = options.map { |option| option["value"] }
+        option_labels = options.map(&:text)
+        expected_labels = expected_targets.map { |target| target == "shipped" ? "Ship" : "Complete" }
         expect(option_values).to match_array(expected_targets)
+        expect(option_labels).to match_array(expected_labels)
       end
     end
   end

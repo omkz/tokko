@@ -23,7 +23,6 @@ class Dashboard::OrdersController < Dashboard::BaseController
 
   def transition_order
     case order_params[:status]
-    when "cancelled" then @order.cancel!(user: Current.user)
     when "shipped" then @order.ship!
     when "completed" then @order.complete!
     else

@@ -101,23 +101,6 @@ class Order < ApplicationRecord
     end
   end
 
-  def cancel!(user: nil)
-    with_lock do
-      case status
-      when "pending"
-        release_reservations!
-      when "paid"
-        return_items!(user: user)
-      else
-        errors.add(:status, "cannot cancel a #{status} order")
-        return false
-      end
-
-      update!(status: :cancelled)
-      true
-    end
-  end
-
   def ship!
     with_lock do
       return invalid_transition(:shipped) unless paid?
@@ -138,8 +121,7 @@ class Order < ApplicationRecord
 
   def available_admin_transitions
     case status
-    when "pending" then [ "cancelled" ]
-    when "paid" then [ "shipped", "cancelled" ]
+    when "paid" then [ "shipped" ]
     when "shipped" then [ "completed" ]
     else []
     end
@@ -172,19 +154,6 @@ class Order < ApplicationRecord
         order_item: reservation.order_item,
         quantity: -reservation.quantity,
         reason: :release
-      )
-    end
-  end
-
-  def return_items!(user:)
-    order_items.includes(:product_variant).sort_by { |item| [ item.product_variant_id, item.id ] }.each do |item|
-      InventoryMovement.create!(
-        product_variant: item.product_variant,
-        order_item: item,
-        quantity: item.quantity,
-        reason: :return,
-        user: user,
-        note: "Order ##{id} cancelled"
       )
     end
   end
