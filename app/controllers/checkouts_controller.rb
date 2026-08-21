@@ -30,22 +30,31 @@ class CheckoutsController < ApplicationController
       flash.now[:alert] = locked_errors.to_sentence
       render :new, status: :unprocessable_entity
     elsif @order.persisted?
+      stripe_session_request_started = false
       begin
-        stripe_session_request_started = false
         stripe_coupon = create_stripe_coupon(@order)
         stripe_session_request_started = true
         stripe_session = create_stripe_session(@order, stripe_coupon)
-        @order.update!(stripe_checkout_session_id: stripe_session.id)
-        redirect_to stripe_session.url, allow_other_host: true
       rescue Stripe::APIConnectionError, Stripe::APIError => error
         if stripe_session_request_started
           handle_indeterminate_checkout_session_error(error)
         else
           handle_definitive_checkout_session_error(error)
         end
+        return
       rescue Stripe::StripeError, ActiveRecord::ActiveRecordError => error
         handle_definitive_checkout_session_error(error)
+        return
       end
+
+      begin
+        @order.update!(stripe_checkout_session_id: stripe_session.id)
+      rescue ActiveRecord::ActiveRecordError => error
+        handle_indeterminate_checkout_session_error(error)
+        return
+      end
+
+      redirect_to stripe_session.url, allow_other_host: true
     else
       @total_price = cart.total_price
       render :new, status: :unprocessable_entity

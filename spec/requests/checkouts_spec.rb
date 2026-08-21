@@ -211,21 +211,32 @@ RSpec.describe "Checkouts", type: :request do
     end
 
     context "when the returned Stripe session ID cannot be persisted" do
+      let(:coupon) { create(:coupon, usage_limit: 1) }
+
       before do
         setup_cart(quantity: 2)
-        create(:order, stripe_checkout_session_id: "cs_test_fake")
+        allow(Stripe::Coupon).to receive(:create).and_return(double("Stripe::Coupon", id: "coupon_test_fake"))
         allow(Stripe::Checkout::Session).to receive(:create).and_return(fake_stripe_session)
+        allow_any_instance_of(Order).to receive(:update!)
+          .with(stripe_checkout_session_id: "cs_test_fake")
+          .and_raise(ActiveRecord::ActiveRecordError, "write failed")
       end
 
-      it "cancels the new order and releases its inventory reservation" do
-        post checkout_path, params: valid_order_params
+      it "keeps the order and reservations pending for webhook reconciliation" do
+        params = valid_order_params.deep_merge(order: { coupon_code: coupon.code })
 
-        failed_order = Order.where(stripe_checkout_session_id: nil).order(:id).last
-        expect(failed_order).to be_cancelled
-        expect(failed_order.inventory_movements.pluck(:reason)).to contain_exactly("reservation", "release")
-        expect(variant.reload.stock).to eq(10)
+        post checkout_path, params: params
+
+        order = Order.last
+        expect(order).to be_pending
+        expect(order.stripe_checkout_session_id).to be_blank
+        expect(order.inventory_movements.reload.sole).to be_reservation
+        expect(order.inventory_movements.release).to be_empty
+        expect(variant.reload.stock).to eq(8)
+        expect(coupon).not_to be_valid_for_use
+        expect(Cart.find_by(user: nil).cart_items).not_to be_empty
         expect(response).to have_http_status(:unprocessable_entity)
-        expect(response.body).to include("Please try again")
+        expect(response.body).to include("We&#39;re confirming your payment session. Please try again shortly.")
       end
     end
 
