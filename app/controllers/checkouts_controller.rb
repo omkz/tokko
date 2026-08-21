@@ -30,9 +30,13 @@ class CheckoutsController < ApplicationController
       flash.now[:alert] = locked_errors.to_sentence
       render :new, status: :unprocessable_entity
     elsif @order.persisted?
-      stripe_session = create_stripe_session(@order)
-      @order.update_column(:stripe_checkout_session_id, stripe_session.id)
-      redirect_to stripe_session.url, allow_other_host: true
+      begin
+        stripe_session = create_stripe_session(@order)
+        @order.update!(stripe_checkout_session_id: stripe_session.id)
+        redirect_to stripe_session.url, allow_other_host: true
+      rescue Stripe::StripeError, ActiveRecord::ActiveRecordError => error
+        handle_checkout_session_error(error)
+      end
     else
       @total_price = cart.total_price
       render :new, status: :unprocessable_entity
@@ -93,20 +97,48 @@ class CheckoutsController < ApplicationController
       mode: "payment",
       customer_email: order.customer_email,
       line_items: line_items,
+      client_reference_id: order.id.to_s,
       metadata: { order_id: order.id },
+      expires_at: 30.minutes.from_now.to_i,
       success_url: "#{request.base_url}/checkout/payment_success?session_id={CHECKOUT_SESSION_ID}",
       cancel_url: "#{request.base_url}/checkout/new"
     }
 
     if order.coupon.present? && order.discount_amount > 0
       stripe_coupon = Stripe::Coupon.create(
-        amount_off: (order.discount_amount * 100).to_i,
-        currency: "usd",
-        duration: "once"
+        {
+          amount_off: (order.discount_amount * 100).to_i,
+          currency: "usd",
+          duration: "once"
+        },
+        { idempotency_key: "checkout-coupon-order-#{order.id}" }
       )
       session_params[:discounts] = [ { coupon: stripe_coupon.id } ]
     end
 
-    Stripe::Checkout::Session.create(session_params)
+    Stripe::Checkout::Session.create(
+      session_params,
+      { idempotency_key: "checkout-session-order-#{order.id}" }
+    )
+  end
+
+  def handle_checkout_session_error(error)
+    Rails.logger.error(
+      "Checkout session creation failed for order #{@order.id}: #{error.class}: #{error.message}"
+    )
+
+    begin
+      @order.reload
+      @order.expire_checkout!
+    rescue ActiveRecord::ActiveRecordError => cleanup_error
+      Rails.logger.error(
+        "Checkout reservation cleanup failed for order #{@order.id}: #{cleanup_error.class}: #{cleanup_error.message}"
+      )
+    end
+
+    @order = Order.new(order_params)
+    @total_price = current_cart.total_price
+    flash.now[:alert] = "We couldn't start the payment session. Please try again."
+    render :new, status: :unprocessable_entity
   end
 end

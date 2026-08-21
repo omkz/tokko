@@ -95,6 +95,116 @@ RSpec.describe "Checkouts", type: :request do
         post checkout_path, params: valid_order_params
         expect(response).to redirect_to("https://checkout.stripe.com/pay/fake")
       end
+
+      it "stores the Stripe session ID while keeping the reservation pending" do
+        post checkout_path, params: valid_order_params
+
+        order = Order.last
+        expect(order).to be_pending
+        expect(order.stripe_checkout_session_id).to eq("cs_test_fake")
+        expect(order.inventory_movements.sole).to be_reservation
+        expect(variant.reload.stock).to eq(8)
+      end
+
+      it "creates the Stripe session with reconciliation fields and an idempotency key" do
+        allow(Stripe::Checkout::Session).to receive(:create) do |session_params, request_options|
+          order = Order.last
+          expect(session_params).to include(
+            client_reference_id: order.id.to_s,
+            metadata: { order_id: order.id }
+          )
+          expect(session_params[:expires_at]).to be_within(5).of(30.minutes.from_now.to_i)
+          expect(request_options).to eq(idempotency_key: "checkout-session-order-#{order.id}")
+          fake_stripe_session
+        end
+
+        post checkout_path, params: valid_order_params
+
+        expect(response).to redirect_to("https://checkout.stripe.com/pay/fake")
+      end
+    end
+
+    context "when Stripe Checkout Session creation fails" do
+      let(:coupon) { create(:coupon, usage_limit: 1) }
+
+      before do
+        setup_cart(quantity: 2)
+        allow(Stripe::Checkout::Session).to receive(:create)
+          .and_raise(Stripe::APIConnectionError.new("Stripe is unavailable"))
+      end
+
+      it "cancels the order and releases inventory and coupon reservations" do
+        params = valid_order_params.deep_merge(order: { coupon_code: coupon.code })
+
+        post checkout_path, params: params
+
+        order = Order.last
+        expect(order).to be_cancelled
+        expect(order.stripe_checkout_session_id).to be_blank
+        expect(order.inventory_movements.pluck(:reason)).to contain_exactly("reservation", "release")
+        expect(variant.reload.stock).to eq(10)
+        expect(coupon).to be_valid_for_use
+      end
+
+      it "keeps the cart intact and shows a retryable error" do
+        params = valid_order_params.deep_merge(order: { coupon_code: coupon.code })
+
+        expect {
+          post checkout_path, params: params
+        }.not_to have_enqueued_mail(OrderMailer, :confirmation)
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response.body).to include("We couldn&#39;t start the payment session. Please try again.")
+        expect(Cart.find_by(user: nil).cart_items).not_to be_empty
+      end
+
+      it "does not leave a pending order without a Stripe session" do
+        post checkout_path, params: valid_order_params
+
+        expect(Order.where(status: :pending, stripe_checkout_session_id: [ nil, "" ])).to be_empty
+      end
+    end
+
+    context "when the returned Stripe session ID cannot be persisted" do
+      before do
+        setup_cart(quantity: 2)
+        create(:order, stripe_checkout_session_id: "cs_test_fake")
+        allow(Stripe::Checkout::Session).to receive(:create).and_return(fake_stripe_session)
+      end
+
+      it "cancels the new order and releases its inventory reservation" do
+        post checkout_path, params: valid_order_params
+
+        failed_order = Order.where(stripe_checkout_session_id: nil).order(:id).last
+        expect(failed_order).to be_cancelled
+        expect(failed_order.inventory_movements.pluck(:reason)).to contain_exactly("reservation", "release")
+        expect(variant.reload.stock).to eq(10)
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response.body).to include("Please try again")
+      end
+    end
+
+    context "with a discounted checkout" do
+      let(:coupon) { create(:coupon, discount_type: :percentage, value: 10) }
+
+      before do
+        setup_cart
+        allow(Stripe::Checkout::Session).to receive(:create).and_return(fake_stripe_session)
+      end
+
+      it "creates the Stripe coupon with an order-specific idempotency key" do
+        expect(Stripe::Coupon).to receive(:create) do |coupon_params, request_options|
+          order = Order.last
+          expect(coupon_params).to include(amount_off: 500_000, currency: "usd", duration: "once")
+          expect(request_options).to eq(idempotency_key: "checkout-coupon-order-#{order.id}")
+          double("Stripe::Coupon", id: "coupon_test_fake")
+        end
+
+        params = valid_order_params.deep_merge(order: { coupon_code: coupon.code })
+        post checkout_path, params: params
+
+        expect(response).to redirect_to("https://checkout.stripe.com/pay/fake")
+      end
     end
 
     context "with multiple variants in cart" do
