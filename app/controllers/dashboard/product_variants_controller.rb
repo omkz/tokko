@@ -17,11 +17,11 @@ class Dashboard::ProductVariantsController < Dashboard::BaseController
   # DELETE /product_variants/:id
   def destroy
     product = @variant.product
-    result = @variant.destroy_or_deactivate!
+    result = @variant.destroy_or_archive!
     notice = if result == :destroyed
       "Variant deleted"
     else
-      "Variant was used in an order and has been deactivated instead"
+      "Variant was used in an order and has been archived instead"
     end
 
     redirect_to edit_dashboard_product_path(product), notice: notice, status: :see_other

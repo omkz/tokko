@@ -19,7 +19,7 @@ RSpec.describe "Dashboard product variants", type: :request do
       expect(flash[:notice]).to eq("Variant deleted")
     end
 
-    it "deactivates a purchased variant and preserves its order item" do
+    it "archives a purchased variant and preserves its order item" do
       variant = create(:product_variant, active: true)
       order_item = create(:order_item, product_variant: variant)
 
@@ -28,7 +28,7 @@ RSpec.describe "Dashboard product variants", type: :request do
       }.not_to change(ProductVariant, :count)
 
       expect(response).to redirect_to(edit_dashboard_product_path(variant.product))
-      expect(flash[:notice]).to eq("Variant was used in an order and has been deactivated instead")
+      expect(flash[:notice]).to eq("Variant was used in an order and has been archived instead")
       expect(variant.reload).not_to be_active
       expect(order_item.reload.product_variant).to eq(variant)
     end

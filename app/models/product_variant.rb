@@ -18,24 +18,23 @@ class ProductVariant < ApplicationRecord
   validates :price, presence: true
   validates :stock, presence: true, numericality: { greater_than_or_equal_to: 0 }
 
+  before_destroy :prevent_destroy_with_order_history, prepend: true
+
   def destroyable?
     !order_items.exists?
   end
 
-  def destroy
-    return super if destroyable?
-
+  def archive!
     update!(active: false)
-    self
   end
 
-  def destroy_or_deactivate!
+  def destroy_or_archive!
     if destroyable?
       destroy!
       :destroyed
     else
-      destroy
-      :deactivated
+      archive!
+      :archived
     end
   end
 
@@ -49,5 +48,14 @@ class ProductVariant < ApplicationRecord
     return title if values.empty?
 
     values.join(" / ")
+  end
+
+  private
+
+  def prevent_destroy_with_order_history
+    return if destroyable?
+
+    errors.add(:base, "Purchased variants cannot be destroyed")
+    throw :abort
   end
 end

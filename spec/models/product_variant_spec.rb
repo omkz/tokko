@@ -18,34 +18,37 @@ RSpec.describe ProductVariant, type: :model do
     it "destroys a variant with no order items" do
       variant = create(:product_variant)
 
-      expect { variant.destroy_or_deactivate! }.to change(ProductVariant, :count).by(-1)
+      expect { variant.destroy! }.to change(ProductVariant, :count).by(-1)
       expect(variant).to be_destroyed
     end
 
-    it "deactivates a variant that has been purchased" do
+    it "does not destroy a variant that has been purchased" do
       variant = create(:product_variant, active: true)
       create(:order_item, product_variant: variant)
 
-      expect(variant.destroy_or_deactivate!).to eq(:deactivated)
-      expect(variant.reload).not_to be_active
+      expect { variant.destroy }.not_to change(ProductVariant, :count)
+
+      expect(variant.reload).to be_active
+      expect(variant.errors[:base]).to be_present
     end
 
-    it "preserves the order item and its variant reference" do
+    it "archives a purchased variant explicitly" do
       variant = create(:product_variant, active: true)
       order_item = create(:order_item, product_variant: variant)
 
-      expect { variant.destroy_or_deactivate! }.not_to change(OrderItem, :count)
+      expect { variant.archive! }.not_to change(OrderItem, :count)
 
+      expect(variant.reload).not_to be_active
       expect(order_item.reload.product_variant).to eq(variant.reload)
     end
 
-    it "deactivates instead when destroy is called directly" do
+    it "raises when destroy! is called on a purchased variant" do
       variant = create(:product_variant, active: true)
       order_item = create(:order_item, product_variant: variant)
 
-      expect { variant.destroy }.not_to change(ProductVariant, :count)
+      expect { variant.destroy! }.to raise_error(ActiveRecord::RecordNotDestroyed)
 
-      expect(variant.reload).not_to be_active
+      expect(variant.reload).to be_active
       expect(order_item.reload).to be_persisted
     end
   end

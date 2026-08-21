@@ -23,6 +23,27 @@ RSpec.describe Product, type: :model do
     it { is_expected.to define_enum_for(:status).with_values(draft: "draft", active: "active", archived: "archived").backed_by_column_of_type(:string) }
   end
 
+  describe "deletion" do
+    it "destroys a product with no historical order items" do
+      product = create(:product)
+
+      expect { product.destroy! }.to change(Product, :count).by(-1)
+      expect(product).to be_destroyed
+    end
+
+    it "does not destroy a product or its variants when it has order history" do
+      product = create(:product, status: :active)
+      variant = product.product_variants.first
+      order_item = create(:order_item, product_variant: variant)
+
+      expect { product.destroy }.not_to change(Product, :count)
+
+      expect(product.reload).to be_active
+      expect(variant.reload).to be_persisted
+      expect(order_item.reload.product_variant).to eq(variant)
+    end
+  end
+
   describe "after_create callback" do
     it "creates a default variant on product creation" do
       product = create(:product)

@@ -44,8 +44,14 @@ class Dashboard::ProductsController < Dashboard::BaseController
 
   # DELETE /dashboard/products/1
   def destroy
-    @product.destroy
-    redirect_to dashboard_products_path, notice: "Product was successfully destroyed.", status: :see_other
+    result = @product.destroy_or_archive!
+    notice = if result == :destroyed
+      "Product deleted"
+    else
+      "Product has order history and has been archived instead"
+    end
+
+    redirect_to dashboard_products_path, notice: notice, status: :see_other
   end
 
   private

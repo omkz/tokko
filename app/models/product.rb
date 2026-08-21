@@ -1,4 +1,6 @@
 class Product < ApplicationRecord
+  before_destroy :prevent_destroy_with_order_history, prepend: true
+
   has_many :product_options,
            -> { order(:position) },
            dependent: :destroy
@@ -66,6 +68,24 @@ class Product < ApplicationRecord
 
   after_create :create_default_variant
 
+  def destroyable?
+    !product_variants.joins(:order_items).exists?
+  end
+
+  def archive!
+    update!(status: :archived)
+  end
+
+  def destroy_or_archive!
+    if destroyable?
+      destroy!
+      :destroyed
+    else
+      archive!
+      :archived
+    end
+  end
+
   def related_products(limit = 4)
     Product.published
            .joins(:collections)
@@ -125,6 +145,13 @@ class Product < ApplicationRecord
   end
 
   private
+
+  def prevent_destroy_with_order_history
+    return if destroyable?
+
+    errors.add(:base, "Products with order history cannot be destroyed")
+    throw :abort
+  end
 
   def create_default_variant
     return if product_variants.exists?
