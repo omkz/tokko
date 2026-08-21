@@ -10,28 +10,27 @@ class Dashboard::OrdersController < Dashboard::BaseController
   end
 
   def update
-    previous_status = @order.status
-
-    if @order.update(order_params)
-      if @order.cancelled? && previous_status != "cancelled"
-        @order.order_items.each do |item|
-          InventoryMovement.create!(
-            product_variant: item.product_variant,
-            quantity: item.quantity,
-            reason: :return,
-            order_item: item,
-            user: Current.user,
-            note: "Order ##{@order.id} cancelled"
-          )
-        end
-      end
+    if transition_order
       redirect_to dashboard_order_path(@order), notice: "Order status updated"
     else
+      @order_items = @order.order_items.includes(product_variant: :product)
+      flash.now[:alert] = @order.errors.full_messages.to_sentence
       render :show, status: :unprocessable_entity
     end
   end
 
   private
+
+  def transition_order
+    case order_params[:status]
+    when "cancelled" then @order.cancel!(user: Current.user)
+    when "shipped" then @order.ship!
+    when "completed" then @order.complete!
+    else
+      @order.errors.add(:status, "is not available from the dashboard")
+      false
+    end
+  end
 
   def set_order
     @order = Order.find(params[:id])

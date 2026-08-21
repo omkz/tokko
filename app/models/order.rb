@@ -101,24 +101,91 @@ class Order < ApplicationRecord
     end
   end
 
-  def expire_checkout!
+  def cancel!(user: nil)
     with_lock do
-      return false unless pending?
-
-      reservations = inventory_movements.reservation.includes(:product_variant, :order_item)
-        .sort_by { |movement| [ movement.product_variant_id, movement.id ] }
-
-      reservations.each do |reservation|
-        InventoryMovement.create!(
-          product_variant: reservation.product_variant,
-          order_item: reservation.order_item,
-          quantity: -reservation.quantity,
-          reason: :release
-        )
+      case status
+      when "pending"
+        release_reservations!
+      when "paid"
+        return_items!(user: user)
+      else
+        errors.add(:status, "cannot cancel a #{status} order")
+        return false
       end
 
       update!(status: :cancelled)
       true
+    end
+  end
+
+  def ship!
+    with_lock do
+      return invalid_transition(:shipped) unless paid?
+
+      update!(status: :shipped)
+      true
+    end
+  end
+
+  def complete!
+    with_lock do
+      return invalid_transition(:completed) unless shipped?
+
+      update!(status: :completed)
+      true
+    end
+  end
+
+  def available_admin_transitions
+    case status
+    when "pending" then [ "cancelled" ]
+    when "paid" then [ "shipped", "cancelled" ]
+    when "shipped" then [ "completed" ]
+    else []
+    end
+  end
+
+  def expire_checkout!
+    with_lock do
+      return false unless pending?
+
+      release_reservations!
+      update!(status: :cancelled)
+      true
+    end
+  end
+
+  private
+
+  def invalid_transition(target_status)
+    errors.add(:status, "cannot transition from #{status} to #{target_status}")
+    false
+  end
+
+  def release_reservations!
+    reservations = inventory_movements.reservation.includes(:product_variant, :order_item)
+      .sort_by { |movement| [ movement.product_variant_id, movement.id ] }
+
+    reservations.each do |reservation|
+      InventoryMovement.create!(
+        product_variant: reservation.product_variant,
+        order_item: reservation.order_item,
+        quantity: -reservation.quantity,
+        reason: :release
+      )
+    end
+  end
+
+  def return_items!(user:)
+    order_items.includes(:product_variant).sort_by { |item| [ item.product_variant_id, item.id ] }.each do |item|
+      InventoryMovement.create!(
+        product_variant: item.product_variant,
+        order_item: item,
+        quantity: item.quantity,
+        reason: :return,
+        user: user,
+        note: "Order ##{id} cancelled"
+      )
     end
   end
 end

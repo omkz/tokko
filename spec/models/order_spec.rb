@@ -255,4 +255,140 @@ RSpec.describe Order, type: :model do
       end
     end
   end
+
+  describe "#cancel!" do
+    let(:variant) { create(:product_variant, stock: 10) }
+    let(:order) { create(:order) }
+    let(:item) { create(:order_item, order: order, product_variant: variant, quantity: 2) }
+
+    before do
+      create(:inventory_movement, product_variant: variant, order_item: item, quantity: -2, reason: :reservation)
+    end
+
+    it "cancels a pending order and releases its reservation" do
+      expect(order.cancel!).to be true
+
+      expect(order.reload).to be_cancelled
+      expect(order.inventory_movements.pluck(:reason)).to contain_exactly("reservation", "release")
+      expect(order.inventory_movements.release.sole.quantity).to eq(2)
+      expect(variant.reload.stock).to eq(10)
+    end
+
+    it "cancels a paid order and returns inventory with the acting admin" do
+      admin = create(:user, :admin)
+      order.complete_payment!
+
+      expect(order.cancel!(user: admin)).to be true
+
+      returned_inventory = order.inventory_movements.reload.return.sole
+      expect(order.reload).to be_cancelled
+      expect(returned_inventory).to have_attributes(
+        quantity: 2,
+        order_item: item,
+        user: admin,
+        note: "Order ##{order.id} cancelled"
+      )
+      expect(variant.reload.stock).to eq(10)
+    end
+
+    it "does not restore inventory twice when cancelled repeatedly" do
+      order.cancel!
+
+      expect(order.cancel!).to be false
+      expect(order.inventory_movements.release.count).to eq(1)
+      expect(variant.reload.stock).to eq(10)
+    end
+
+    it "does not cancel or change inventory for a shipped order" do
+      order.complete_payment!
+      order.ship!
+      stock = variant.reload.stock
+
+      expect { order.cancel! }.not_to change(InventoryMovement, :count)
+      expect(order.reload).to be_shipped
+      expect(variant.reload.stock).to eq(stock)
+    end
+
+    it "does not cancel or change inventory for a completed order" do
+      order.complete_payment!
+      order.ship!
+      order.complete!
+      stock = variant.reload.stock
+
+      expect { order.cancel! }.not_to change(InventoryMovement, :count)
+      expect(order.reload).to be_completed
+      expect(variant.reload.stock).to eq(stock)
+    end
+  end
+
+  describe "#ship!" do
+    it "moves a paid order to shipped" do
+      order = create(:order, :paid)
+
+      expect(order.ship!).to be true
+      expect(order.reload).to be_shipped
+    end
+
+    it "does not ship a pending order" do
+      order = create(:order)
+
+      expect(order.ship!).to be false
+      expect(order.reload).to be_pending
+    end
+
+    it "does not ship a cancelled order" do
+      order = create(:order, :cancelled)
+
+      expect(order.ship!).to be false
+      expect(order.reload).to be_cancelled
+    end
+  end
+
+  describe "#complete!" do
+    it "moves a shipped order to completed" do
+      order = create(:order, status: :shipped)
+
+      expect(order.complete!).to be true
+      expect(order.reload).to be_completed
+    end
+
+    it "does not let a paid order skip directly to completed" do
+      order = create(:order, :paid)
+
+      expect(order.complete!).to be false
+      expect(order.reload).to be_paid
+    end
+  end
+
+  describe "Stripe lifecycle transitions" do
+    let(:variant) { create(:product_variant, stock: 10) }
+    let(:order) { create(:order) }
+    let(:item) { create(:order_item, order: order, product_variant: variant, quantity: 2) }
+
+    before do
+      create(:inventory_movement, product_variant: variant, order_item: item, quantity: -2, reason: :reservation)
+    end
+
+    it "completes payment only from pending" do
+      expect(order.complete_payment!).to be true
+      expect(order.reload).to be_paid
+      expect(order.inventory_movements.reload.sole).to be_sale
+    end
+
+    it "expires a pending checkout and releases its reservation" do
+      expect(order.expire_checkout!).to be true
+      expect(order.reload).to be_cancelled
+      expect(order.inventory_movements.release.sole.quantity).to eq(2)
+      expect(variant.reload.stock).to eq(10)
+    end
+
+    it "does not expire or cancel a paid order" do
+      order.complete_payment!
+      stock = variant.reload.stock
+
+      expect { order.expire_checkout! }.not_to change(InventoryMovement, :count)
+      expect(order.reload).to be_paid
+      expect(variant.reload.stock).to eq(stock)
+    end
+  end
 end

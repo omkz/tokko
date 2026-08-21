@@ -12,13 +12,15 @@
         <h1 class="text-lg font-bold text-gray-900">Order #<%= @order.id.to_s.rjust(5, '0') %></h1>
       </div>
       
-      <div class="flex items-center gap-3">
-        <%= form_with model: [:dashboard, @order], class: "flex items-center gap-2" do |f| %>
-          <%= f.select :status, Order.statuses.keys.map { |s| [s.capitalize, s] }, {}, 
-              class: "text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-indigo-500 outline-none" %>
-          <%= f.submit "Update Status", class: "bg-gray-900 text-white text-sm font-semibold px-4 py-1.5 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer" %>
-        <% end %>
-      </div>
+      <% if @order.available_admin_transitions.any? %>
+        <div class="flex items-center gap-3">
+          <%= form_with model: [:dashboard, @order], class: "flex items-center gap-2" do |f| %>
+            <%= f.select :status, @order.available_admin_transitions.map { |status| [status.capitalize, status] }, {},
+                class: "text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-indigo-500 outline-none" %>
+            <%= f.submit "Update Status", class: "bg-gray-900 text-white text-sm font-semibold px-4 py-1.5 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer" %>
+          <% end %>
+        </div>
+      <% end %>
     </div>
   </div>
 
