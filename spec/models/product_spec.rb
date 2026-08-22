@@ -172,6 +172,10 @@ RSpec.describe Product, type: :model do
       expect(Product.search("SHIRT").pluck(:id)).to include(shirt.id)
     end
 
+    it "matches a substring within a name" do
+      expect(Product.search("hir").pluck(:id)).to include(shirt.id)
+    end
+
     it "matches by description" do
       expect(Product.search("trousers").pluck(:id)).to include(pants.id)
     end
