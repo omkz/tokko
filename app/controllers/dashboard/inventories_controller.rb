@@ -9,21 +9,33 @@ class Dashboard::InventoriesController < Dashboard::BaseController
 
   def update_all
     updates = params[:variants] || {}
+    variant_ids = updates.keys
 
-    success_count = 0
-    updates.each do |variant_id, variant_params|
-      variant = ProductVariant.find(variant_id)
-      delta = variant_params[:stock].to_i - variant.stock.to_i
-      next if delta == 0
+    success_count = ProductVariant.transaction do
+      variants = ProductVariant.lock
+                               .where(id: variant_ids)
+                               .order(:id)
+                               .index_by { |variant| variant.id.to_s }
 
-      InventoryMovement.create!(
-        product_variant: variant,
-        quantity: delta,
-        reason: :adjustment,
-        user: Current.user,
-        note: "Manual adjustment via dashboard"
-      )
-      success_count += 1
+      missing_ids = variant_ids - variants.keys
+      raise ActiveRecord::RecordNotFound, "Couldn't find ProductVariant with ID: #{missing_ids.join(', ')}" if missing_ids.any?
+
+      success_count = 0
+      updates.each do |variant_id, variant_params|
+        variant = variants.fetch(variant_id)
+        delta = variant_params[:stock].to_i - variant.stock
+        next if delta.zero?
+
+        InventoryMovement.create!(
+          product_variant: variant,
+          quantity: delta,
+          reason: :adjustment,
+          user: Current.user,
+          note: "Manual adjustment via dashboard"
+        )
+        success_count += 1
+      end
+      success_count
     end
 
     redirect_to dashboard_inventory_path(q: params[:q], page: params[:page]),
