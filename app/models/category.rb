@@ -21,7 +21,14 @@ class Category < ApplicationRecord
 
   # Fetch self and all descendants (subcategories) efficiently
   def self_and_descendant_ids
-    [ id ] + children.flat_map(&:self_and_descendant_ids)
+    tree = self.class.with_recursive(
+      category_tree: [
+        self.class.where(id: id),
+        self.class.joins("JOIN category_tree ON categories.parent_id = category_tree.id")
+      ]
+    )
+
+    tree.from("category_tree AS categories").pluck(:id)
   end
 
   private
