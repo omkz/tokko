@@ -1,0 +1,16 @@
+class CreateStripeWebhookEvents < ActiveRecord::Migration[8.1]
+  def change
+    create_table :stripe_webhook_events do |t|
+      t.string :stripe_event_id, null: false
+      t.string :event_type, null: false
+      t.string :stripe_session_id, null: false
+      t.string :payment_status
+      t.bigint :metadata_order_id
+      t.datetime :processed_at
+
+      t.timestamps
+    end
+
+    add_index :stripe_webhook_events, :stripe_event_id, unique: true
+  end
+end

@@ -1,4 +1,11 @@
 class Webhooks::StripeController < ApplicationController
+  SUPPORTED_EVENT_TYPES = %w[
+    checkout.session.completed
+    checkout.session.async_payment_succeeded
+    checkout.session.async_payment_failed
+    checkout.session.expired
+  ].freeze
+
   allow_unauthenticated_access
   skip_before_action :verify_authenticity_token
 
@@ -8,61 +15,22 @@ class Webhooks::StripeController < ApplicationController
     webhook_secret = Rails.application.credentials.dig(:stripe, :webhook_secret)
 
     event = Stripe::Webhook.construct_event(payload, sig_header, webhook_secret)
+    return head :ok unless SUPPORTED_EVENT_TYPES.include?(event["type"])
 
-    case event["type"]
-    when "checkout.session.completed"
-      session = event["data"]["object"]
-      complete_order(session) if session["payment_status"] == "paid"
-    when "checkout.session.async_payment_succeeded"
-      complete_order(event["data"]["object"])
-    when "checkout.session.async_payment_failed", "checkout.session.expired"
-      expire_order(event["data"]["object"])
+    session = event["data"]["object"]
+    stripe_webhook_event = StripeWebhookEvent.create_or_find_by!(stripe_event_id: event["id"]) do |record|
+      record.event_type = event["type"]
+      record.stripe_session_id = session["id"]
+      record.payment_status = session["payment_status"]
+      record.metadata_order_id = session.dig("metadata", "order_id").presence
     end
+
+    ProcessStripeWebhookEventJob.perform_later(stripe_webhook_event.id) unless stripe_webhook_event.processed?
 
     head :ok
   rescue JSON::ParserError
     head :bad_request
   rescue Stripe::SignatureVerificationError
     head :bad_request
-  end
-
-  private
-
-  def complete_order(session)
-    order = find_order(session)
-    return unless order
-    return unless order.complete_payment!
-
-    OrderMailer.confirmation(order).deliver_later
-    order.cart&.cart_items&.destroy_all
-  end
-
-  def expire_order(session)
-    find_order(session)&.expire_checkout!
-  end
-
-  def find_order(session)
-    order = Order.find_by(stripe_checkout_session_id: session["id"])
-    return order if order
-
-    order_id = session.dig("metadata", "order_id")
-    return if order_id.blank?
-
-    order = Order.find_by(id: order_id)
-    return unless order
-
-    conflict = false
-    order.with_lock do
-      if order.stripe_checkout_session_id.blank?
-        order.update!(stripe_checkout_session_id: session["id"])
-      elsif order.stripe_checkout_session_id != session["id"]
-        Rails.logger.warn(
-          "Ignoring Stripe session #{session["id"]} for order #{order.id}: stored session ID differs"
-        )
-        conflict = true
-      end
-    end
-
-    order unless conflict
   end
 end
