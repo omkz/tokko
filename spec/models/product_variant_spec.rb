@@ -32,14 +32,18 @@ RSpec.describe ProductVariant, type: :model do
       expect(variant.errors[:base]).to be_present
     end
 
-    it "archives a purchased variant explicitly" do
+    it "preserves historical order data when the catalog item is archived" do
       variant = create(:product_variant, active: true)
       order_item = create(:order_item, product_variant: variant)
+      snapshots = order_item.attributes.slice("product_name", "variant_options", "variant_sku", "unit_price")
 
       expect { variant.archive! }.not_to change(OrderItem, :count)
+      variant.product.archive!
 
       expect(variant.reload).not_to be_active
-      expect(order_item.reload.product_variant).to eq(variant.reload)
+      expect(order_item.reload.product_variant_id).to eq(variant.id)
+      expect(order_item.product_variant).to eq(variant.reload)
+      expect(order_item.attributes.slice(*snapshots.keys)).to eq(snapshots)
     end
 
     it "raises when destroy! is called on a purchased variant" do
@@ -62,6 +66,32 @@ RSpec.describe ProductVariant, type: :model do
     it "returns false when stock is positive" do
       variant = build(:product_variant, stock: 5)
       expect(variant.out_of_stock?).to be false
+    end
+  end
+
+  describe "#purchasable?" do
+    it "is true for an active variant of an active product" do
+      variant = build(:product_variant, active: true, product: build(:product, status: :active))
+
+      expect(variant).to be_purchasable
+    end
+
+    it "is false for an inactive variant of an active product" do
+      variant = build(:product_variant, active: false, product: build(:product, status: :active))
+
+      expect(variant).not_to be_purchasable
+    end
+
+    it "is false for an active variant of a draft product" do
+      variant = build(:product_variant, active: true, product: build(:product, status: :draft))
+
+      expect(variant).not_to be_purchasable
+    end
+
+    it "is false for an active variant of an archived product" do
+      variant = build(:product_variant, active: true, product: build(:product, status: :archived))
+
+      expect(variant).not_to be_purchasable
     end
   end
 

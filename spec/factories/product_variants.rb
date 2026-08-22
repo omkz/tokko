@@ -5,5 +5,6 @@ FactoryBot.define do
     price { 10_000 }
     stock { 10 }
     title { "Default Title" }
+    active { true }
   end
 end

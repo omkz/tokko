@@ -49,6 +49,15 @@ class Order < ApplicationRecord
 
       sorted_items.each do |item|
         variant = locked_variants[item.product_variant_id]
+        next if variant.purchasable?
+
+        stock_errors << "#{variant.product.name} (#{variant.option_text}) is no longer available"
+      end
+
+      raise ActiveRecord::Rollback if stock_errors.any?
+
+      sorted_items.each do |item|
+        variant = locked_variants[item.product_variant_id]
         next if variant.stock >= item.quantity
 
         stock_errors << if variant.stock == 0

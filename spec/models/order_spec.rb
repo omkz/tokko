@@ -179,6 +179,30 @@ RSpec.describe Order, type: :model do
       end
     end
 
+    context "when a variant is no longer purchasable" do
+      let(:coupon) { create(:coupon, usage_limit: 1) }
+
+      before do
+        create(:cart_item, cart: cart, product_variant: variant, quantity: 2)
+        variant.archive!
+      end
+
+      it "does not create an order, reserve inventory, or consume coupon capacity" do
+        order = nil
+        errors = nil
+
+        expect {
+          order, errors = Order.create_from_cart!(cart, valid_attributes, coupon_code: coupon.code)
+        }.not_to change(Order, :count)
+
+        expect(order).not_to be_persisted
+        expect(errors).to contain_exactly("#{variant.product.name} (#{variant.option_text}) is no longer available")
+        expect(InventoryMovement.reservation).to be_empty
+        expect(variant.reload.stock).to eq(10)
+        expect(coupon).to be_valid_for_use
+      end
+    end
+
     context "with two competing checkouts" do
       let(:other_cart) { create(:cart) }
 

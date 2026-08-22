@@ -42,6 +42,10 @@ class ProductVariant < ApplicationRecord
     stock <= 0
   end
 
+  def purchasable?
+    active? && product.active?
+  end
+
   def option_text
     values = product_option_values.map(&:value)
 

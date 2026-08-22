@@ -14,6 +14,12 @@ class CartsController < ApplicationController
 
   def add
     variant = ProductVariant.find(params[:variant_id])
+
+    unless variant.purchasable?
+      respond_with_cart_error("This product is no longer available.")
+      return
+    end
+
     quantity = [ params[:quantity].to_i, 1 ].max
     cart = find_or_create_cart
     item = cart.cart_items.find_or_initialize_by(product_variant: variant)
@@ -21,10 +27,7 @@ class CartsController < ApplicationController
 
     if new_quantity > variant.stock
       message = variant.stock == 0 ? "#{variant.product.name} is out of stock." : "Only #{variant.stock} left in stock."
-      respond_to do |format|
-        format.turbo_stream { render turbo_stream: turbo_stream.replace("flash", partial: "layouts/flash", locals: { alert: message }) }
-        format.html { redirect_to request.referer || root_path, alert: message }
-      end
+      respond_with_cart_error(message)
       return
     end
 
@@ -44,7 +47,14 @@ class CartsController < ApplicationController
 
     item = cart.cart_items.find_by(product_variant_id: params[:variant_id].to_i)
     if item
-      quantity <= 0 ? item.destroy : item.update!(quantity: quantity)
+      if quantity <= 0
+        item.destroy
+      elsif item.product_variant.purchasable?
+        item.update!(quantity: quantity)
+      else
+        redirect_to cart_path, alert: "This product is no longer available."
+        return
+      end
     end
 
     redirect_to cart_path
@@ -53,5 +63,20 @@ class CartsController < ApplicationController
   def destroy
     current_cart&.cart_items&.destroy_all
     redirect_to cart_path, notice: "Cart cleared"
+  end
+
+  private
+
+  def respond_with_cart_error(message)
+    respond_to do |format|
+      format.turbo_stream do
+        render turbo_stream: turbo_stream.append(
+          "flash-notifications",
+          partial: "layouts/toast",
+          locals: { message: message, type: "alert" }
+        )
+      end
+      format.html { redirect_to request.referer || root_path, alert: message }
+    end
   end
 end

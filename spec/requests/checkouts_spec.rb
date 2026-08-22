@@ -390,6 +390,50 @@ RSpec.describe "Checkouts", type: :request do
       end
     end
 
+    shared_examples "checkout with an unavailable catalog item" do
+      it "rejects checkout before creating an order, reservation, or Stripe session" do
+        stock = variant.reload.stock
+        movement_count = InventoryMovement.count
+        expect(Stripe::Checkout::Session).not_to receive(:create)
+
+        expect {
+          post checkout_path, params: valid_order_params
+        }.not_to change(Order, :count)
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response.body).to include("is no longer available")
+        expect(InventoryMovement.count).to eq(movement_count)
+        expect(variant.reload.stock).to eq(stock)
+      end
+    end
+
+    context "when the variant becomes inactive before checkout" do
+      before do
+        setup_cart
+        variant.archive!
+      end
+
+      include_examples "checkout with an unavailable catalog item"
+    end
+
+    context "when the product becomes archived before checkout" do
+      before do
+        setup_cart
+        variant.product.archive!
+      end
+
+      include_examples "checkout with an unavailable catalog item"
+    end
+
+    context "when the product becomes a draft before checkout" do
+      before do
+        setup_cart
+        variant.product.update!(status: :draft)
+      end
+
+      include_examples "checkout with an unavailable catalog item"
+    end
+
     context "with missing required order fields" do
       before do
         setup_cart
