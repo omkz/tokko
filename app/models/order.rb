@@ -44,8 +44,15 @@ class Order < ApplicationRecord
         raise ActiveRecord::Rollback
       end
 
+      product_ids = sorted_items.map { |item| item.product_variant.product_id }.uniq.sort
+      Product.lock.where(id: product_ids).order(:id).load
+
       variant_ids = sorted_items.map(&:product_variant_id)
-      locked_variants = ProductVariant.lock.includes(:product, :product_option_values).where(id: variant_ids).index_by(&:id)
+      locked_variants = ProductVariant.lock
+        .includes(:product, :product_option_values)
+        .where(id: variant_ids)
+        .order(:id)
+        .index_by(&:id)
 
       sorted_items.each do |item|
         variant = locked_variants[item.product_variant_id]
