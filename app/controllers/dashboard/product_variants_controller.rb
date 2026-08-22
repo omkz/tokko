@@ -1,7 +1,6 @@
 class Dashboard::ProductVariantsController < Dashboard::BaseController
   before_action :set_variant, only: %i[update destroy]
 
-  # PATCH /product_variants/:id
   def update
     respond_to do |format|
       if @variant.update(variant_params)
@@ -14,7 +13,6 @@ class Dashboard::ProductVariantsController < Dashboard::BaseController
     end
   end
 
-  # DELETE /product_variants/:id
   def destroy
     product = @variant.product
     result = @variant.destroy_or_archive!

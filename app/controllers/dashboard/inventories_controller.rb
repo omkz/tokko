@@ -1,6 +1,5 @@
 class Dashboard::InventoriesController < Dashboard::BaseController
   def index
-    # We want to manage variants directly
     @variants = ProductVariant.includes(:product, :product_option_values)
                               .joins(:product)
                               .search_by_product_name(params[:q])

@@ -15,7 +15,6 @@ class CategoriesController < ApplicationController
 
     @pagy, @products = pagy(products_query)
 
-    # Preloads for performance
     @products = @products.preload(:product_variants, images_attachments: :blob)
   end
 end
