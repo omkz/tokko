@@ -29,10 +29,8 @@ class StripeWebhookEvent < ApplicationRecord
   def complete_order
     order = find_order
     return unless order
-    return unless order.complete_payment!
 
-    OrderMailer.confirmation(order).deliver_later
-    order.cart&.cart_items&.destroy_all
+    order.complete_checkout_payment!
   end
 
   def expire_order

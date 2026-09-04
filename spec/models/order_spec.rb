@@ -358,4 +358,63 @@ RSpec.describe Order, type: :model do
       end
     end
   end
+
+  describe "#complete_checkout_payment!" do
+    let(:cart) { create(:cart) }
+    let(:variant) { create(:product_variant, stock: 10) }
+    let(:order) { create(:order, cart: cart) }
+    let(:item) { create(:order_item, order: order, product_variant: variant, quantity: 2) }
+
+    before do
+      create(:cart_item, cart: cart, product_variant: variant, quantity: 1)
+      create(:inventory_movement, product_variant: variant, order_item: item, quantity: -2, reason: :reservation)
+    end
+
+    it "completes payment, sells the reservation, emails once, and clears the cart" do
+      expect { order.complete_checkout_payment! }.to have_enqueued_mail(OrderMailer, :confirmation).once
+
+      expect(order.reload).to be_paid
+      expect(order.inventory_movements.reload.sole).to be_sale
+      expect(cart.cart_items.reload).to be_empty
+    end
+
+    it "is a no-op when the order is no longer pending" do
+      order.complete_payment!
+
+      expect {
+        expect(order.complete_checkout_payment!).to be false
+      }.not_to have_enqueued_mail(OrderMailer, :confirmation)
+
+      expect(cart.cart_items.reload).not_to be_empty
+    end
+
+    it "sends the mail and clears the cart only on the call that wins the transition" do
+      results = []
+
+      expect {
+        results << order.complete_checkout_payment!
+        results << order.complete_checkout_payment!
+      }.to have_enqueued_mail(OrderMailer, :confirmation).once
+
+      expect(results).to eq([ true, false ])
+      expect(order.inventory_movements.reload.sole).to be_sale
+    end
+  end
+
+  describe ".stale_pending_checkout" do
+    it "includes pending orders older than the grace period" do
+      stale = create(:order, created_at: 46.minutes.ago)
+      expect(Order.stale_pending_checkout.pluck(:id)).to include(stale.id)
+    end
+
+    it "excludes pending orders within the grace period" do
+      recent = create(:order, created_at: 44.minutes.ago)
+      expect(Order.stale_pending_checkout.pluck(:id)).not_to include(recent.id)
+    end
+
+    it "excludes non-pending orders regardless of age" do
+      paid = create(:order, :paid, created_at: 46.minutes.ago)
+      expect(Order.stale_pending_checkout.pluck(:id)).not_to include(paid.id)
+    end
+  end
 end

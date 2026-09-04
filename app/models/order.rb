@@ -14,6 +14,7 @@ class Order < ApplicationRecord
   }, default: :pending
 
   scope :successful, -> { where(status: [ :paid, :shipped, :completed ]) }
+  scope :stale_pending_checkout, -> { pending.where(created_at: ..45.minutes.ago) }
 
   def self.total_revenue
     successful.sum(:total_price)
@@ -115,6 +116,18 @@ class Order < ApplicationRecord
       update!(status: :paid)
       true
     end
+  end
+
+  # Shared payment-completion path for both StripeWebhookEvent and the stale
+  # checkout recovery job, so the two can race safely: whichever call wins
+  # the pending -> paid transition sends the mail and clears the cart, the
+  # loser is a no-op.
+  def complete_checkout_payment!
+    return false unless complete_payment!
+
+    OrderMailer.confirmation(self).deliver_later
+    cart&.cart_items&.destroy_all
+    true
   end
 
   def ship!
