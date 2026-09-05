@@ -22,12 +22,14 @@ RSpec.describe ProcessOrderEventJob, type: :job do
     expect(ActionMailer::Base.deliveries.size).to eq(1)
   end
 
-  it "discards the job when its event has been deleted" do
+  it "discards the job when its event has been deleted, without re-enqueueing a retry" do
     event = order.order_events.create!(event_type: "payment_completed")
     id = event.id
     event.destroy!
 
-    expect { described_class.perform_now(id) }.not_to raise_error
+    expect {
+      expect { described_class.perform_now(id) }.not_to raise_error
+    }.not_to have_enqueued_job(described_class)
   end
 
   it "retries when processing fails" do

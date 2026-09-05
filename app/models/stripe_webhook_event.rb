@@ -6,14 +6,16 @@ class StripeWebhookEvent < ApplicationRecord
   end
 
   def process!
+    paid_order = nil
+
     with_lock do
       return false if processed?
 
       case event_type
       when "checkout.session.completed"
-        complete_order if payment_status == "paid"
+        paid_order = complete_order if payment_status == "paid"
       when "checkout.session.async_payment_succeeded"
-        complete_order
+        paid_order = complete_order
       when "checkout.session.async_payment_failed", "checkout.session.expired"
         expire_order
       end
@@ -21,16 +23,24 @@ class StripeWebhookEvent < ApplicationRecord
       update!(processed_at: Time.current)
     end
 
+    # Enqueued only after the transaction above has committed, so the job
+    # never races the OrderEvent it depends on. If this enqueue is lost
+    # (process crash, queue outage) the durable outbox recovery job is the
+    # safety net.
+    paid_order&.enqueue_pending_payment_event
+
     true
   end
 
   private
 
+  # Returns the order if this call won the pending -> paid transition, so
+  # the caller can enqueue its outbox event once the transaction commits.
   def complete_order
     order = find_order
     return unless order
 
-    order.enqueue_pending_payment_event if order.complete_checkout_payment!
+    order if order.complete_checkout_payment!
   end
 
   def expire_order

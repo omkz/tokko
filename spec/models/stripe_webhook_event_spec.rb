@@ -41,6 +41,27 @@ RSpec.describe StripeWebhookEvent, type: :model do
       expect(ActionMailer::Base.deliveries).to be_empty
     end
 
+    it "enqueues the persisted payment event only after its transaction has committed" do
+      create(:cart_item, cart: cart, product_variant: variant, quantity: 1)
+      event = create_event(type: "checkout.session.completed", payment_status: "paid")
+      baseline_depth = ActiveRecord::Base.connection.open_transactions
+
+      depth_at_enqueue = nil
+      order_event_id_at_enqueue = nil
+      allow(ProcessOrderEventJob).to receive(:perform_later) do |id|
+        depth_at_enqueue = ActiveRecord::Base.connection.open_transactions
+        order_event_id_at_enqueue = id
+      end
+
+      event.process!
+
+      persisted_event = order.order_events.sole
+      expect(depth_at_enqueue).to eq(baseline_depth)
+      expect(order_event_id_at_enqueue).to eq(persisted_event.id)
+      expect(order.reload).to be_paid
+      expect(event.reload).to be_processed
+    end
+
     it "marks an unpaid completion processed without changing payment state" do
       item = create(:cart_item, cart: cart, product_variant: variant, quantity: 1)
       event = create_event(type: "checkout.session.completed", payment_status: "unpaid")
