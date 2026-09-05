@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_23_010000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_05_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -170,6 +170,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_23_010000) do
     t.index ["user_id"], name: "index_inventory_movements_on_user_id"
   end
 
+  create_table "order_events", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "event_type", null: false
+    t.bigint "order_id", null: false
+    t.datetime "processed_at"
+    t.datetime "updated_at", null: false
+    t.index ["order_id"], name: "index_order_events_unique_payment_completed", unique: true, where: "((event_type)::text = 'payment_completed'::text)"
+    t.index ["processed_at", "order_id"], name: "index_order_events_on_unprocessed", where: "(processed_at IS NULL)"
+  end
+
   create_table "order_items", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "order_id", null: false
@@ -324,6 +334,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_23_010000) do
   add_foreign_key "inventory_movements", "order_items"
   add_foreign_key "inventory_movements", "product_variants"
   add_foreign_key "inventory_movements", "users"
+  add_foreign_key "order_events", "orders"
   add_foreign_key "order_items", "orders"
   add_foreign_key "order_items", "product_variants"
   add_foreign_key "orders", "carts"

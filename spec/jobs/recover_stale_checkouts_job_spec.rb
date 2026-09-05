@@ -30,18 +30,20 @@ RSpec.describe RecoverStaleCheckoutsJob, type: :job do
   end
 
   describe "stale pending order with a remote paid session" do
-    it "completes payment, sells the reservation, emails once, and clears the cart" do
+    it "completes payment, sells the reservation, records one payment event, and clears the cart" do
       cart = create(:cart)
       create(:cart_item, cart: cart, product_variant: variant, quantity: 1)
       order = build_stale_order(session_id: "cs_test_paid", cart: cart)
       stub_session("cs_test_paid", status: "complete", payment_status: "paid")
 
-      expect { described_class.perform_now }.to have_enqueued_mail(OrderMailer, :confirmation).once
+      expect { described_class.perform_now }.to have_enqueued_job(ProcessOrderEventJob)
 
       expect(order.reload).to be_paid
       expect(order.inventory_movements.reload.sole).to be_sale
       expect(variant.reload.stock).to eq(8)
       expect(cart.cart_items.reload).to be_empty
+      expect(order.order_events.sole.event_type).to eq("payment_completed")
+      expect(ActionMailer::Base.deliveries).to be_empty
     end
 
     it "has payment side effects only once when run twice against the same paid session" do
@@ -53,7 +55,7 @@ RSpec.describe RecoverStaleCheckoutsJob, type: :job do
       expect {
         described_class.perform_now
         described_class.perform_now
-      }.to have_enqueued_mail(OrderMailer, :confirmation).once
+      }.to change(OrderEvent, :count).by(1)
 
       expect(order.reload).to be_paid
       expect(order.inventory_movements.reload.sole).to be_sale
@@ -68,7 +70,7 @@ RSpec.describe RecoverStaleCheckoutsJob, type: :job do
       order = build_stale_order(session_id: "cs_test_unpaid", cart: cart)
       stub_session("cs_test_unpaid", status: "complete", payment_status: "unpaid")
 
-      expect { described_class.perform_now }.not_to have_enqueued_mail(OrderMailer, :confirmation)
+      expect { described_class.perform_now }.not_to have_enqueued_job(ProcessOrderEventJob)
 
       expect(order.reload).to be_pending
       expect(order.inventory_movements.reload.sole).to be_reservation
@@ -178,7 +180,7 @@ RSpec.describe RecoverStaleCheckoutsJob, type: :job do
   end
 
   describe "webhook/recovery idempotency" do
-    it "does not duplicate email, inventory sale, or cart cleanup when recovery runs after the webhook already completed payment" do
+    it "does not duplicate the payment event, inventory sale, or cart cleanup when recovery runs after the webhook already completed payment" do
       cart = create(:cart)
       create(:cart_item, cart: cart, product_variant: variant, quantity: 1)
       order = build_stale_order(session_id: "cs_test_webhook_first", cart: cart)
@@ -189,15 +191,18 @@ RSpec.describe RecoverStaleCheckoutsJob, type: :job do
         payment_status: "paid"
       )
 
-      expect { event.process! }.to have_enqueued_mail(OrderMailer, :confirmation).once
+      expect { event.process! }.to change(OrderEvent, :count).by(1)
       expect(Stripe::Checkout::Session).not_to receive(:retrieve)
 
-      expect { described_class.perform_now }.not_to have_enqueued_mail(OrderMailer, :confirmation)
+      expect {
+        described_class.perform_now
+      }.not_to change(OrderEvent, :count)
 
       expect(order.reload).to be_paid
       expect(order.inventory_movements.reload.sole).to be_sale
       expect(variant.reload.stock).to eq(8)
       expect(cart.cart_items.reload).to be_empty
+      expect(order.order_events.count).to eq(1)
     end
   end
 end

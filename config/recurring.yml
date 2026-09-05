@@ -16,3 +16,6 @@ production:
   recover_stale_checkouts:
     class: RecoverStaleCheckoutsJob
     schedule: every 15 minutes
+  recover_unprocessed_order_events:
+    class: RecoverUnprocessedOrderEventsJob
+    schedule: every 5 minutes

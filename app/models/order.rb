@@ -2,6 +2,7 @@ class Order < ApplicationRecord
   has_many :order_items, dependent: :destroy
   has_many :product_variants, through: :order_items
   has_many :inventory_movements, through: :order_items
+  has_many :order_events, dependent: :destroy
   belongs_to :coupon, optional: true
   belongs_to :cart, optional: true
 
@@ -120,14 +121,28 @@ class Order < ApplicationRecord
 
   # Shared payment-completion path for both StripeWebhookEvent and the stale
   # checkout recovery job, so the two can race safely: whichever call wins
-  # the pending -> paid transition sends the mail and clears the cart, the
-  # loser is a no-op.
+  # the pending -> paid transition commits the reservation-to-sale,
+  # order-to-paid, and cart cleanup together with a durable payment_completed
+  # OrderEvent in a single transaction. The loser is a no-op.
   def complete_checkout_payment!
-    return false unless complete_payment!
+    with_lock do
+      return false unless pending?
 
-    OrderMailer.confirmation(self).deliver_later
-    cart&.cart_items&.destroy_all
+      inventory_movements.reservation.update_all(reason: "sale", updated_at: Time.current)
+      cart&.cart_items&.destroy_all
+      update!(status: :paid)
+      order_events.create!(event_type: "payment_completed")
+    end
+
     true
+  end
+
+  # Best-effort enqueue of the outbox event created by a successful
+  # complete_checkout_payment!. Safe to skip or duplicate: the recurring
+  # RecoverUnprocessedOrderEventsJob guarantees eventual processing.
+  def enqueue_pending_payment_event
+    event = order_events.find_by(event_type: "payment_completed")
+    ProcessOrderEventJob.perform_later(event.id) if event
   end
 
   def ship!

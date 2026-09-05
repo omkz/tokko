@@ -26,37 +26,40 @@ RSpec.describe StripeWebhookEvent, type: :model do
   it { is_expected.to validate_presence_of(:stripe_session_id) }
 
   describe "#process!" do
-    it "completes a paid checkout, finalizes inventory, sends confirmation, and clears its cart" do
+    it "completes a paid checkout, finalizes inventory, records one payment event, and clears its cart" do
       create(:cart_item, cart: cart, product_variant: variant, quantity: 1)
       event = create_event(type: "checkout.session.completed", payment_status: "paid")
 
-      expect { event.process! }.to have_enqueued_mail(OrderMailer, :confirmation).once
+      expect { event.process! }.to have_enqueued_job(ProcessOrderEventJob)
 
       expect(order.reload).to be_paid
       expect(order.inventory_movements.reload.sole).to be_sale
       expect(variant.stock).to eq(8)
       expect(cart.cart_items.reload).to be_empty
       expect(event.reload).to be_processed
+      expect(order.order_events.sole.event_type).to eq("payment_completed")
+      expect(ActionMailer::Base.deliveries).to be_empty
     end
 
     it "marks an unpaid completion processed without changing payment state" do
       item = create(:cart_item, cart: cart, product_variant: variant, quantity: 1)
       event = create_event(type: "checkout.session.completed", payment_status: "unpaid")
 
-      expect { event.process! }.not_to have_enqueued_mail(OrderMailer, :confirmation)
+      expect { event.process! }.not_to have_enqueued_job(ProcessOrderEventJob)
 
       expect(order.reload).to be_pending
       expect(order.inventory_movements.reload.sole).to be_reservation
       expect(variant.reload.stock).to eq(8)
       expect(cart.cart_items).to include(item)
       expect(event.reload).to be_processed
+      expect(order.order_events).to be_empty
     end
 
     it "completes an asynchronous payment success" do
       create(:cart_item, cart: cart, product_variant: variant, quantity: 1)
       event = create_event(type: "checkout.session.async_payment_succeeded")
 
-      expect { event.process! }.to have_enqueued_mail(OrderMailer, :confirmation).once
+      expect { event.process! }.to have_enqueued_job(ProcessOrderEventJob)
 
       expect(order.reload).to be_paid
       expect(order.inventory_movements.reload.sole).to be_sale
@@ -138,7 +141,7 @@ RSpec.describe StripeWebhookEvent, type: :model do
       expect {
         results << event.process!
         results << event.process!
-      }.to have_enqueued_mail(OrderMailer, :confirmation).once
+      }.to change(OrderEvent, :count).by(1)
 
       expect(results).to eq([ true, false ])
       expect(event.reload.processed_at).to be_present

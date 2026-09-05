@@ -370,12 +370,16 @@ RSpec.describe Order, type: :model do
       create(:inventory_movement, product_variant: variant, order_item: item, quantity: -2, reason: :reservation)
     end
 
-    it "completes payment, sells the reservation, emails once, and clears the cart" do
-      expect { order.complete_checkout_payment! }.to have_enqueued_mail(OrderMailer, :confirmation).once
+    it "completes payment, sells the reservation, clears the cart, and records one payment_completed event" do
+      expect { order.complete_checkout_payment! }.to change(OrderEvent, :count).by(1)
 
       expect(order.reload).to be_paid
       expect(order.inventory_movements.reload.sole).to be_sale
       expect(cart.cart_items.reload).to be_empty
+
+      event = order.order_events.sole
+      expect(event.event_type).to eq("payment_completed")
+      expect(event).not_to be_processed
     end
 
     it "is a no-op when the order is no longer pending" do
@@ -383,21 +387,34 @@ RSpec.describe Order, type: :model do
 
       expect {
         expect(order.complete_checkout_payment!).to be false
-      }.not_to have_enqueued_mail(OrderMailer, :confirmation)
+      }.not_to change(OrderEvent, :count)
 
       expect(cart.cart_items.reload).not_to be_empty
     end
 
-    it "sends the mail and clears the cart only on the call that wins the transition" do
+    it "clears the cart and records the event only on the call that wins the transition" do
       results = []
 
       expect {
         results << order.complete_checkout_payment!
         results << order.complete_checkout_payment!
-      }.to have_enqueued_mail(OrderMailer, :confirmation).once
+      }.to change(OrderEvent, :count).by(1)
 
       expect(results).to eq([ true, false ])
       expect(order.inventory_movements.reload.sole).to be_sale
+      expect(order.order_events.count).to eq(1)
+    end
+
+    it "rolls back the entire transaction when creating the OrderEvent fails" do
+      order.order_events.create!(event_type: "payment_completed", processed_at: Time.current)
+
+      expect {
+        expect { order.complete_checkout_payment! }.to raise_error(ActiveRecord::RecordNotUnique)
+      }.not_to change(OrderEvent, :count)
+
+      expect(order.reload).to be_pending
+      expect(order.inventory_movements.reload.sole).to be_reservation
+      expect(cart.cart_items.reload).not_to be_empty
     end
   end
 

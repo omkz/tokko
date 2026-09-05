@@ -30,7 +30,7 @@ class StripeWebhookEvent < ApplicationRecord
     order = find_order
     return unless order
 
-    order.complete_checkout_payment!
+    order.enqueue_pending_payment_event if order.complete_checkout_payment!
   end
 
   def expire_order

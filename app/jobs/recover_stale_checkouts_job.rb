@@ -28,7 +28,7 @@ class RecoverStaleCheckoutsJob < ApplicationJob
 
   def apply_session(order, session)
     if session.payment_status == "paid"
-      order.complete_checkout_payment!
+      order.enqueue_pending_payment_event if order.complete_checkout_payment!
     elsif session.status == "expired"
       order.expire_checkout!
     end

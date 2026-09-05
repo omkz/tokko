@@ -22,7 +22,7 @@ RSpec.describe ProcessStripeWebhookEventJob, type: :job do
     expect {
       described_class.perform_now(event.id)
       described_class.perform_now(event.id)
-    }.to have_enqueued_mail(OrderMailer, :confirmation).once
+    }.to change { order.order_events.count }.by(1)
 
     expect(event.reload).to be_processed
     expect(order.reload).to be_paid
