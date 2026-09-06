@@ -98,3 +98,130 @@ jobs:
 
       - name: Run test suite
         run: bundle exec rspec
+
+  # Proves the actual production Docker image (the one Kamal deploys) builds,
+  # ships production-only gems, boots via its real entrypoint/CMD against
+  # fresh PostgreSQL databases, and answers /up — without any demo data.
+  # This is a release gate, not a functional test: it doesn't re-run RSpec/
+  # RuboCop/Brakeman, which already run in the jobs above.
+  production_smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+
+      # The repo intentionally ships no config/master.key, so the committed
+      # config/credentials.yml.enc can't be decrypted here. Generate a
+      # throwaway key/credentials pair (and a SECRET_KEY_BASE) that only
+      # exist in this ephemeral runner workspace and are never committed,
+      # uploaded, or printed.
+      - name: Generate ephemeral Rails credentials for the smoke image
+        run: |
+          set -euo pipefail
+          rm -f config/credentials.yml.enc config/master.key
+          EDITOR=true bin/rails credentials:edit >/dev/null
+
+          master_key="$(cat config/master.key)"
+          secret_key_base="$(openssl rand -hex 64)"
+
+          echo "::add-mask::${master_key}"
+          echo "::add-mask::${secret_key_base}"
+          echo "RAILS_MASTER_KEY=${master_key}" >> "$GITHUB_ENV"
+          echo "SECRET_KEY_BASE=${secret_key_base}" >> "$GITHUB_ENV"
+
+      - name: Build production image
+        run: docker build -t tokko-production-smoke .
+
+      - name: Verify test-only gems are absent from the built image
+        run: |
+          set -euo pipefail
+          for gem in capybara selenium-webdriver simplecov; do
+            if docker run --rm tokko-production-smoke bundle show "$gem" > /dev/null 2>&1; then
+              echo "::error::${gem} is present in the production image's bundle"
+              exit 1
+            fi
+          done
+
+      # The postgres service publishes 5432 on the runner host, not on a
+      # Docker network our own container joins, so the app container reaches
+      # it via the host gateway rather than a service hostname.
+      - name: Boot the image against fresh PostgreSQL via its real entrypoint
+        run: |
+          set -euo pipefail
+          docker run -d --name tokko-smoke \
+            --add-host=host.docker.internal:host-gateway \
+            -p 3000:80 \
+            -e DB_HOST=host.docker.internal \
+            -e DB_PORT=5432 \
+            -e DB_USERNAME=postgres \
+            -e TOKKO_DATABASE_PASSWORD=postgres \
+            -e RAILS_MASTER_KEY="${RAILS_MASTER_KEY}" \
+            -e SECRET_KEY_BASE="${SECRET_KEY_BASE}" \
+            -e APP_HOST=localhost \
+            -e APP_PROTOCOL=http \
+            -e SOLID_QUEUE_IN_PUMA=true \
+            tokko-production-smoke
+
+      - name: Wait for /up
+        run: |
+          set -euo pipefail
+          for _ in $(seq 1 30); do
+            if curl -fsS "http://localhost:3000/up" > /dev/null; then
+              echo "Application is healthy."
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::Application did not become healthy within the timeout."
+          exit 1
+
+      - name: Verify fresh production databases were created
+        run: |
+          set -euo pipefail
+          command -v psql > /dev/null || sudo apt-get install -y --no-install-recommends postgresql-client
+          for db in tokko_production tokko_production_cache tokko_production_queue tokko_production_cable; do
+            exists="$(PGPASSWORD=postgres psql -h localhost -U postgres -tAc \
+              "SELECT 1 FROM pg_database WHERE datname = '${db}'")"
+            if [ "$exists" != "1" ]; then
+              echo "::error::Database ${db} was not created by db:prepare."
+              exit 1
+            fi
+          done
+
+      - name: Verify no production demo data was seeded
+        run: |
+          docker exec tokko-smoke bin/rails runner '
+            raise "admin@tokko.com exists in a fresh production database" \
+              if User.exists?(email_address: "admin@tokko.com")
+            raise "Product.count is not zero in a fresh production database" \
+              unless Product.count.zero?
+            puts "Fresh production database has no demo credentials or catalog."
+          '
+
+      - name: Print container logs on failure
+        if: failure()
+        run: docker logs tokko-smoke || true
+
+      - name: Clean up smoke container
+        if: always()
+        run: docker rm -f tokko-smoke > /dev/null 2>&1 || true
