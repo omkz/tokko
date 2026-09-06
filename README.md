@@ -84,12 +84,14 @@ Copy the webhook signing secret it prints and add it to credentials as `stripe.w
 bin/dev          # Start server + Tailwind watcher (port 3000)
 ```
 
-**Default admin account** (created by seed):
+**Development-only demo account** (created by `db/seeds/development.rb`):
 
 ```
 Email:    admin@tokko.com
 Password: password
 ```
+
+This account is created only by the development seed and is never created in production.
 
 Log in at `http://localhost:3000/dashboard`.
 
