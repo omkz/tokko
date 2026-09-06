@@ -131,10 +131,12 @@ bin/kamal deploy
 
 See [`docs/operations/deployment.md`](docs/operations/deployment.md) for PostgreSQL provisioning, healthcheck details, mail/SMTP environment variables, SSL options, and a post-deploy verification checklist.
 
+Production does not create a default administrator. Bootstrap the first owner explicitly; see [`docs/operations/deployment.md`](docs/operations/deployment.md#first-owner).
+
 ### Backup and Restore
 
 See [`docs/operations/backup-and-restore.md`](docs/operations/backup-and-restore.md) for the disaster recovery runbook — what to back up, how to verify a backup, and how to restore production.
 
 ## License
 
-MIT
+MIT — see [LICENSE](LICENSE).

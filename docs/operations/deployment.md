@@ -153,6 +153,56 @@ bin/kamal deploy
 
 See the README's Deployment section for the full flow, including secrets.
 
+## First owner
+
+Tokko intentionally creates **no default production administrator** and **no
+known production password**. `db/seeds.rb` only loads demo data (including
+the `admin@tokko.com` account) in `development` — production seeding creates
+no users at all.
+
+Once the application is deployed and its database is ready, explicitly
+bootstrap the first owner account:
+
+```bash
+export TOKKO_OWNER_EMAIL='owner@example.com'
+export TOKKO_OWNER_PASSWORD='use-a-long-random-password'
+```
+
+These are one-time bootstrap values, not ongoing configuration — don't add
+them to `config/deploy.yml` or `.kamal/secrets`.
+
+`bin/rails tokko:bootstrap_owner` needs those two variables present *inside*
+the running app container. Passing them with `bin/kamal app exec -e
+TOKKO_OWNER_PASSWORD:...` would put the password on your local command line,
+where it can land in shell history and briefly show up in local process
+listings — avoid that. Instead, use the interactive container shell Kamal
+already gives you (the `shell` alias in `config/deploy.yml`):
+
+```bash
+bin/kamal shell   # app exec --interactive --reuse "bash"
+```
+
+Then, inside that container shell:
+
+```bash
+export TOKKO_OWNER_EMAIL='owner@example.com'
+export TOKKO_OWNER_PASSWORD='use-a-long-random-password'
+bin/rails tokko:bootstrap_owner
+unset TOKKO_OWNER_EMAIL
+unset TOKKO_OWNER_PASSWORD
+exit
+```
+
+(If your shell has `HISTCONTROL=ignorespace` set, as many do by default,
+prefix each `export` with a leading space to keep the password out of the
+container's own shell history too.)
+
+`tokko:bootstrap_owner` requires both variables (aborting with no changes if
+either is missing), rejects a password under 12 characters, refuses to
+create a second owner under a different email once one exists, and never
+prints the password. It's safe to rerun for the same email — e.g. to rotate
+the password later.
+
 ## Single-server worker design
 
 The example `config/deploy.yml` runs Solid Queue inside the same Puma
