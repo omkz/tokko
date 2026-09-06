@@ -9,17 +9,26 @@ namespace :tokko do
     abort("TOKKO_OWNER_PASSWORD must be at least 12 characters.") if password.length < 12
 
     normalized_email = User.normalize_value_for(:email_address, email)
+    owner_email = nil
 
-    other_owner = User.owner.where.not(email_address: normalized_email).first
-    if other_owner
-      abort("An owner already exists (#{other_owner.email_address}). Refusing to create another owner via bootstrap.")
+    User.transaction do
+      # Serializes concurrent bootstrap attempts so two operators can't both
+      # observe "no owner yet" and each create a first owner. Scoped to this
+      # transaction only — releases automatically on commit or rollback.
+      User.connection.execute("LOCK TABLE #{User.quoted_table_name} IN SHARE ROW EXCLUSIVE MODE")
+
+      other_owner = User.owner.where.not(email_address: normalized_email).first
+      if other_owner
+        abort("An owner already exists (#{other_owner.email_address}). Refusing to create another owner via bootstrap.")
+      end
+
+      user = User.find_or_initialize_by(email_address: normalized_email)
+      user.role = :owner
+      user.password = password
+      user.save!
+      owner_email = user.email_address
     end
 
-    user = User.find_or_initialize_by(email_address: normalized_email)
-    user.role = :owner
-    user.password = password
-    user.save!
-
-    puts "Owner ready: #{user.email_address}"
+    puts "Owner ready: #{owner_email}"
   end
 end
