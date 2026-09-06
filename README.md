@@ -1,6 +1,8 @@
 # Tokko — Rails E-Commerce Starter Kit
 
-A production-ready e-commerce starter kit built with Rails 8.1. Ships with everything you need to launch an online store: products with variants, Stripe checkout, customer accounts, discount coupons, inventory tracking, and a full-featured admin dashboard.
+[![CI](https://github.com/omkz/tokko/actions/workflows/ci.yml/badge.svg)](https://github.com/omkz/tokko/actions/workflows/ci.yml)
+
+Tokko is an open-source Rails e-commerce starter kit built with Rails 8.1, PostgreSQL, Hotwire, and Stripe. It includes the core commerce building blocks — products with variants, Stripe checkout, customer accounts, discount coupons, inventory tracking, and an admin dashboard — as a starting point for your own store.
 
 ## Features
 
@@ -31,36 +33,44 @@ A production-ready e-commerce starter kit built with Rails 8.1. Ships with every
 
 ## Requirements
 
-- Ruby 4.0+
-- PostgreSQL 14+
-- Node.js (for Tailwind CSS watcher)
+- Ruby version from [`.ruby-version`](.ruby-version) (currently Ruby 4.0.3)
+- PostgreSQL 14+, running locally
+
+For Stripe checkout/webhook development (optional — see [Stripe development](#stripe-development) below):
 - A [Stripe](https://stripe.com) account
+- [Stripe CLI](https://docs.stripe.com/stripe-cli)
 
 ## Quick Start
 
+Make sure PostgreSQL is running locally, then:
+
 ```bash
-git clone <your-repo-url> my-store
-cd my-store
+git clone https://github.com/omkz/tokko.git
+cd tokko
 bin/setup
 ```
 
-`bin/setup` installs dependencies, creates and seeds the database, and starts the server at `http://localhost:3000`.
+`bin/setup` will:
+- install gems, if needed
+- initialize local Rails credentials, if `config/credentials.yml.enc` doesn't exist yet
+- prepare the development database
+- run development seed data on a new database
+- clear temp/log files
+- start `bin/dev`
 
-To reset the database and start fresh:
+Use `bin/setup --skip-server` to run setup without starting the development server.
 
-```bash
-bin/setup --reset
-```
+`bin/setup --reset` is also available, but it's **destructive**: it deletes and recreates the development database. Don't reach for it as a routine troubleshooting step.
 
 ## Configuration
 
-All secrets are managed via Rails credentials. Open the credentials file:
+Rails application credentials are used only for Stripe secrets. `config/master.key` decrypts them and must never be committed — a fresh `bin/setup` creates its own credentials/key pair automatically, so there's usually nothing to do here for local development.
+
+To add Stripe credentials yourself:
 
 ```bash
 bin/rails credentials:edit
 ```
-
-Add the following:
 
 ```yaml
 stripe:
@@ -68,15 +78,9 @@ stripe:
   webhook_secret: whsec_...
 ```
 
-(Production SMTP is configured via environment variables, not credentials — see [Deployment](#deployment) below.)
+(These are placeholders — never commit real credentials.)
 
-**Stripe webhook** — in development, use the Stripe CLI to forward events:
-
-```bash
-stripe listen --forward-to localhost:3000/webhooks/stripe
-```
-
-Copy the webhook signing secret it prints and add it to credentials as `stripe.webhook_secret`.
+Production database and SMTP configuration use environment variables instead of credentials — see [`docs/operations/deployment.md`](docs/operations/deployment.md) for deployment details.
 
 ## Development
 
@@ -95,11 +99,35 @@ This account is created only by the development seed and is never created in pro
 
 Log in at `http://localhost:3000/dashboard`.
 
+### Stripe development
+
+Stripe is optional until you want to exercise checkout or webhook flows. `bin/dev` does not start the Stripe CLI.
+
+1. Add test Stripe credentials:
+   ```bash
+   bin/rails credentials:edit
+   ```
+   ```yaml
+   stripe:
+     secret_key: sk_test_...
+     webhook_secret: whsec_...
+   ```
+2. In a separate terminal, forward webhook events:
+   ```bash
+   stripe listen --forward-to localhost:3000/webhooks/stripe
+   ```
+   Copy the webhook signing secret it prints into `stripe.webhook_secret` above.
+
+Without Stripe credentials configured, checkout will not complete — everything else in the storefront and dashboard works fine on its own.
+
 ## Testing
 
+A clean checkout needs Tailwind CSS built once before request/system specs that render layouts:
+
 ```bash
+RAILS_ENV=test bin/rails tailwindcss:build
 bundle exec rspec                              # Full suite
-bundle exec rspec spec/models/product_spec.rb # Single file
+bundle exec rspec spec/models/product_spec.rb  # Single file
 ```
 
 **Code quality:**
@@ -136,6 +164,10 @@ Production does not create a default administrator. Bootstrap the first owner ex
 ### Backup and Restore
 
 See [`docs/operations/backup-and-restore.md`](docs/operations/backup-and-restore.md) for the disaster recovery runbook — what to back up, how to verify a backup, and how to restore production.
+
+## Contributing
+
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 

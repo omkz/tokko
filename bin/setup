@@ -20,6 +20,19 @@ FileUtils.chdir APP_ROOT do
   #   FileUtils.cp "config/database.yml.sample", "config/database.yml"
   # end
 
+  unless File.exist?("config/credentials.yml.enc")
+    puts "\n== Initializing Rails credentials =="
+    # Creates config/master.key and config/credentials.yml.enc if either is
+    # missing, reusing config/master.key instead of replacing it when only
+    # the encrypted file is absent. EDITOR=true skips opening an editor on
+    # the freshly generated (empty) credentials. Stdout is suppressed here
+    # because this command prints the newly generated master key.
+    system(
+      { "EDITOR" => "true" }, "bin/rails", "credentials:edit",
+      out: File::NULL, exception: true
+    )
+  end
+
   puts "\n== Preparing database =="
   system! "bin/rails db:prepare"
   system! "bin/rails db:reset" if ARGV.include?("--reset")
