@@ -66,11 +66,9 @@ Add the following:
 stripe:
   secret_key: sk_test_...
   webhook_secret: whsec_...
-
-smtp:
-  user_name: your@email.com
-  password: your-smtp-password
 ```
+
+(Production SMTP is configured via environment variables, not credentials — see [Deployment](#deployment) below.)
 
 **Stripe webhook** — in development, use the Stripe CLI to forward events:
 
@@ -112,18 +110,24 @@ bin/bundler-audit # Gem vulnerability check
 
 ## Deployment
 
-This project includes a [Kamal](https://kamal-deploy.org) configuration. Update `config/deploy.yml` with your server IP and image registry, then:
+This project includes a [Kamal](https://kamal-deploy.org) configuration. Update `config/deploy.yml` with your server IP, image registry, domain, and mail settings, then set the production database password and deploy:
 
 ```bash
-kamal setup   # First deploy
-kamal deploy  # Subsequent deploys
+export TOKKO_DATABASE_PASSWORD='...'
+
+bin/kamal config   # sanity-check the resolved configuration locally
+bin/kamal setup    # first deploy
 ```
 
-Set `RAILS_MASTER_KEY` on your server (found in `config/master.key`):
+`RAILS_MASTER_KEY` (from `config/master.key`) is read from `.kamal/secrets` automatically by Kamal 2 whenever a command needs it — there's no separate push step. Don't commit real secrets; `.kamal/secrets` only contains variable references, and actual values come from your shell environment or secret manager.
+
+For subsequent deploys:
 
 ```bash
-kamal env push
+bin/kamal deploy
 ```
+
+See [`docs/operations/deployment.md`](docs/operations/deployment.md) for PostgreSQL provisioning, healthcheck details, mail/SMTP environment variables, SSL options, and a post-deploy verification checklist.
 
 ### Backup and Restore
 

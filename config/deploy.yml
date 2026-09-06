@@ -13,16 +13,26 @@ servers:
   #     - 192.168.0.1
   #   cmd: bin/jobs
 
-# Enable SSL auto certification via Let's Encrypt and allow for multiple apps on a single web server.
-# If used with Cloudflare, set encryption mode in SSL/TLS setting to "Full" to enable CF-to-app encryption.
-#
-# Using an SSL proxy like this requires turning on config.assume_ssl and config.force_ssl in production.rb!
-#
-# Don't use this when deploying to multiple web servers (then you have to terminate SSL at your load balancer).
-#
-# proxy:
-#   ssl: true
-#   host: app.example.com
+proxy:
+  # Kamal proxy healthchecks the app at this path before routing traffic to
+  # it and during rolling deploys. Rails' built-in /up (rails/health#show) is
+  # a lightweight liveness/boot check — it does not depend on the database,
+  # Stripe, or SMTP, so a container only reports healthy once it can serve
+  # requests at all.
+  healthcheck:
+    path: /up
+    interval: 3
+    timeout: 3
+
+  # Enable SSL auto certification via Let's Encrypt and allow for multiple apps on a single web server.
+  # If used with Cloudflare, set encryption mode in SSL/TLS setting to "Full" to enable CF-to-app encryption.
+  #
+  # Using an SSL proxy like this requires turning on config.assume_ssl and config.force_ssl in production.rb!
+  #
+  # Don't use this when deploying to multiple web servers (then you have to terminate SSL at your load balancer).
+  #
+  # ssl: true
+  # host: shop.example.com
 
 # Where you keep your container images.
 registry:
@@ -40,6 +50,14 @@ registry:
 env:
   secret:
     - RAILS_MASTER_KEY
+    - TOKKO_DATABASE_PASSWORD
+
+    # Only needed if your SMTP provider requires authentication. Kamal
+    # requires every listed secret to actually be defined when it reads
+    # .kamal/secrets, so leave these commented out for unauthenticated/relay
+    # SMTP setups rather than forcing operators to invent values.
+    # - SMTP_USERNAME
+    # - SMTP_PASSWORD
   clear:
     # Run the Solid Queue Supervisor inside the web server's Puma process to do jobs.
     # When you start using multiple servers, you should split out job processing to a dedicated machine.
@@ -51,9 +69,28 @@ env:
     # Set number of cores available to the application on each server (default: 1).
     # WEB_CONCURRENCY: 2
 
-    # Match this to any external database server to configure Active Record correctly
+    # PostgreSQL connection for config/database.yml's production primary
+    # (defaults: DB_PORT 5432, DB_USERNAME tokko). Leave DB_HOST unset to
+    # connect over a local Unix socket instead of TCP.
     # Use tokko-db for a db accessory server on same machine via local kamal docker network.
     # DB_HOST: 192.168.0.2
+    # DB_PORT: 5432
+    # DB_USERNAME: tokko
+
+    # Used to build links in mailer templates (see docs/operations/deployment.md). Replace with your real domain.
+    # APP_HOST: shop.example.com
+    # APP_PROTOCOL: https
+
+    # Default "from" address for outgoing mail. Replace with your real address.
+    # MAIL_FROM: no-reply@shop.example.com
+
+    # Outgoing SMTP server (defaults: SMTP_PORT 587, SMTP_AUTHENTICATION plain).
+    # Leave unset to fall back to localhost, or pair with SMTP_USERNAME/SMTP_PASSWORD
+    # above if your provider requires authentication.
+    # SMTP_ADDRESS: smtp.example.com
+    # SMTP_PORT: 587
+    # SMTP_DOMAIN: shop.example.com
+    # SMTP_AUTHENTICATION: plain
 
     # Log everything from Rails
     # RAILS_LOG_LEVEL: debug

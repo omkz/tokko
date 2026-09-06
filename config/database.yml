@@ -88,7 +88,9 @@ production:
   primary: &primary_production
     <<: *default
     database: tokko_production
-    username: tokko
+    host: <%= ENV["DB_HOST"] %>
+    port: <%= ENV.fetch("DB_PORT", 5432) %>
+    username: <%= ENV.fetch("DB_USERNAME", "tokko") %>
     password: <%= ENV["TOKKO_DATABASE_PASSWORD"] %>
   cache:
     <<: *primary_production
