@@ -11,7 +11,8 @@ RSpec.describe "tokko:bootstrap_owner concurrency" do
 
   OWNER_A_EMAIL = "owner-a@example.com".freeze
   OWNER_B_EMAIL = "owner-b@example.com".freeze
-  VALID_PASSWORD = "a-very-long-password".freeze
+
+  let(:valid_password) { "a-very-long-password" }
 
   around do |example|
     User.where(email_address: [ OWNER_A_EMAIL, OWNER_B_EMAIL ]).delete_all
@@ -29,9 +30,10 @@ RSpec.describe "tokko:bootstrap_owner concurrency" do
   end
 
   it "lets exactly one of two concurrent bootstrap attempts (different emails) create the owner" do
+    password = valid_password
     results = [
-      Thread.new { run_bootstrap(email: OWNER_A_EMAIL, password: VALID_PASSWORD) },
-      Thread.new { run_bootstrap(email: OWNER_B_EMAIL, password: VALID_PASSWORD) }
+      Thread.new { run_bootstrap(email: OWNER_A_EMAIL, password: password) },
+      Thread.new { run_bootstrap(email: OWNER_B_EMAIL, password: password) }
     ].map(&:value)
 
     successes = results.select { |result| result[:success] }

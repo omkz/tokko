@@ -42,7 +42,7 @@ Rails.application.routes.draw do
   resources :orders,      only: [ :index, :show ]
   resources :wishlist_items, only: [ :index, :create, :destroy ]
   post "coupons/validate", to: "coupons#validate", as: :validate_coupon
-  resource  :cart, only: [ :show, :update, :destroy ] do
+  resource :cart, only: [ :show, :update, :destroy ] do
     post "add", to: "carts#add", as: :add_to
   end
   resource :checkout, only: [ :new, :create ] do

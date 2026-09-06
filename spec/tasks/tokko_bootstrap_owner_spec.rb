@@ -19,7 +19,7 @@ RSpec.describe "tokko:bootstrap_owner" do
     ENV["TOKKO_OWNER_PASSWORD"] = original_password
   end
 
-  VALID_PASSWORD = "a-very-long-password"
+  let(:valid_password) { "a-very-long-password" }
 
   def run_task
     task.invoke
@@ -37,7 +37,7 @@ RSpec.describe "tokko:bootstrap_owner" do
 
   it "fails when TOKKO_OWNER_EMAIL is missing" do
     ENV.delete("TOKKO_OWNER_EMAIL")
-    ENV["TOKKO_OWNER_PASSWORD"] = VALID_PASSWORD
+    ENV["TOKKO_OWNER_PASSWORD"] = valid_password
 
     expect { run_task }.to raise_error(SystemExit)
     expect(User.exists?).to be(false)
@@ -70,19 +70,19 @@ RSpec.describe "tokko:bootstrap_owner" do
 
   it "creates an owner with the given email and role on valid input" do
     ENV["TOKKO_OWNER_EMAIL"] = "owner@example.com"
-    ENV["TOKKO_OWNER_PASSWORD"] = VALID_PASSWORD
+    ENV["TOKKO_OWNER_PASSWORD"] = valid_password
 
     run_task
 
     owner = User.find_by(email_address: "owner@example.com")
     expect(owner).to be_present
     expect(owner).to be_owner
-    expect(owner.authenticate(VALID_PASSWORD)).to eq(owner)
+    expect(owner.authenticate(valid_password)).to eq(owner)
   end
 
   it "is safe to rerun for the same email and can update the password" do
     ENV["TOKKO_OWNER_EMAIL"] = "owner@example.com"
-    ENV["TOKKO_OWNER_PASSWORD"] = VALID_PASSWORD
+    ENV["TOKKO_OWNER_PASSWORD"] = valid_password
     run_task
 
     task.reenable
@@ -100,7 +100,7 @@ RSpec.describe "tokko:bootstrap_owner" do
     create(:user, role: :owner, email_address: "existing-owner@example.com")
 
     ENV["TOKKO_OWNER_EMAIL"] = "new-owner@example.com"
-    ENV["TOKKO_OWNER_PASSWORD"] = VALID_PASSWORD
+    ENV["TOKKO_OWNER_PASSWORD"] = valid_password
 
     expect { run_task }.to raise_error(SystemExit)
     expect(User.exists?(email_address: "new-owner@example.com")).to be(false)
@@ -108,11 +108,11 @@ RSpec.describe "tokko:bootstrap_owner" do
 
   it "never prints the password" do
     ENV["TOKKO_OWNER_EMAIL"] = "owner@example.com"
-    ENV["TOKKO_OWNER_PASSWORD"] = VALID_PASSWORD
+    ENV["TOKKO_OWNER_PASSWORD"] = valid_password
 
     stdout = capture(:stdout) { run_task }
 
-    expect(stdout).not_to include(VALID_PASSWORD)
+    expect(stdout).not_to include(valid_password)
     expect(stdout).to include("Owner ready: owner@example.com")
   end
 

@@ -67,7 +67,7 @@ RSpec.describe "Products storefront", type: :request do
     it "shows related products from the same collection" do
       related = create(:product, name: "Red Sneakers", status: :active)
       collection = create(:collection)
-      collection.products << [product, related]
+      collection.products << [ product, related ]
 
       get product_path(product)
       expect(response.body).to include("Red Sneakers")

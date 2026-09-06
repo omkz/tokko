@@ -96,6 +96,9 @@ jobs:
       - name: Prepare database
         run: bin/rails db:prepare
 
+      - name: Build Tailwind CSS
+        run: bin/rails tailwindcss:build
+
       - name: Run test suite
         run: bundle exec rspec
 
