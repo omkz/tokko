@@ -66,8 +66,10 @@ aliases:
   logs: app logs -f
   dbc: app exec --interactive --reuse "bin/rails dbconsole --include-password"
 
-# Use a persistent storage volume for sqlite database files and local Active Storage files.
-# Recommended to change this to a mounted volume path that is backed up off server.
+# Persists local Active Storage files (product images, etc.) across deploys.
+# Tokko's database is PostgreSQL, managed separately — this volume only holds
+# uploaded files. It must be included in your backup strategy alongside the
+# database; see docs/operations/backup-and-restore.md.
 volumes:
   - "tokko_storage:/rails/storage"
 

@@ -125,6 +125,10 @@ Set `RAILS_MASTER_KEY` on your server (found in `config/master.key`):
 kamal env push
 ```
 
+### Backup and Restore
+
+See [`docs/operations/backup-and-restore.md`](docs/operations/backup-and-restore.md) for the disaster recovery runbook — what to back up, how to verify a backup, and how to restore production.
+
 ## License
 
 MIT
