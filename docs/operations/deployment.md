@@ -121,6 +121,23 @@ instead in that case.
 
 ## First deploy
 
+Before running `bin/kamal setup`, configure the PostgreSQL connection for the
+production primary (and the cache/queue/cable databases, which inherit it) —
+see [PostgreSQL provisioning](#postgresql-provisioning) above:
+
+* `DB_HOST` — hostname/IP of your PostgreSQL server, in `config/deploy.yml`'s
+  `env.clear` (leave unset only if the app container actually has access to a
+  local PostgreSQL Unix socket — not the normal case for a container
+  deployment)
+* `DB_PORT` — defaults to `5432`, also in `env.clear`
+* `DB_USERNAME` — defaults to `tokko`, also in `env.clear`
+* `TOKKO_DATABASE_PASSWORD` — a secret, exported in your shell (or provided
+  by your secret manager) before running Kamal commands, per `.kamal/secrets`
+
+Exporting `TOKKO_DATABASE_PASSWORD` alone is not sufficient for a normal
+containerized deployment — without `DB_HOST` pointed at a reachable
+PostgreSQL server, the container has no way to reach the database.
+
 ```bash
 export TOKKO_DATABASE_PASSWORD='...'
 

@@ -70,9 +70,11 @@ env:
     # WEB_CONCURRENCY: 2
 
     # PostgreSQL connection for config/database.yml's production primary
-    # (defaults: DB_PORT 5432, DB_USERNAME tokko). Leave DB_HOST unset to
-    # connect over a local Unix socket instead of TCP.
-    # Use tokko-db for a db accessory server on same machine via local kamal docker network.
+    # (defaults: DB_PORT 5432, DB_USERNAME tokko). For a typical Kamal/
+    # container deployment, set DB_HOST to the hostname or IP address of
+    # your PostgreSQL server. Leaving DB_HOST unset connects over a local
+    # Unix socket instead of TCP, which only works if that socket is
+    # actually available to the application container.
     # DB_HOST: 192.168.0.2
     # DB_PORT: 5432
     # DB_USERNAME: tokko
@@ -133,26 +135,7 @@ builder:
 # ssh:
 #   user: app
 
-# Use accessory services (secrets come from .kamal/secrets).
-# accessories:
-#   db:
-#     image: mysql:8.0
-#     host: 192.168.0.2
-#     # Change to 3306 to expose port to the world instead of just local network.
-#     port: "127.0.0.1:3306:3306"
-#     env:
-#       clear:
-#         MYSQL_ROOT_HOST: '%'
-#       secret:
-#         - MYSQL_ROOT_PASSWORD
-#     files:
-#       - config/mysql/production.cnf:/etc/mysql/my.cnf
-#       - db/production.sql:/docker-entrypoint-initdb.d/setup.sql
-#     directories:
-#       - data:/var/lib/mysql
-#   redis:
-#     image: valkey/valkey:8
-#     host: 192.168.0.2
-#     port: 6379
-#     directories:
-#       - data:/data
+# Kamal supports running accessory services (databases, Redis, etc.) alongside
+# the app — see https://kamal-deploy.org/docs/configuration/accessories/.
+# Tokko doesn't require any and assumes PostgreSQL is provisioned separately
+# unless you deliberately add one here.

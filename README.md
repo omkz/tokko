@@ -110,7 +110,7 @@ bin/bundler-audit # Gem vulnerability check
 
 ## Deployment
 
-This project includes a [Kamal](https://kamal-deploy.org) configuration. Update `config/deploy.yml` with your server IP, image registry, domain, and mail settings, then set the production database password and deploy:
+This project includes a [Kamal](https://kamal-deploy.org) configuration. Update `config/deploy.yml` with your server IP, image registry, domain, mail settings, and PostgreSQL connection (`DB_HOST`/`DB_PORT`/`DB_USERNAME`), then set the production database password and deploy:
 
 ```bash
 export TOKKO_DATABASE_PASSWORD='...'
