@@ -60,9 +60,13 @@ class StripeWebhookEvent < ApplicationRecord
       if order.stripe_checkout_session_id.blank?
         order.update!(stripe_checkout_session_id: stripe_session_id)
       elsif order.stripe_checkout_session_id != stripe_session_id
-        Rails.logger.warn(
-          "Ignoring Stripe session #{stripe_session_id} for order #{order.id}: stored session ID differs"
-        )
+        Rails.logger.warn({
+          event: "checkout_warning",
+          reason: "stripe_session_conflict",
+          order_id: order.id,
+          incoming_stripe_session_id: stripe_session_id,
+          stored_stripe_session_id: order.stripe_checkout_session_id
+        }.to_json)
         conflict = true
       end
     end

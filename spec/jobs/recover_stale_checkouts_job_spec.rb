@@ -124,9 +124,14 @@ RSpec.describe RecoverStaleCheckoutsJob, type: :job do
 
       described_class.perform_now
 
-      expect(Rails.logger).to have_received(:warn).with(
-        "Order #{order.id}: cannot reconcile stale checkout, local Stripe session ID is missing"
-      )
+      expect(Rails.logger).to have_received(:warn) do |payload|
+        parsed = JSON.parse(payload)
+        expect(parsed).to eq(
+          "event" => "checkout_warning",
+          "reason" => "missing_stripe_session_id",
+          "order_id" => order.id
+        )
+      end
       expect(order.reload).to be_pending
       expect(order.inventory_movements.reload.sole).to be_reservation
       expect(variant.reload.stock).to eq(8)
@@ -134,7 +139,7 @@ RSpec.describe RecoverStaleCheckoutsJob, type: :job do
   end
 
   describe "an unknown Stripe checkout session" do
-    it "logs an error, leaves the order pending, and continues reconciling later orders" do
+    it "reports the rescued error, leaves the order pending, and continues reconciling later orders" do
       unknown_order = build_stale_order(session_id: "cs_test_unknown")
       allow(Stripe::Checkout::Session).to receive(:retrieve)
         .with("cs_test_unknown")
@@ -148,12 +153,19 @@ RSpec.describe RecoverStaleCheckoutsJob, type: :job do
       create(:inventory_movement, product_variant: other_variant, order_item: paid_item, quantity: -1, reason: :reservation)
       stub_session("cs_test_paid_after", status: "complete", payment_status: "paid")
 
-      allow(Rails.logger).to receive(:error)
+      allow(Rails.error).to receive(:report).and_call_original
 
       described_class.perform_now
 
-      expect(Rails.logger).to have_received(:error).with(
-        "Order #{unknown_order.id}: Stripe checkout session cs_test_unknown could not be retrieved"
+      expect(Rails.error).to have_received(:report).with(
+        instance_of(Stripe::InvalidRequestError),
+        handled: true,
+        severity: :error,
+        context: {
+          operation: "reconcile_stale_checkout",
+          order_id: unknown_order.id,
+          stripe_checkout_session_id: "cs_test_unknown"
+        }
       )
       expect(unknown_order.reload).to be_pending
       expect(unknown_order.inventory_movements.reload.sole).to be_reservation
@@ -165,14 +177,16 @@ RSpec.describe RecoverStaleCheckoutsJob, type: :job do
   end
 
   describe "a transient Stripe API failure" do
-    it "is retried according to the job's retry policy and leaves local state unchanged" do
+    it "is retried according to the job's retry policy, leaves local state unchanged, and is not manually reported" do
       order = build_stale_order(session_id: "cs_test_transient")
       allow(Stripe::Checkout::Session).to receive(:retrieve)
         .with("cs_test_transient")
         .and_raise(Stripe::APIConnectionError.new("connection reset"))
+      allow(Rails.error).to receive(:report).and_call_original
 
       expect { described_class.perform_now }.to have_enqueued_job(described_class)
 
+      expect(Rails.error).not_to have_received(:report)
       expect(order.reload).to be_pending
       expect(order.inventory_movements.reload.sole).to be_reservation
       expect(variant.reload.stock).to eq(8)

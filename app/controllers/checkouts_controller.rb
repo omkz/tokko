@@ -124,28 +124,40 @@ class CheckoutsController < ApplicationController
   end
 
   def handle_indeterminate_checkout_session_error(error)
-    log_checkout_session_error(error)
+    report_checkout_session_error(error)
     render_checkout_session_error("We're confirming your payment session. Please try again shortly.")
   end
 
   def handle_definitive_checkout_session_error(error)
-    log_checkout_session_error(error)
+    report_checkout_session_error(error)
 
     begin
       @order.reload
       @order.expire_checkout!
     rescue ActiveRecord::ActiveRecordError => cleanup_error
-      Rails.logger.error(
-        "Checkout reservation cleanup failed for order #{@order.id}: #{cleanup_error.class}: #{cleanup_error.message}"
+      Rails.error.report(
+        cleanup_error,
+        handled: true,
+        severity: :error,
+        context: {
+          operation: "release_checkout_reservation",
+          order_id: @order.id
+        }
       )
     end
 
     render_checkout_session_error("We couldn't start the payment session. Please try again.")
   end
 
-  def log_checkout_session_error(error)
-    Rails.logger.error(
-      "Checkout session creation failed for order #{@order.id}: #{error.class}: #{error.message}"
+  def report_checkout_session_error(error)
+    Rails.error.report(
+      error,
+      handled: true,
+      severity: :error,
+      context: {
+        operation: "create_stripe_checkout",
+        order_id: @order.id
+      }
     )
   end
 

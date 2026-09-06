@@ -20,11 +20,21 @@ class ApplicationController < ActionController::Base
 
   before_action :resume_session
   before_action :set_nav_data
+  before_action :set_error_context
 
   private
 
   def set_nav_data
     @nav_categories = Category.roots.ordered.includes(:children)
     @nav_collections = Collection.featured_for_nav
+  end
+
+  # Privacy-minimal by design: no params, user identity, or customer data.
+  def set_error_context
+    Rails.error.set_context(
+      request_id: request.request_id,
+      controller: controller_name,
+      action: action_name
+    )
   end
 end

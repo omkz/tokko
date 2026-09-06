@@ -12,17 +12,26 @@ class RecoverStaleCheckoutsJob < ApplicationJob
 
   def reconcile(order)
     if order.stripe_checkout_session_id.blank?
-      Rails.logger.warn(
-        "Order #{order.id}: cannot reconcile stale checkout, local Stripe session ID is missing"
-      )
+      Rails.logger.warn({
+        event: "checkout_warning",
+        reason: "missing_stripe_session_id",
+        order_id: order.id
+      }.to_json)
       return
     end
 
     session = Stripe::Checkout::Session.retrieve(order.stripe_checkout_session_id)
     apply_session(order, session)
-  rescue Stripe::InvalidRequestError
-    Rails.logger.error(
-      "Order #{order.id}: Stripe checkout session #{order.stripe_checkout_session_id} could not be retrieved"
+  rescue Stripe::InvalidRequestError => error
+    Rails.error.report(
+      error,
+      handled: true,
+      severity: :error,
+      context: {
+        operation: "reconcile_stale_checkout",
+        order_id: order.id,
+        stripe_checkout_session_id: order.stripe_checkout_session_id
+      }
     )
   end
 

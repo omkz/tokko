@@ -133,9 +133,16 @@ RSpec.describe StripeWebhookEvent, type: :model do
 
       event.process!
 
-      expect(Rails.logger).to have_received(:warn).with(
-        "Ignoring Stripe session cs_test_conflicting for order #{order.id}: stored session ID differs"
-      )
+      expect(Rails.logger).to have_received(:warn) do |payload|
+        parsed = JSON.parse(payload)
+        expect(parsed).to eq(
+          "event" => "checkout_warning",
+          "reason" => "stripe_session_conflict",
+          "order_id" => order.id,
+          "incoming_stripe_session_id" => "cs_test_conflicting",
+          "stored_stripe_session_id" => "cs_test_abc123"
+        )
+      end
       expect(order.reload).to be_pending
       expect(order.stripe_checkout_session_id).to eq("cs_test_abc123")
       expect(order.inventory_movements.reload.sole).to be_reservation

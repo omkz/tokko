@@ -188,6 +188,48 @@ RSpec.describe "Checkouts", type: :request do
 
         expect(Order.where(status: :pending, stripe_checkout_session_id: [ nil, "" ])).to be_empty
       end
+
+      it "reports the rescued Stripe error with the checkout operation and order context" do
+        allow(Rails.error).to receive(:report).and_call_original
+
+        post checkout_path, params: valid_order_params
+
+        order = Order.last
+        expect(Rails.error).to have_received(:report).with(
+          instance_of(Stripe::InvalidRequestError),
+          handled: true,
+          severity: :error,
+          context: {
+            operation: "create_stripe_checkout",
+            order_id: order.id
+          }
+        )
+      end
+
+      context "when releasing the checkout reservation also fails" do
+        before do
+          allow_any_instance_of(Order).to receive(:expire_checkout!)
+            .and_raise(ActiveRecord::ActiveRecordError, "write failed")
+          allow(Rails.error).to receive(:report).and_call_original
+        end
+
+        it "reports the cleanup failure with the release operation and order context" do
+          post checkout_path, params: valid_order_params
+
+          order = Order.last
+          expect(Rails.error).to have_received(:report).with(
+            instance_of(ActiveRecord::ActiveRecordError),
+            handled: true,
+            severity: :error,
+            context: {
+              operation: "release_checkout_reservation",
+              order_id: order.id
+            }
+          )
+          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response.body).to include("We couldn&#39;t start the payment session. Please try again.")
+        end
+      end
     end
 
     shared_examples "an indeterminate Stripe Checkout failure" do
@@ -215,6 +257,23 @@ RSpec.describe "Checkouts", type: :request do
         expect(Cart.find_by(user: nil).cart_items).not_to be_empty
         expect(response).to have_http_status(:unprocessable_entity)
         expect(response.body).to include("We&#39;re confirming your payment session. Please try again shortly.")
+      end
+
+      it "reports the rescued Stripe error with the checkout operation and order context" do
+        allow(Rails.error).to receive(:report).and_call_original
+
+        post checkout_path, params: valid_order_params
+
+        order = Order.last
+        expect(Rails.error).to have_received(:report).with(
+          instance_of(stripe_error.class),
+          handled: true,
+          severity: :error,
+          context: {
+            operation: "create_stripe_checkout",
+            order_id: order.id
+          }
+        )
       end
     end
 
