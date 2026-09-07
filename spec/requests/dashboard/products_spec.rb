@@ -7,6 +7,44 @@ RSpec.describe "Dashboard products", type: :request do
     post session_path, params: { email_address: admin.email_address, password: "password123" }
   end
 
+  describe "POST /dashboard/products" do
+    it "creates an active product" do
+      post dashboard_products_path, params: { product: { name: "Active Product", status: "active" } }
+
+      product = Product.find_by!(name: "Active Product")
+      expect(product).to be_active
+      expect(response).to redirect_to(edit_dashboard_product_path(product))
+    end
+
+    it "creates an archived product" do
+      post dashboard_products_path, params: { product: { name: "Archived Product", status: "archived" } }
+
+      product = Product.find_by!(name: "Archived Product")
+      expect(product).to be_archived
+      expect(response).to redirect_to(edit_dashboard_product_path(product))
+    end
+  end
+
+  describe "PATCH /dashboard/products/:id" do
+    it "updates a draft product to active" do
+      product = create(:product, status: :draft)
+
+      patch dashboard_product_path(id: product.id), params: { product: { status: "active" } }
+
+      expect(product.reload).to be_active
+      expect(response).to redirect_to(dashboard_products_path)
+    end
+
+    it "updates an active product to archived" do
+      product = create(:product, status: :active)
+
+      patch dashboard_product_path(id: product.id), params: { product: { status: "archived" } }
+
+      expect(product.reload).to be_archived
+      expect(response).to redirect_to(dashboard_products_path)
+    end
+  end
+
   describe "DELETE /dashboard/products/:id" do
     it "destroys a product without order history" do
       product = create(:product)

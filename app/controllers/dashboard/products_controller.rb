@@ -53,6 +53,6 @@ class Dashboard::ProductsController < Dashboard::BaseController
   end
 
   def product_params
-    params.require(:product).permit(:name, :description, :slug, :category_id, images: [], collection_ids: [], filter_option_ids: [])
+    params.require(:product).permit(:name, :description, :slug, :category_id, :status, images: [], collection_ids: [], filter_option_ids: [])
   end
 end
