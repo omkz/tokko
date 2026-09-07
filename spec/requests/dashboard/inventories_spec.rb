@@ -30,10 +30,10 @@ RSpec.describe "Dashboard inventories", type: :request do
     end
 
     it "records the stock delta and current user for each movement" do
-      variant = create(:product_variant, stock: 7)
+      variant = create(:product_variant, stock: 10)
 
       patch dashboard_inventory_update_all_path, params: {
-        variants: { variant.id => { stock: 12 } }
+        variants: { variant.id => { stock: 15 } }
       }
 
       movement = InventoryMovement.adjustment.find_by!(product_variant: variant)
@@ -42,6 +42,7 @@ RSpec.describe "Dashboard inventories", type: :request do
         user: admin,
         note: "Manual adjustment via dashboard"
       )
+      expect(variant.reload.stock).to eq(15)
     end
 
     it "does not create a movement when stock is unchanged" do

@@ -35,7 +35,6 @@ class Dashboard::ProductVariantsController < Dashboard::BaseController
     params.require(:product_variant).permit(
       :price,
       :sku,
-      :stock,
       :active
     )
   end

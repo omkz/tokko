@@ -25,10 +25,9 @@
     </div>
   </div>
 
-  <div class="col-span-2">
-    <%= f.number_field :stock, min: 0,
-      class: "border border-gray-200 rounded-lg px-2.5 py-1.5 w-full text-center text-sm focus:border-gray-400 outline-none transition hover:border-gray-300 bg-transparent",
-      data: { action: "change->variant-row#autoSubmit" } %>
+  <div class="col-span-2 text-center">
+    <span class="text-sm font-medium text-gray-700"><%= variant.stock %></span>
+    <span class="text-xs text-gray-400">in stock</span>
   </div>
 
   <div class="col-span-1 flex justify-center">
