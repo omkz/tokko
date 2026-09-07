@@ -29,7 +29,7 @@
               </div>
               <div class="text-center">
                 <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total</p>
-                <p class="text-sm font-bold text-gray-900 mt-1">Rp <%= number_with_delimiter(order.total_price.to_i) %></p>
+                <p class="text-sm font-bold text-gray-900 mt-1"><%= number_to_currency(order.total_price, unit: "$") %></p>
               </div>
               <div class="text-center">
                 <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</p>

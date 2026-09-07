@@ -26,9 +26,9 @@ RSpec.describe "Products storefront", type: :request do
 
     context "when sorting by price" do
       before do
-        active.product_variants.first.update!(price: 50_000)
+        active.product_variants.first.update!(price: 50)
         create(:product, name: "Expensive Jacket", status: :active).tap do |p|
-          p.product_variants.first.update!(price: 200_000)
+          p.product_variants.first.update!(price: 200)
         end
       end
 
@@ -51,6 +51,17 @@ RSpec.describe "Products storefront", type: :request do
       get product_path(product)
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Blue Sneakers")
+    end
+
+    it "renders and serializes decimal USD prices without dropping cents" do
+      product.product_variants.first.update!(price: 29.99)
+
+      get product_path(product)
+
+      document = Nokogiri::HTML(response.body)
+      variants = JSON.parse(document.at_css("[data-product-selection-variants-value]")["data-product-selection-variants-value"])
+      expect(response.body).to include("$29.99")
+      expect(variants.first.fetch("price")).to eq(29.99)
     end
 
     it "returns 404 for a draft product" do

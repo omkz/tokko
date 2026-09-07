@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe "Checkouts", type: :request do
-  let(:variant) { create(:product_variant, price: 50_000, stock: 10) }
+  let(:variant) { create(:product_variant, price: 50, stock: 10) }
 
   let(:valid_order_params) do
     {
@@ -117,6 +117,10 @@ RSpec.describe "Checkouts", type: :request do
             client_reference_id: order.id.to_s,
             metadata: { order_id: order.id }
           )
+          expect(session_params.dig(:line_items, 0, :price_data)).to include(
+            currency: "usd",
+            unit_amount: 5000
+          )
           expect(session_params[:expires_at]).to be_within(5).of(30.minutes.from_now.to_i)
           expect(request_options).to eq(idempotency_key: "checkout-session-order-#{order.id}")
           fake_stripe_session
@@ -139,6 +143,21 @@ RSpec.describe "Checkouts", type: :request do
         allow(Stripe::Checkout::Session).to receive(:create) do |session_params, _request_options|
           expect(session_params.dig(:line_items, 0, :price_data, :product_data, :name))
             .to eq("#{original_name} — Original Option")
+          fake_stripe_session
+        end
+
+        post checkout_path, params: valid_order_params
+
+        expect(response).to redirect_to("https://checkout.stripe.com/pay/fake")
+      end
+
+      it "sends decimal USD prices to Stripe in cents" do
+        variant.update!(price: 29.99)
+        allow(Stripe::Checkout::Session).to receive(:create) do |session_params, _request_options|
+          expect(session_params.dig(:line_items, 0, :price_data)).to include(
+            currency: "usd",
+            unit_amount: 2999
+          )
           fake_stripe_session
         end
 
@@ -330,7 +349,7 @@ RSpec.describe "Checkouts", type: :request do
       it "creates the Stripe coupon with an order-specific idempotency key" do
         expect(Stripe::Coupon).to receive(:create) do |coupon_params, request_options|
           order = Order.last
-          expect(coupon_params).to include(amount_off: 500_000, currency: "usd", duration: "once")
+          expect(coupon_params).to include(amount_off: 500, currency: "usd", duration: "once")
           expect(request_options).to eq(idempotency_key: "checkout-coupon-order-#{order.id}")
           double("Stripe::Coupon", id: "coupon_test_fake")
         end
@@ -342,8 +361,28 @@ RSpec.describe "Checkouts", type: :request do
       end
     end
 
+    context "with a fixed-amount coupon" do
+      let(:coupon) { create(:coupon, discount_type: :fixed, value: 5.25) }
+
+      before do
+        setup_cart
+        allow(Stripe::Checkout::Session).to receive(:create).and_return(fake_stripe_session)
+      end
+
+      it "sends the fixed USD discount to Stripe in cents" do
+        expect(Stripe::Coupon).to receive(:create) do |coupon_params, _request_options|
+          expect(coupon_params).to include(amount_off: 525, currency: "usd", duration: "once")
+          double("Stripe::Coupon", id: "coupon_test_fake")
+        end
+
+        post checkout_path, params: valid_order_params.deep_merge(order: { coupon_code: coupon.code })
+
+        expect(response).to redirect_to("https://checkout.stripe.com/pay/fake")
+      end
+    end
+
     context "with multiple variants in cart" do
-      let(:variant2) { create(:product_variant, price: 30_000, stock: 5) }
+      let(:variant2) { create(:product_variant, price: 30, stock: 5) }
 
       before do
         setup_cart(quantity: 1)

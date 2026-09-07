@@ -186,8 +186,8 @@ RSpec.describe Product, type: :model do
   end
 
   describe ".sort_by_param" do
-    let!(:cheap)     { create(:product).tap { |p| p.product_variants.first.update!(price: 10_000) } }
-    let!(:expensive) { create(:product).tap { |p| p.product_variants.first.update!(price: 100_000) } }
+    let!(:cheap)     { create(:product).tap { |p| p.product_variants.first.update!(price: 10) } }
+    let!(:expensive) { create(:product).tap { |p| p.product_variants.first.update!(price: 100) } }
 
     it "sorts by price ascending" do
       ids = Product.sort_by_param("price_asc").pluck(:id)

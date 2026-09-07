@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe "Carts", type: :request do
-  let(:variant) { create(:product_variant, price: 50_000, stock: 10) }
+  let(:variant) { create(:product_variant, price: 50, stock: 10) }
 
   def guest_cart
     Cart.find_by(user: nil)

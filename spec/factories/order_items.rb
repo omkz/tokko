@@ -6,6 +6,6 @@ FactoryBot.define do
     product_name { product_variant.product.name }
     variant_options { product_variant.option_text }
     variant_sku { product_variant.sku }
-    unit_price { 10_000 }
+    unit_price { 10 }
   end
 end

@@ -20,7 +20,7 @@
           </div>
           <div>
             <p class="text-xs font-bold text-gray-900 uppercase tracking-widest">Free Shipping</p>
-            <p class="text-[10px] text-gray-500 font-medium">On orders over Rp 500k</p>
+            <p class="text-[10px] text-gray-500 font-medium">On orders over $50</p>
           </div>
         </div>
         <div class="flex items-center gap-4">
@@ -110,7 +110,7 @@
             <div class="mt-3">
               <p class="text-sm font-semibold text-gray-800 truncate"><%= product.name %></p>
               <p class="text-sm font-bold text-gray-900 mt-0.5">
-                <% if prices.any? %>Rp <%= number_with_delimiter(prices.min.to_i) %><% else %>—<% end %>
+                <% if prices.any? %><%= number_to_currency(prices.min, unit: "$") %><% else %>—<% end %>
               </p>
             </div>
             <%= link_to "", product_path(product), class: "absolute inset-0", aria: { label: product.name } %>

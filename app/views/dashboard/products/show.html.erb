@@ -71,7 +71,7 @@
                   <tr class="<%= variant.active? ? '' : 'opacity-50' %>">
                     <td class="px-4 py-3 font-medium text-gray-900"><%= variant.option_text %></td>
                     <td class="px-4 py-3 text-gray-500 font-mono text-xs"><%= variant.sku %></td>
-                    <td class="px-4 py-3 text-right font-medium">Rp <%= number_with_delimiter(variant.price.to_i) %></td>
+                    <td class="px-4 py-3 text-right font-medium"><%= number_to_currency(variant.price, unit: "$") %></td>
                     <td class="px-4 py-3 text-center">
                       <span class="<%= variant.stock.to_i > 0 ? 'text-green-700 bg-green-50' : 'text-gray-400 bg-gray-50' %> text-xs font-medium px-2 py-0.5 rounded-full">
                         <%= variant.stock %>
@@ -107,8 +107,8 @@
             <div class="flex justify-between border-t border-gray-100 pt-3">
               <span class="text-gray-500">Price range</span>
               <span class="font-medium">
-                Rp <%= number_with_delimiter(prices.min.to_i) %>
-                <% if prices.min != prices.max %> – Rp <%= number_with_delimiter(prices.max.to_i) %><% end %>
+                <%= number_to_currency(prices.min, unit: "$") %>
+                <% if prices.min != prices.max %> – <%= number_to_currency(prices.max, unit: "$") %><% end %>
               </span>
             </div>
           <% end %>

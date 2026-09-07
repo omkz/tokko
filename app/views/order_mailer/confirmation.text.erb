@@ -8,10 +8,10 @@ Thank you for your order! Here's a summary:
 ITEMS
 -----
 <% @items.each do |item| %>
-- <%= item.product_name %> (<%= item.variant_options %>, SKU: <%= item.variant_sku %>) x<%= item.quantity %> — Rp <%= number_with_delimiter(item.unit_price.to_i * item.quantity) %>
+- <%= item.product_name %> (<%= item.variant_options %>, SKU: <%= item.variant_sku %>) x<%= item.quantity %> — <%= number_to_currency(item.unit_price * item.quantity, unit: "$") %>
 <% end %>
 
-TOTAL: Rp <%= number_with_delimiter(@order.total_price.to_i) %>
+TOTAL: <%= number_to_currency(@order.total_price, unit: "$") %>
 
 SHIPPING TO
 -----------

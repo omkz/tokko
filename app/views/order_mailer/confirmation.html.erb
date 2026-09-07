@@ -47,12 +47,12 @@
                       <br><span style="color:#9ca3af;font-size:12px;">SKU: <%= item.variant_sku %></span>
                     </td>
                     <td style="padding:16px;font-size:14px;color:#374151;text-align:center;"><%= item.quantity %></td>
-                    <td style="padding:16px;font-size:14px;font-weight:600;color:#111827;text-align:right;">Rp <%= number_with_delimiter(item.unit_price.to_i * item.quantity) %></td>
+                    <td style="padding:16px;font-size:14px;font-weight:600;color:#111827;text-align:right;"><%= number_to_currency(item.unit_price * item.quantity, unit: "$") %></td>
                   </tr>
                 <% end %>
                 <tr style="border-top:2px solid #e5e7eb;background:#f9fafb;">
                   <td colspan="2" style="padding:16px;font-size:15px;font-weight:800;color:#111827;">Total</td>
-                  <td style="padding:16px;font-size:15px;font-weight:800;color:#111827;text-align:right;">Rp <%= number_with_delimiter(@order.total_price.to_i) %></td>
+                  <td style="padding:16px;font-size:15px;font-weight:800;color:#111827;text-align:right;"><%= number_to_currency(@order.total_price, unit: "$") %></td>
                 </tr>
               </table>
 

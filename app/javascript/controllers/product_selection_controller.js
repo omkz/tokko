@@ -1,6 +1,9 @@
 import { Controller } from "@hotwired/stimulus"
 
-const formatter = new Intl.NumberFormat('id-ID')
+const formatter = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD"
+})
 
 export default class extends Controller {
   static targets = ["price", "variantId", "button", "stockBadge", "quantity"]
@@ -49,7 +52,7 @@ export default class extends Controller {
     if (!match) return
 
     if (this.hasPriceTarget) {
-      this.priceTarget.textContent = `Rp ${formatter.format(match.price)}`
+      this.priceTarget.textContent = formatter.format(match.price)
     }
     if (this.hasVariantIdTarget) {
       this.variantIdTarget.value = match.id

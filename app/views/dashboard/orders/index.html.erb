@@ -56,7 +56,7 @@
                   </span>
                 </td>
                 <td class="px-6 py-4 text-right pr-12">
-                  <span class="text-sm font-bold text-gray-900">Rp <%= number_with_delimiter(order.total_price.to_i) %></span>
+                  <span class="text-sm font-bold text-gray-900"><%= number_to_currency(order.total_price, unit: "$") %></span>
                 </td>
                 <td class="px-6 py-4 text-right">
                   <%= link_to dashboard_order_path(order), class: "text-sm font-bold text-indigo-600 hover:text-indigo-800 transition-colors" do %>

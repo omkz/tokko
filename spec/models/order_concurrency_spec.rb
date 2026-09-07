@@ -162,7 +162,7 @@ RSpec.describe "Order checkout concurrency", type: :model do
     product = create(:product, name: "Concurrency Product #{SecureRandom.hex(6)}")
     @product_ids << product.id
     variant = product.product_variants.sole
-    variant.update!(price: 10_000, stock: stock, active: true)
+    variant.update!(price: 10, stock: stock, active: true)
     [ product, variant ]
   end
 

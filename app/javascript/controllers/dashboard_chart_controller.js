@@ -17,7 +17,7 @@ export default class extends Controller {
       data: {
         labels: labels,
         datasets: [{
-          label: 'Revenue (Rp)',
+          label: 'Revenue (USD)',
           data: values,
           borderColor: '#4f46e5',
           backgroundColor: 'rgba(79, 70, 229, 0.1)',
@@ -39,7 +39,10 @@ export default class extends Controller {
             grid: { color: '#f3f4f6' },
             ticks: {
               callback: function(value) {
-                return 'Rp ' + new Intl.NumberFormat('id-ID').format(value)
+                return new Intl.NumberFormat('en-US', {
+                  style: 'currency',
+                  currency: 'USD'
+                }).format(value)
               }
             }
           },

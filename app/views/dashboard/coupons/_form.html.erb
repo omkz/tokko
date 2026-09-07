@@ -21,7 +21,7 @@
     <div>
       <%= f.label :discount_type, class: "block text-sm font-bold text-gray-900 mb-2" %>
       <%= f.select :discount_type,
-            [["Percentage (%)", "percentage"], ["Fixed Amount (Rp)", "fixed"]],
+            [["Percentage (%)", "percentage"], ["Fixed Amount ($)", "fixed"]],
             {},
             class: "w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all" %>
     </div>
@@ -37,7 +37,7 @@
       <%= f.label :minimum_order, "Minimum Order (optional)", class: "block text-sm font-bold text-gray-900 mb-2" %>
       <%= f.number_field :minimum_order, step: "0.01",
             class: "w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all",
-            placeholder: "100000" %>
+            placeholder: "100.00" %>
     </div>
 
     <div>

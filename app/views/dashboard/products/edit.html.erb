@@ -246,9 +246,9 @@
               <span class="text-gray-500">Price range</span>
               <span class="font-semibold text-right">
                 <% if prices.min == prices.max %>
-                  Rp <%= number_with_delimiter(prices.min.to_i) %>
+                  <%= number_to_currency(prices.min, unit: "$") %>
                 <% else %>
-                  Rp <%= number_with_delimiter(prices.min.to_i) %><br>– Rp <%= number_with_delimiter(prices.max.to_i) %>
+                  <%= number_to_currency(prices.min, unit: "$") %><br>– <%= number_to_currency(prices.max, unit: "$") %>
                 <% end %>
               </span>
             </div>

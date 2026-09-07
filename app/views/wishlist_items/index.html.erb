@@ -45,7 +45,7 @@
             <% prices = product.product_variants.map(&:price).compact %>
             <p class="text-sm font-bold text-gray-900 mt-1">
               <% if prices.any? %>
-                Rp <%= number_with_delimiter(prices.min.to_i) %>
+                <%= number_to_currency(prices.min, unit: "$") %>
               <% else %>
                 &mdash;
               <% end %>

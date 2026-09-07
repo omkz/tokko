@@ -148,7 +148,7 @@
                   <p class="font-semibold text-gray-900 truncate"><%= item.product_variant.product.name %></p>
                   <p class="text-xs text-gray-400 mt-0.5"><%= item.product_variant.option_text %> &times; <%= item.quantity %></p>
                 </div>
-                <span class="font-bold text-gray-900 shrink-0">Rp <%= number_with_delimiter(item.product_variant.price.to_i * item.quantity) %></span>
+                <span class="font-bold text-gray-900 shrink-0"><%= number_to_currency(item.product_variant.price * item.quantity, unit: "$") %></span>
               </div>
             <% end %>
           </div>
@@ -172,7 +172,7 @@
           <div class="border-t border-gray-100 px-6 py-5 space-y-3 text-sm">
             <div class="flex justify-between text-gray-500">
               <span>Subtotal</span>
-              <span class="text-gray-900 font-medium">Rp <%= number_with_delimiter(@total_price) %></span>
+              <span class="text-gray-900 font-medium"><%= number_to_currency(@total_price, unit: "$") %></span>
             </div>
             <div style="display:none" class="justify-between text-emerald-600 font-semibold" data-coupon-target="discountRow">
               <span>Discount</span>
@@ -187,7 +187,7 @@
           <%# Total row %>
           <div class="bg-gray-50 px-6 py-4 flex justify-between items-center">
             <span class="text-sm font-bold text-gray-900">Total</span>
-            <span class="text-xl font-black text-gray-900" data-coupon-target="total">Rp <%= number_with_delimiter(@total_price) %></span>
+            <span class="text-xl font-black text-gray-900" data-coupon-target="total"><%= number_to_currency(@total_price, unit: "$") %></span>
           </div>
 
           <%# CTA %>

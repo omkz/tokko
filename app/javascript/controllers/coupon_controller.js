@@ -23,8 +23,8 @@ export default class extends Controller {
       this.messageTarget.textContent = `✓ ${data.code} applied`
       this.messageTarget.className = "text-xs font-semibold text-emerald-600 mt-2"
       this.discountRowTarget.style.display = "flex"
-      this.discountAmountTarget.textContent = `- Rp ${this.formatNumber(data.discount_amount)}`
-      this.totalTarget.textContent = `Rp ${this.formatNumber(data.total)}`
+      this.discountAmountTarget.textContent = `- ${this.formatCurrency(data.discount_amount)}`
+      this.totalTarget.textContent = this.formatCurrency(data.total)
       this.couponCodeTarget.value = data.code
     } else {
       this.messageTarget.textContent = data.message
@@ -34,7 +34,10 @@ export default class extends Controller {
     }
   }
 
-  formatNumber(n) {
-    return Math.round(n).toLocaleString("id-ID")
+  formatCurrency(value) {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD"
+    }).format(value)
   }
 }

@@ -41,18 +41,18 @@ RSpec.describe Order, type: :model do
 
   describe ".total_revenue" do
     it "sums total_price of successful orders only" do
-      create(:order, status: :paid, total_price: 100_000)
-      create(:order, status: :completed, total_price: 50_000)
-      create(:order, status: :pending, total_price: 200_000)
-      create(:order, status: :cancelled, total_price: 75_000)
+      create(:order, status: :paid, total_price: 100)
+      create(:order, status: :completed, total_price: 50)
+      create(:order, status: :pending, total_price: 200)
+      create(:order, status: :cancelled, total_price: 75)
 
-      expect(Order.total_revenue).to eq(150_000)
+      expect(Order.total_revenue).to eq(150)
     end
   end
 
   describe ".create_from_cart!" do
     let(:cart) { create(:cart) }
-    let(:variant) { create(:product_variant, price: 50_000, stock: 10) }
+    let(:variant) { create(:product_variant, price: 50, stock: 10) }
 
     let(:valid_attributes) do
       {
@@ -73,7 +73,7 @@ RSpec.describe Order, type: :model do
 
       it "sets total_price from the cart" do
         order, _ = Order.create_from_cart!(cart, valid_attributes)
-        expect(order.total_price).to eq(100_000)
+        expect(order.total_price).to eq(100)
       end
 
       it "sets status to pending" do
@@ -103,7 +103,7 @@ RSpec.describe Order, type: :model do
         snapshots = item.attributes.slice("product_name", "variant_options", "variant_sku", "unit_price")
 
         variant.product.update!(name: "Renamed Product")
-        variant.update!(sku: "NEW-SKU", price: 75_000)
+        variant.update!(sku: "NEW-SKU", price: 75)
         option_value.update!(value: "White")
 
         expect(item.reload.attributes.slice(*snapshots.keys)).to eq(snapshots)
@@ -126,7 +126,7 @@ RSpec.describe Order, type: :model do
     end
 
     context "with multiple variants" do
-      let(:variant2) { create(:product_variant, price: 30_000, stock: 5) }
+      let(:variant2) { create(:product_variant, price: 30, stock: 5) }
 
       before do
         create(:cart_item, cart: cart, product_variant: variant, quantity: 1)
@@ -140,7 +140,7 @@ RSpec.describe Order, type: :model do
 
       it "calculates total_price across all items" do
         order, _ = Order.create_from_cart!(cart, valid_attributes)
-        expect(order.total_price).to eq(50_000 + 90_000)
+        expect(order.total_price).to eq(50 + 90)
       end
 
       it "decrements stock for each variant" do

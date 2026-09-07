@@ -11,8 +11,8 @@ RSpec.describe "Collections storefront", type: :request do
     CollectionMembership.create!(product: product2, collection: collection)
 
     # Update the automatically created default variants' prices for sorting tests
-    product1.product_variants.first.update!(price: 150000)
-    product2.product_variants.first.update!(price: 50000)
+    product1.product_variants.first.update!(price: 150)
+    product2.product_variants.first.update!(price: 50)
   end
 
   describe "GET /collections/:slug" do
@@ -35,7 +35,7 @@ RSpec.describe "Collections storefront", type: :request do
 
       expect(response).to have_http_status(:ok)
 
-      # Since Gloves are 50,000 and Coat is 150,000, Gloves should appear first in price_asc
+      # Since Gloves are $50 and Coat is $150, Gloves should appear first in price_asc
       body = response.body
       coat_index = body.index("Warm Coat")
       gloves_index = body.index("Cold Gloves")
@@ -48,7 +48,7 @@ RSpec.describe "Collections storefront", type: :request do
 
       expect(response).to have_http_status(:ok)
 
-      # Coat (150,000) should appear first in price_desc
+      # Coat ($150) should appear first in price_desc
       body = response.body
       coat_index = body.index("Warm Coat")
       gloves_index = body.index("Cold Gloves")

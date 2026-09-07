@@ -40,11 +40,11 @@
                     <% if coupon.percentage? %>
                       <%= coupon.value.to_i %>% off
                     <% else %>
-                      Rp <%= number_with_delimiter(coupon.value.to_i) %> off
+                      <%= number_to_currency(coupon.value, unit: "$") %> off
                     <% end %>
                   </span>
                   <% if coupon.minimum_order.present? %>
-                    <p class="text-xs text-gray-400 mt-0.5">min. Rp <%= number_with_delimiter(coupon.minimum_order.to_i) %></p>
+                    <p class="text-xs text-gray-400 mt-0.5">min. <%= number_to_currency(coupon.minimum_order, unit: "$") %></p>
                   <% end %>
                 </td>
                 <td class="px-6 py-4 text-sm text-gray-600">

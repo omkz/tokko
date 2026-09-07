@@ -44,9 +44,9 @@ RSpec.describe Cart, type: :model do
   describe "#total_price" do
     it "returns the sum of price * quantity for all items" do
       cart = create(:cart)
-      variant = create(:product_variant, price: 100_000)
+      variant = create(:product_variant, price: 100)
       create(:cart_item, cart: cart, product_variant: variant, quantity: 3)
-      expect(cart.total_price).to eq(300_000)
+      expect(cart.total_price).to eq(300)
     end
 
     it "returns 0 for an empty cart" do

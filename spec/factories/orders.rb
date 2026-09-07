@@ -4,7 +4,7 @@ FactoryBot.define do
     customer_email { Faker::Internet.email }
     customer_phone { Faker::PhoneNumber.phone_number }
     shipping_address { Faker::Address.full_address }
-    total_price { 100_000 }
+    total_price { 100 }
     status { :pending }
 
     trait :paid do
