@@ -7,8 +7,8 @@ RSpec.describe "ApplicationController error context", type: :request do
 
     get root_path
 
-    expect(captured_context).to include(controller: "home", action: "index")
+    expect(captured_context).to include(controller_name: "home", action_name: "index")
     expect(captured_context[:request_id]).to be_present
-    expect(captured_context.keys).to contain_exactly(:request_id, :controller, :action)
+    expect(captured_context.keys).to contain_exactly(:request_id, :controller_name, :action_name)
   end
 end

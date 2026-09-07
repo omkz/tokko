@@ -33,8 +33,8 @@ class ApplicationController < ActionController::Base
   def set_error_context
     Rails.error.set_context(
       request_id: request.request_id,
-      controller: controller_name,
-      action: action_name
+      controller_name: controller_name,
+      action_name: action_name
     )
-  end
+    end
 end
