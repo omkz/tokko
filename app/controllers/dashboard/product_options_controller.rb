@@ -17,6 +17,13 @@ class Dashboard::ProductOptionsController < Dashboard::BaseController
 
   def destroy
     product = @option.product
+
+    unless @option.removable_without_variant_collisions?
+      redirect_to edit_dashboard_product_path(product),
+                  alert: "Cannot remove this option because multiple active variants would become duplicates. Archive or remove conflicting variants first."
+      return
+    end
+
     @option.destroy
 
     redirect_to edit_dashboard_product_path(product),
