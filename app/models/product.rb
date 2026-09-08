@@ -27,13 +27,12 @@ class Product < ApplicationRecord
   scope :published,    -> { where(status: :active) }
   scope :in_category,  ->(category) { where(category_id: category.self_and_descendant_ids) }
 
-  scope :best_sellers, ->(limit = 4) {
+  scope :best_sellers, -> {
     joins(product_variants: { order_items: :order })
-      .where.not(orders: { status: :cancelled })
+      .merge(Order.successful)
       .select("products.*, SUM(order_items.quantity) AS total_sold")
       .group("products.id")
       .order("total_sold DESC")
-      .limit(limit)
       .includes(images_attachments: :blob)
   }
 

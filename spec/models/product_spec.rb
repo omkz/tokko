@@ -159,6 +159,95 @@ RSpec.describe Product, type: :model do
     end
   end
 
+  describe ".best_sellers" do
+    def create_order_item(product, status:, quantity:)
+      create(
+        :order_item,
+        order: create(:order, status: status),
+        product_variant: product.product_variants.first,
+        quantity: quantity
+      )
+    end
+
+    it "counts quantities from paid orders" do
+      product = create(:product)
+      create_order_item(product, status: :paid, quantity: 5)
+
+      expect(Product.best_sellers.find(product.id).total_sold.to_i).to eq(5)
+    end
+
+    it "counts quantities from shipped orders" do
+      product = create(:product)
+      create_order_item(product, status: :shipped, quantity: 3)
+
+      expect(Product.best_sellers.find(product.id).total_sold.to_i).to eq(3)
+    end
+
+    it "counts quantities from completed orders" do
+      product = create(:product)
+      create_order_item(product, status: :completed, quantity: 4)
+
+      expect(Product.best_sellers.find(product.id).total_sold.to_i).to eq(4)
+    end
+
+    it "does not count pending order quantities" do
+      product = create(:product)
+      create_order_item(product, status: :paid, quantity: 2)
+      create_order_item(product, status: :pending, quantity: 100)
+
+      expect(Product.best_sellers.find(product.id).total_sold.to_i).to eq(2)
+    end
+
+    it "does not count cancelled order quantities" do
+      product = create(:product)
+      create_order_item(product, status: :paid, quantity: 2)
+      create_order_item(product, status: :cancelled, quantity: 100)
+
+      expect(Product.best_sellers.find(product.id).total_sold.to_i).to eq(2)
+    end
+
+    it "sums quantities across multiple successful orders" do
+      product = create(:product)
+      create_order_item(product, status: :paid, quantity: 2)
+      create_order_item(product, status: :shipped, quantity: 3)
+      create_order_item(product, status: :completed, quantity: 4)
+
+      expect(Product.best_sellers.find(product.id).total_sold.to_i).to eq(9)
+    end
+
+    it "orders products by successful units sold" do
+      product_a = create(:product)
+      product_b = create(:product)
+      create_order_item(product_a, status: :paid, quantity: 3)
+      create_order_item(product_b, status: :completed, quantity: 7)
+
+      expect(Product.best_sellers.map(&:id)).to eq([ product_b.id, product_a.id ])
+      expect(Product.best_sellers.map { |product| product.total_sold.to_i }).to eq([ 7, 3 ])
+    end
+
+    it "does not let a huge pending order outrank real successful sales" do
+      product_a = create(:product)
+      product_b = create(:product)
+      product_c = create(:product)
+      create_order_item(product_a, status: :paid, quantity: 3)
+      create_order_item(product_b, status: :completed, quantity: 7)
+      create_order_item(product_c, status: :pending, quantity: 100)
+
+      expect(Product.best_sellers.map(&:id)).to eq([ product_b.id, product_a.id ])
+    end
+
+    it "remains chainable" do
+      product_a = create(:product)
+      product_b = create(:product)
+      product_c = create(:product)
+      create_order_item(product_a, status: :paid, quantity: 3)
+      create_order_item(product_b, status: :completed, quantity: 7)
+      create_order_item(product_c, status: :paid, quantity: 1)
+
+      expect(Product.best_sellers.limit(2).map(&:id)).to eq([ product_b.id, product_a.id ])
+    end
+  end
+
   describe ".search" do
     let!(:shirt) { create(:product, name: "Blue Shirt", description: "A cotton shirt") }
     let!(:pants) { create(:product, name: "Black Pants", description: "Slim fit trousers") }

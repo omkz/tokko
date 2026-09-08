@@ -7,7 +7,7 @@ class Dashboard::HomeController < Dashboard::BaseController
 
     @recent_orders = Order.order(created_at: :desc).limit(5)
 
-    @top_products = Product.best_sellers
+    @top_products = Product.best_sellers.limit(4)
 
     @sales_data = (6.days.ago.to_date..Date.today).map do |date|
       { date: date.strftime("%b %d"), revenue: Order.revenue_on(date) }
