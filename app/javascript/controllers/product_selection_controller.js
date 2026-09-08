@@ -25,7 +25,8 @@ export default class extends Controller {
 
   increment() {
     if (!this.hasQuantityTarget) return
-    const max = parseInt(this.quantityTarget.dataset.max) || 99
+    const parsedMax = parseInt(this.quantityTarget.dataset.max)
+    const max = Number.isNaN(parsedMax) ? 99 : parsedMax
     const val = parseInt(this.quantityTarget.value) || 1
     if (val < max) this.quantityTarget.value = val + 1
   }
@@ -49,7 +50,20 @@ export default class extends Controller {
       ? this.variantsValue[0]
       : this.variantsValue.find(v => entries.every(([name, value]) => v.options[name] === value))
 
-    if (!match) return
+    if (!match) {
+      if (this.hasPriceTarget) this.priceTarget.textContent = "—"
+      if (this.hasVariantIdTarget) this.variantIdTarget.value = ""
+      if (this.hasButtonTarget) {
+        this.buttonTarget.disabled = true
+        this.buttonTarget.textContent = "Unavailable"
+      }
+      if (this.hasQuantityTarget) {
+        this.quantityTarget.value = 1
+        this.quantityTarget.dataset.max = 0
+      }
+      if (this.hasStockBadgeTarget) this.#updateStockBadge(0, false)
+      return
+    }
 
     if (this.hasPriceTarget) {
       this.priceTarget.textContent = formatter.format(match.price)
@@ -72,17 +86,18 @@ export default class extends Controller {
       }
     }
     if (this.hasStockBadgeTarget) {
-      this.#updateStockBadge(stock)
+      this.#updateStockBadge(inStock ? stock : 0)
     }
   }
 
-  #updateStockBadge(stock) {
+  #updateStockBadge(stock, available = true) {
     const states = {
+      unavailable: { text: "Unavailable", cls: "px-2 py-1 bg-red-50 text-red-700 text-[10px] font-bold uppercase tracking-wider rounded-md border border-red-100" },
       outOfStock: { text: "Out of Stock", cls: "px-2 py-1 bg-red-50 text-red-700 text-[10px] font-bold uppercase tracking-wider rounded-md border border-red-100" },
       lowStock:   { text: `Only ${stock} left`, cls: "px-2 py-1 bg-amber-50 text-amber-700 text-[10px] font-bold uppercase tracking-wider rounded-md border border-amber-100" },
       inStock:    { text: "In Stock", cls: "px-2 py-1 bg-green-50 text-green-700 text-[10px] font-bold uppercase tracking-wider rounded-md border border-green-100" }
     }
-    const state = stock <= 0 ? states.outOfStock : stock <= 5 ? states.lowStock : states.inStock
+    const state = !available ? states.unavailable : stock <= 0 ? states.outOfStock : stock <= 5 ? states.lowStock : states.inStock
     this.stockBadgeTarget.textContent = state.text
     this.stockBadgeTarget.className = state.cls
   }
