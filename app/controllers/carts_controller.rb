@@ -26,8 +26,7 @@ class CartsController < ApplicationController
     new_quantity = item.new_record? ? quantity : item.quantity + quantity
 
     if new_quantity > variant.stock
-      message = variant.stock == 0 ? "#{variant.product.name} is out of stock." : "Only #{variant.stock} left in stock."
-      respond_with_cart_error(message)
+      respond_with_cart_error(stock_error_message(variant))
       return
     end
 
@@ -47,13 +46,18 @@ class CartsController < ApplicationController
 
     item = cart.cart_items.find_by(product_variant_id: params[:variant_id].to_i)
     if item
+      variant = item.product_variant
+
       if quantity <= 0
         item.destroy
-      elsif item.product_variant.purchasable?
-        item.update!(quantity: quantity)
-      else
+      elsif !variant.purchasable?
         redirect_to cart_path, alert: "This product is no longer available."
         return
+      elsif quantity > variant.stock
+        redirect_to cart_path, alert: stock_error_message(variant)
+        return
+      else
+        item.update!(quantity: quantity)
       end
     end
 
@@ -66,6 +70,10 @@ class CartsController < ApplicationController
   end
 
   private
+
+  def stock_error_message(variant)
+    variant.stock == 0 ? "#{variant.product.name} is out of stock." : "Only #{variant.stock} left in stock."
+  end
 
   def respond_with_cart_error(message)
     respond_to do |format|

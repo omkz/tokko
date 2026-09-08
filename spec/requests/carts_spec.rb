@@ -107,6 +107,37 @@ RSpec.describe "Carts", type: :request do
       expect(guest_cart.cart_items.first.reload.quantity).to eq(5)
     end
 
+    it "allows quantity equal to available stock" do
+      patch cart_path, params: { variant_id: variant.id, quantity: 10 }
+
+      expect(guest_cart.cart_items.first.reload.quantity).to eq(10)
+    end
+
+    it "rejects quantity above available stock" do
+      patch cart_path, params: { variant_id: variant.id, quantity: 11 }
+
+      expect(guest_cart.cart_items.first.reload.quantity).to eq(2)
+      expect(flash[:alert]).to eq("Only 10 left in stock.")
+    end
+
+    it "rejects a higher quantity when stock falls below the current cart quantity" do
+      variant.update!(stock: 1)
+
+      patch cart_path, params: { variant_id: variant.id, quantity: 3 }
+
+      expect(guest_cart.cart_items.first.reload.quantity).to eq(2)
+      expect(flash[:alert]).to eq("Only 1 left in stock.")
+    end
+
+    it "rejects a positive quantity when stock falls to zero" do
+      variant.update!(stock: 0)
+
+      patch cart_path, params: { variant_id: variant.id, quantity: 3 }
+
+      expect(guest_cart.cart_items.first.reload.quantity).to eq(2)
+      expect(flash[:alert]).to eq("#{variant.product.name} is out of stock.")
+    end
+
     it "removes the item when quantity is 0" do
       patch cart_path, params: { variant_id: variant.id, quantity: 0 }
       expect(guest_cart.cart_items.reload).to be_empty
