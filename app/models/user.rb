@@ -10,6 +10,10 @@ class User < ApplicationRecord
 
   normalizes :email_address, with: ->(e) { e.strip.downcase }
 
+  validates :password, presence: true, confirmation: true, on: :password_reset
+  validates :password_confirmation, presence: true, on: :password_reset
+  validate :password_within_bcrypt_limit, on: :password_reset
+
   generates_token_for :magic_link, expires_in: 15.minutes do
     updated_at
   end
@@ -21,4 +25,11 @@ class User < ApplicationRecord
   def dashboard_access?
     staff? || admin? || owner?
   end
+
+  private
+    def password_within_bcrypt_limit
+      return unless password.present? && password.bytesize > ActiveModel::SecurePassword::MAX_PASSWORD_LENGTH_ALLOWED
+
+      errors.add(:password, :password_too_long)
+    end
 end

@@ -15,4 +15,18 @@ RSpec.describe User, type: :model do
       expect(user.email_address).to eq('test@example.com')
     end
   end
+
+  describe 'passwordless behavior' do
+    it 'allows a user to exist without a password' do
+      user = User.create!(email_address: 'passwordless@example.com')
+
+      expect(user.password_digest).to be_nil
+    end
+
+    it 'allows ordinary password assignment without confirmation outside password reset' do
+      user = User.create!(email_address: 'password@example.com', password: 'password')
+
+      expect(user.authenticate('password')).to eq(user)
+    end
+  end
 end
